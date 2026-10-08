@@ -689,6 +689,12 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
 .check input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; }
 .check small { display: block; color: var(--fg-3); font-size: 12px; }
 .set-foot { color: var(--fg-3); font-size: 12px; margin-top: 4px; }
+.about { padding: 14px 16px; border-radius: 10px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--line)); }
+.about h3 { margin: 0 0 6px; font: 650 14px/1.3 var(--font-display); }
+.about p { margin: 0 0 8px; color: var(--fg-2); font-size: 13px; max-width: 65ch; }
+.about a { color: var(--accent); font-weight: 600; font-size: 13px; text-decoration: none; }
+.about a:hover { text-decoration: underline; }
+.help .about { margin-bottom: 22px; }
 
 .ex-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .ex-card {

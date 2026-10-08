@@ -89,8 +89,12 @@ node tests/smoke-original.cjs <ordner-mit-alten-.bb-dateien>
 `node tests/examples.cjs <ordner>` schreibt zusätzlich die C-Dateien samt Eingaben; mit
 `sh tests/compile-c.sh <ordner>` (Linux/WSL mit gcc) werden sie übersetzt und ausgeführt.
 
-## Herkunft
+## Dank und Herkunft
 
-Neu geschrieben; das Dateiformat und die Bedienidee stammen vom Blockbild-Editor 2.2
-([eggers97/block-diagram-editor](https://github.com/eggers97/block-diagram-editor), GPL-3.0).
-Aus dem alten Projekt wurde kein Code übernommen.
+Der ursprüngliche Blockbild-Editor wurde von **Stefan Egger** und **Michael Delfser** entwickelt
+(Version 1.0 im März 2016, Version 2.2 im September 2018) und wird seit Jahren im Programmierunterricht
+eingesetzt: [eggers97/block-diagram-editor](https://github.com/eggers97/block-diagram-editor) (GPL-3.0).
+Idee, Bedienkonzept und das `.bb`-Dateiformat stammen von ihnen – vielen Dank für diese Grundlage!
+
+Version 3 ist eine Neuentwicklung; aus dem alten Projekt wurde kein Code übernommen.
+Im Editor stehen die Credits unter *Einstellungen* und am Ende der *Hilfe*.

@@ -699,6 +699,12 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
 .check input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; }
 .check small { display: block; color: var(--fg-3); font-size: 12px; }
 .set-foot { color: var(--fg-3); font-size: 12px; margin-top: 4px; }
+.about { padding: 14px 16px; border-radius: 10px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--line)); }
+.about h3 { margin: 0 0 6px; font: 650 14px/1.3 var(--font-display); }
+.about p { margin: 0 0 8px; color: var(--fg-2); font-size: 13px; max-width: 65ch; }
+.about a { color: var(--accent); font-weight: 600; font-size: 13px; text-decoration: none; }
+.about a:hover { text-decoration: underline; }
+.help .about { margin-bottom: 22px; }
 
 .ex-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .ex-card {
@@ -1012,6 +1018,10 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     'set.addresses': 'Speicheradressen im Stack anzeigen', 'set.skipChecks': 'Bedingungsprüfungen nicht als eigenen Schritt zeigen',
     'set.follow': 'Beim Ausführen zum aktiven Unterprogramm wechseln', 'set.version': 'Version {0}',
     'set.compat': 'Liest und schreibt .bb-Dateien des Blockbild-Editors 2.x.',
+    'about.title': 'Über den Blockbild-Editor',
+    'about.credit': 'Der Blockbild-Editor wurde von Stefan Egger und Michael Delfser entwickelt (Version 1.0 im März 2016, Version 2.2 im September 2018) und hilft seither Schülerinnen und Schülern, sauber strukturiert programmieren zu lernen.',
+    'about.thanks': 'Version 3 ist eine Neuentwicklung, die auf ihrer Idee, ihrer Bedienung und ihrem Dateiformat aufbaut. Vielen Dank an Stefan Egger und Michael Delfser für diese Grundlage!',
+    'about.original': 'Original-Projekt auf GitHub',
 
     'toast.saved': 'Gespeichert als {0}', 'toast.copied': 'In die Zwischenablage kopiert', 'toast.pasted': 'Eingefügt',
     'toast.nothingToPaste': 'Zwischenablage ist leer', 'toast.deleted': '{0} Block/Blöcke gelöscht', 'toast.undo': 'Rückgängig',
@@ -1193,6 +1203,10 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     'set.addresses': 'Show memory addresses in the stack', 'set.skipChecks': 'Do not show condition checks as separate steps',
     'set.follow': 'Switch to the active subprogram while running', 'set.version': 'Version {0}',
     'set.compat': 'Reads and writes .bb files of block diagram editor 2.x.',
+    'about.title': 'About the block diagram editor',
+    'about.credit': 'The block diagram editor was created by Stefan Egger and Michael Delfser (version 1.0 in March 2016, version 2.2 in September 2018) and has helped students learn clean structured programming ever since.',
+    'about.thanks': 'Version 3 is a rewrite built on their idea, their way of working and their file format. Many thanks to Stefan Egger and Michael Delfser for this foundation!',
+    'about.original': 'Original project on GitHub',
 
     'toast.saved': 'Saved as {0}', 'toast.copied': 'Copied to clipboard', 'toast.pasted': 'Pasted',
     'toast.nothingToPaste': 'Clipboard is empty', 'toast.deleted': '{0} block(s) deleted', 'toast.undo': 'Undo',
@@ -6897,8 +6911,17 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       check('set-addr', t('set.addresses'), null, s.addresses, (v) => { s.addresses = v; saveSettings(); renderStackPanel(); }),
       check('set-skip', t('set.skipChecks'), null, s.skipChecks, (v) => { s.skipChecks = v; saveSettings(); if (S.run.interp) S.run.interp.skipChecks = v; }),
       check('set-follow', t('set.follow'), null, s.follow, (v) => { s.follow = v; saveSettings(); }),
+      aboutBlock(),
       h('p.set-foot', null, t('set.version', VERSION) + ' · ' + t('set.compat')));
     BBE.ui.dialog({ t, title: t('set.title'), body, actions: [{ label: t('dlg.close'), value: null, primary: true }] });
+  }
+
+  function aboutBlock() {
+    return h('section.about', { 'aria-label': t('about.title') },
+      h('h3', null, t('about.title')),
+      h('p', null, t('about.credit')),
+      h('p', null, t('about.thanks')),
+      h('a', { href: 'https://github.com/eggers97/block-diagram-editor', target: '_blank', rel: 'noopener' }, t('about.original') + ' ↗'));
   }
 
   function setLanguage(lang) {
@@ -6918,6 +6941,13 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     const html = BBE.help && BBE.help[I18N.lang === 'en' ? 'en' : 'de'];
     const body = h('div.help');
     body.innerHTML = html || '';
+    const about = aboutBlock();
+    about.id = 'h-about';
+    const navAbout = h('a', { href: '#h-about' }, t('about.title'));
+    const nav = body.querySelector('nav');
+    if (nav) nav.appendChild(navAbout);
+    const content = body.querySelector(':scope > div');
+    if (content) content.appendChild(about);
     body.addEventListener('click', (e) => {
       const a = e.target.closest('nav a');
       if (!a) return;

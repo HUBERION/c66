@@ -1816,8 +1816,17 @@
       check('set-addr', t('set.addresses'), null, s.addresses, (v) => { s.addresses = v; saveSettings(); renderStackPanel(); }),
       check('set-skip', t('set.skipChecks'), null, s.skipChecks, (v) => { s.skipChecks = v; saveSettings(); if (S.run.interp) S.run.interp.skipChecks = v; }),
       check('set-follow', t('set.follow'), null, s.follow, (v) => { s.follow = v; saveSettings(); }),
+      aboutBlock(),
       h('p.set-foot', null, t('set.version', VERSION) + ' · ' + t('set.compat')));
     BBE.ui.dialog({ t, title: t('set.title'), body, actions: [{ label: t('dlg.close'), value: null, primary: true }] });
+  }
+
+  function aboutBlock() {
+    return h('section.about', { 'aria-label': t('about.title') },
+      h('h3', null, t('about.title')),
+      h('p', null, t('about.credit')),
+      h('p', null, t('about.thanks')),
+      h('a', { href: 'https://github.com/eggers97/block-diagram-editor', target: '_blank', rel: 'noopener' }, t('about.original') + ' ↗'));
   }
 
   function setLanguage(lang) {
@@ -1837,6 +1846,13 @@
     const html = BBE.help && BBE.help[I18N.lang === 'en' ? 'en' : 'de'];
     const body = h('div.help');
     body.innerHTML = html || '';
+    const about = aboutBlock();
+    about.id = 'h-about';
+    const navAbout = h('a', { href: '#h-about' }, t('about.title'));
+    const nav = body.querySelector('nav');
+    if (nav) nav.appendChild(navAbout);
+    const content = body.querySelector(':scope > div');
+    if (content) content.appendChild(about);
     body.addEventListener('click', (e) => {
       const a = e.target.closest('nav a');
       if (!a) return;
