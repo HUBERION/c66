@@ -1,0 +1,7 @@
+# lokale Werkzeuge
+.claude/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+dist/artifact.html

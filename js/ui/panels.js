@@ -1,0 +1,246 @@
+/* Blockbild-Editor – Seitenleiste: Stack, Konsole, C-Code, Prüfung */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+  const { h } = BBE.dom;
+  const { icon } = BBE.icons;
+  const show = (v) => BBE.interp.show(v);
+
+  // ---------------------------------------------------------------- Stack
+
+  function renderStack(box, frames, opts) {
+    const { t, showAddr, changed, changedElems, live } = opts;
+    box.textContent = '';
+    if (!frames || !frames.length) {
+      box.appendChild(h('div.stack-empty', null, icon('stack'), h('span', null, t('stack.empty'))));
+      return;
+    }
+    frames.forEach((fr, i) => {
+      const el = h('div.frame' + (i === 0 && live ? '.top' : ''));
+      el.appendChild(h('div.frame-head', null,
+        h('span', null, fr.isMain ? 'main' : fr.name + '()'),
+        h('span.frame-tag', null, i === 0 && live ? t('stack.top') : '')));
+      const table = h('table.vars');
+      const tbody = h('tbody');
+      if (!fr.vars.length) {
+        tbody.appendChild(h('tr', null, h('td.v-val', { colspan: showAddr ? 3 : 2, style: { color: 'var(--fg-3)' } }, '–')));
+      }
+      for (const v of fr.vars) {
+        const isChanged = changed && changed.has(v.cell);
+        const row = h('tr', { class: (v.ref ? 'ref ' : '') + (isChanged ? 'changed' : '') });
+        const nameCell = h('td.v-name', null, v.name, h('span.v-type', null, t('type.' + v.type)));
+        if (v.ref) nameCell.appendChild(h('span.v-ref', null, '→ ' + t('stack.ref', v.via || '?')));
+        row.appendChild(nameCell);
+        row.appendChild(h('td.v-val', null, valueNode(v, changedElems)));
+        if (showAddr) row.appendChild(h('td.v-addr', null, v.addr || ''));
+        tbody.appendChild(row);
+      }
+      table.appendChild(tbody);
+      el.appendChild(table);
+      box.appendChild(el);
+    });
+  }
+
+  function valueNode(v, changedElems) {
+    if (v.isArray) {
+      const base = parseInt(v.addr, 16);
+      return h('span.arr', null, v.value.map((x, i) => {
+        const addr = '0x' + (base + i * 8).toString(16).padStart(4, '0');
+        const ch = changedElems && changedElems.has(addr);
+        return h('span.cell' + (ch ? '.changed' : ''), { title: v.name + '[' + i + '] · ' + addr },
+          h('i', null, String(i)), h('b', null, typeof x === 'string' ? '"' + x + '"' : show(x)));
+      }));
+    }
+    if (typeof v.value === 'string') return h('span.str', null, v.value);
+    return h('span', null, show(v.value));
+  }
+
+  // ---------------------------------------------------------------- Konsole
+
+  class Console {
+    constructor(opts) {
+      this.t = opts.t;
+      this.body = opts.body;       // scrollender Bereich
+      this.list = opts.list;       // Zeilen
+      this.form = opts.form;       // Eingabezeile
+      this.input = opts.input;
+      this.promptEl = opts.promptEl;
+      this.pending = null;
+      this.empty = true;
+      this.renderEmpty();
+
+      this.form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.submit();
+      });
+      this.input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); this.cancelInput(); }
+      });
+    }
+
+    renderEmpty() {
+      this.list.textContent = '';
+      this.list.appendChild(h('div.c-empty', null, this.t('console.empty')));
+      this.empty = true;
+    }
+
+    clear() {
+      this.renderEmpty();
+    }
+
+    add(el) {
+      if (this.empty) { this.list.textContent = ''; this.empty = false; }
+      this.list.appendChild(el);
+      while (this.list.childElementCount > 2000) this.list.firstChild.remove();
+      this.body.scrollTop = this.body.scrollHeight;
+      return el;
+    }
+
+    print(text) { this.add(h('div.c-line', null, text)); }
+    sys(text) { this.add(h('div.c-sys', null, text)); }
+    error(text) { this.add(h('div.c-err', null, text)); }
+    hint(text) { this.add(h('div.c-hint', null, text)); }
+
+    /** Fragt einen Wert ab; cb(wert) oder cb(null) bei Abbruch. */
+    ask(prompt, numeric, label, cb) {
+      const lineEl = this.add(h('div.c-line', null, h('span.c-prompt', null, prompt)));
+      this.pending = { numeric, label, cb, lineEl };
+      this.promptEl.textContent = prompt || label || '';
+      this.form.hidden = false;
+      this.input.value = '';
+      this.input.inputMode = numeric ? 'decimal' : 'text';
+      this.input.placeholder = this.t('console.inputPh');
+      setTimeout(() => this.input.focus(), 0);
+    }
+
+    submit() {
+      const p = this.pending;
+      if (!p) return;
+      const raw = this.input.value;
+      if (p.numeric) {
+        const s = raw.trim().replace(',', '.');
+        if (s === '' || Number.isNaN(Number(s))) {
+          this.hint(this.t('console.needNumber'));
+          this.input.select();
+          return;
+        }
+        this.finishInput(s, raw.trim());
+        return;
+      }
+      this.finishInput(raw, raw);
+    }
+
+    finishInput(value, echo) {
+      const p = this.pending;
+      this.pending = null;
+      this.form.hidden = true;
+      p.lineEl.appendChild(h('span.c-in', null, echo));
+      p.cb(value);
+    }
+
+    cancelInput() {
+      const p = this.pending;
+      if (!p) return;
+      this.pending = null;
+      this.form.hidden = true;
+      this.hint(this.t('console.cancelled', p.label));
+      p.cb(null);
+    }
+
+    abort() {
+      if (!this.pending) return;
+      this.pending = null;
+      this.form.hidden = true;
+    }
+
+    get waiting() { return !!this.pending; }
+  }
+
+  // ---------------------------------------------------------------- C-Code
+
+  const C_KW = new Set('if else while for do switch case default break continue return sizeof'.split(' '));
+  const C_TYPES = new Set('int char void const static unsigned long short double float'.split(' '));
+
+  function highlightC(pre, code) {
+    pre.textContent = '';
+    let inBlock = false;
+    for (const line of code.replace(/\n$/, '').split('\n')) {
+      const el = h('span.cl');
+      let i = 0;
+      const push = (cls, text) => { if (!text) return; el.appendChild(cls ? h('span.' + cls, null, text) : document.createTextNode(text)); };
+      if (!inBlock && /^\s*#/.test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
+      let buf = '';
+      const flush = () => { push(null, buf); buf = ''; };
+      while (i < line.length) {
+        if (inBlock) {
+          const end = line.indexOf('*/', i);
+          if (end < 0) { push('tok-cmt', line.slice(i)); i = line.length; break; }
+          push('tok-cmt', line.slice(i, end + 2));
+          i = end + 2;
+          inBlock = false;
+          continue;
+        }
+        const rest = line.slice(i);
+        if (rest.startsWith('/*')) { flush(); inBlock = true; continue; }
+        if (rest.startsWith('//')) { flush(); push('tok-cmt', rest); i = line.length; break; }
+        if (rest[0] === '"') {
+          flush();
+          let j = 1;
+          while (j < rest.length && rest[j] !== '"') j += rest[j] === '\\' ? 2 : 1;
+          push('tok-str', rest.slice(0, j + 1));
+          i += j + 1;
+          continue;
+        }
+        const m = /^[A-Za-z_]\w*/.exec(rest);
+        if (m) {
+          if (C_KW.has(m[0])) { flush(); push('tok-kw', m[0]); }
+          else if (C_TYPES.has(m[0])) { flush(); push('tok-type', m[0]); }
+          else buf += m[0];
+          i += m[0].length;
+          continue;
+        }
+        const num = /^\d+(\.\d+)?/.exec(rest);
+        if (num && !/\w/.test(line[i - 1] || '')) { flush(); push('tok-num', num[0]); i += num[0].length; continue; }
+        buf += rest[0];
+        i++;
+      }
+      flush();
+      if (!el.childNodes.length) el.appendChild(document.createTextNode(' '));
+      pre.appendChild(el);
+    }
+  }
+
+  // ---------------------------------------------------------------- Prüfung
+
+  function renderProblems(box, analysis, opts) {
+    const { t, program, onPick } = opts;
+    box.textContent = '';
+    if (!analysis || !analysis.problems.length) {
+      box.appendChild(h('div.prob-ok', null, icon('check'), h('span', null, t('prob.none'))));
+      return;
+    }
+    const sorted = analysis.problems.slice().sort((a, b) => (a.sev === b.sev ? 0 : a.sev === 'error' ? -1 : 1));
+    const list = h('ul.prob-list');
+    for (const p of sorted) {
+      const fn = program.fns.find((f) => f.id === p.fnId);
+      const where = (fn ? (fn.isMain ? 'main' : fn.name || '?') : '?') + ' · ' + fieldLabel(t, p.field);
+      const btn = h('button.prob.' + p.sev, { type: 'button' },
+        icon(p.sev === 'error' ? 'error' : 'warn'),
+        h('span', null, h('span.p-msg', null, t(p.key, p.args)), h('span.p-where', null, where)));
+      btn.addEventListener('click', () => onPick(p));
+      list.appendChild(h('li', null, btn));
+    }
+    box.appendChild(list);
+  }
+
+  function fieldLabel(t, field) {
+    if (!field) return '';
+    if (field.startsWith('case:')) return t('kw.case');
+    if (field.startsWith('arg:')) return t('ph.arg') + ' ' + (Number(field.slice(4)) + 1);
+    if (field.startsWith('param:')) return t('fn.params');
+    const map = { cond: 'ph.cond', expr: 'ph.expr', target: 'ph.var', name: 'ph.name', init: 'ph.value', length: 'ph.length', prompt: 'ph.prompt', counter: 'ph.var', from: 'ph.from', to: 'ph.to', step: 'ph.step', fn: 'pal.call', resultInit: 'fn.result' };
+    return map[field] ? t(map[field]).replace(/"/g, '') : field;
+  }
+
+  BBE.panels = { renderStack, Console, highlightC, renderProblems };
+})(window);
