@@ -108,7 +108,8 @@
       this.promptEl.textContent = prompt || label || '';
       this.form.hidden = false;
       this.input.value = '';
-      this.input.inputMode = numeric ? 'decimal' : 'text';
+      this.input.inputMode = 'text';
+      this.input.enterKeyHint = 'send';
       this.input.placeholder = this.t('console.inputPh');
       setTimeout(() => this.input.focus(), 0);
     }

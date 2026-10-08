@@ -21,6 +21,10 @@
     }, true);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag) cancel(); });
     document.addEventListener('touchmove', (e) => { if (drag && e.cancelable) e.preventDefault(); }, { passive: false });
+    // Android öffnet bei langem Drücken das Kontextmenü – während des Ziehens unterdrücken
+    document.addEventListener('contextmenu', (e) => {
+      if (drag || (pending && pending.type === 'touch')) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
 
     function sourceOf(target) {
       if (!(target instanceof Element)) return null;

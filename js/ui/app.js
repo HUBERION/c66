@@ -155,7 +155,19 @@
     el.zoombox = h('div.zoombox');
     el.canvasInner = h('div.canvas-inner', null, el.zoombox);
     el.canvas = h('div.canvas', { tabindex: '-1' }, h('div.canvas-tools', null, zoomOut, el.zoomVal, zoomIn), el.canvasInner);
-    const work = h('section.work', null, el.tabs, el.canvas);
+    // Aktionsleiste für Touch-Geräte (statt Rechtsklick/Tastatur)
+    const sb = (iconName, label, fn, cls) => {
+      const b = h('button.btn.icon' + (cls ? '.' + cls : ''), { type: 'button', title: label, 'aria-label': label }, icon(iconName));
+      b.addEventListener('click', (e) => { e.stopPropagation(); fn(b); });
+      return b;
+    };
+    el.selBar = h('div.sel-bar', { hidden: true, role: 'toolbar', 'aria-label': t('tb.more') },
+      sb('up', t('ctx.moveUp'), () => moveSelection(-1)),
+      sb('down', t('ctx.moveDown'), () => moveSelection(1)),
+      sb('duplicate', t('ctx.duplicate'), duplicateSelection),
+      sb('trash', t('ctx.delete'), deleteSelection, 'danger'),
+      sb('more', t('tb.more'), (b) => openBlockMenu(nodeById(S.anchor), b, null)));
+    const work = h('section.work', null, el.tabs, el.canvas, el.selBar);
 
     // ---- Seitenleiste
     el.sideTabs = {};
@@ -954,6 +966,7 @@
   // ================================================================ Auswahl
 
   function applySelection() {
+    if (el.selBar) el.selBar.hidden = !S.sel.size || isRunning() || !S.anchor;
     el.zoombox.querySelectorAll('.blk.sel').forEach((b) => b.classList.remove('sel'));
     el.zoombox.querySelectorAll('.blk-more').forEach((b) => b.remove());
     for (const id of S.sel) {
@@ -1857,7 +1870,19 @@
 
   // ================================================================ Start
 
+  /** iOS zoomt beim Antippen kleiner Eingabefelder hinein – verhindern (Pinch-Zoom bleibt möglich). */
+  function preventIosInputZoom() {
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!ios) return;
+    let meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'viewport'; document.head.appendChild(meta); }
+    const content = meta.getAttribute('content') || 'width=device-width, initial-scale=1, viewport-fit=cover';
+    if (!/maximum-scale/.test(content)) meta.setAttribute('content', content + ', maximum-scale=1');
+  }
+
   function boot() {
+    preventIosInputZoom();
+    if (S.settings.sideCollapsed === undefined && window.innerWidth <= 560) S.settings.sideCollapsed = true;
     applyTheme();
     document.documentElement.lang = I18N.lang;
     buildShell();
