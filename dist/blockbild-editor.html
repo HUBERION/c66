@@ -416,7 +416,6 @@ kbd {
 .f.dim { color: var(--fg-3); }
 .f:read-only { cursor: default; }
 .f-cmt { color: var(--fg-3); font-style: italic; margin-left: auto; text-align: right; }
-.f-cmt:not(.has):not(.show):not(:focus) { display: none; }
 .cmt-mark { color: var(--fg-3); font: italic 13px/1.4 var(--font-code); margin-left: auto; padding-left: 10px; }
 .cmt-wrap { margin-left: auto; display: inline-flex; align-items: baseline; gap: 2px; padding-left: 12px; }
 .cmt-wrap:not(.has):not(.show) { display: none; }
@@ -584,14 +583,25 @@ body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-sele
 
 /* ------------------------------------------------------------------ Seitenleiste */
 .side { background: var(--surface); border-left: 1px solid var(--line); display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; min-width: 0; }
-.side-tabs { display: flex; gap: 2px; padding: 8px 12px 0; border-bottom: 1px solid var(--line); background: var(--surface-2); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-.side-tab {
-  height: 34px; padding: 0 12px; white-space: nowrap; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0;
-  background: transparent; color: var(--fg-2); display: inline-flex; align-items: center; gap: 6px; position: relative; top: 1px; font-weight: 500;
+.side-tabs {
+  display: flex; align-items: center; gap: 4px; padding: 7px 12px;
+  border-bottom: 1px solid var(--line); background: var(--surface-2);
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
 }
-.side-tab { transition: color .16s ease, background-color .16s ease; }
-.side-tab:hover { color: var(--fg); }
-.side-tab.active { background: var(--surface); color: var(--fg); border-color: var(--line); }
+/* gleicher Pillen-Stil wie die Reiterleiste der Unterprogramme */
+.side-tab {
+  height: 34px; padding: 0 11px 0 9px; white-space: nowrap; flex: none;
+  border: 1px solid transparent; border-radius: 9px;
+  background: transparent; color: var(--fg-2); display: inline-flex; align-items: center; gap: 7px; position: relative; font-weight: 500;
+  transition: background-color .16s ease, color .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.side-tab svg.ic { width: 16px; height: 16px; color: var(--fg-3); transition: color .16s ease; }
+.side-tab:hover { color: var(--fg); background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.side-tab.active {
+  background: var(--surface); color: var(--fg); border-color: var(--line); font-weight: 600;
+  box-shadow: 0 1px 2px rgba(28, 35, 49, 0.06), 0 2px 8px rgba(28, 35, 49, 0.06);
+}
+.side-tab.active svg.ic { color: var(--accent); }
 .side-tab .badge { font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: inline-grid; place-items: center; }
 .badge.err { background: var(--err); color: #fff; }
 .badge.warn { background: var(--warn-soft); color: var(--warn); }
@@ -604,7 +614,7 @@ body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-sele
 .side-collapsed .side { grid-template-rows: minmax(0, 1fr); }
 .side-collapsed .side-tabs { flex-direction: column; align-items: center; padding: 10px 6px; gap: 6px; border-bottom: 0; }
 .side-collapsed .side-tab { top: 0; width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 9px; border: 1px solid transparent; position: relative; }
-.side-collapsed .side-tab.active { background: transparent; border-color: transparent; }
+.side-collapsed .side-tab.active { background: transparent; border-color: transparent; box-shadow: none; }
 .side-collapsed .side-tab:hover { background: var(--surface-3); }
 .side-collapsed .side-tab > span:not(.badge) { display: none; }
 .side-collapsed .side-tab .badge { position: absolute; top: 0; right: -2px; min-width: 16px; height: 16px; font-size: 10px; }
@@ -3591,6 +3601,47 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
               IF('zahlen[j] > zahlen[j + 1]', [CALL('tausche', ['zahlen[j]', 'zahlen[j + 1]'])]))),
           CALL('zeige', ['zahlen'])
         ),
+        tausche: FN('void', [par('integer', 'a', true), par('integer', 'b', true)], undefined,
+          decl('integer', 'hilf', 'a'),
+          set('a', 'b'),
+          set('b', 'hilf')),
+        zeige: FN('void', [par('integer[]', 'werte', true)], undefined,
+          decl('string', 'zeile', '""'),
+          decl('integer', 'k', '0'),
+          FOR('k', '0', 'werte.length - 1', '+1', set('zeile', 'zeile + werte[k] + " "')),
+          out('zeile'))
+      })
+    },
+    {
+      id: 'quick', level: 4,
+      title: { de: 'Sortieren (Quicksort)', en: 'Sorting (quicksort)' },
+      desc: { de: 'Teile und herrsche: Rekursion mit Arrays, Pivot-Element und Tauschen.', en: 'Divide and conquer: recursion with arrays, pivot element and swapping.' },
+      build: (L) => ({
+        main: S(
+          arr('integer[]', 'zahlen', '9'),
+          decl('integer', 'i', '0'),
+          NOTE(L('Testdaten erzeugen', 'Create test data')),
+          FOR('i', '0', 'zahlen.length - 1', '+1', set('zahlen[i]', '(i * 37 + 11) % 50')),
+          CALL('zeige', ['zahlen']),
+          CALL('quicksort', ['zahlen', '0', 'zahlen.length - 1']),
+          CALL('zeige', ['zahlen'])
+        ),
+        quicksort: FN('void', [par('integer[]', 'werte', true), par('integer', 'links', false), par('integer', 'rechts', false)], undefined,
+          decl('integer', 'p', '0'),
+          IF('links < rechts', [
+            NOTE(L('Aufteilen: kleine Werte links vom Pivot, große rechts', 'Partition: small values left of the pivot, large ones right')),
+            CALL('teile', ['werte', 'links', 'rechts'], 'p'),
+            CALL('quicksort', ['werte', 'links', 'p - 1']),
+            CALL('quicksort', ['werte', 'p + 1', 'rechts'])
+          ])),
+        teile: FN('integer', [par('integer[]', 'werte', true), par('integer', 'links', false), par('integer', 'rechts', false)], '0',
+          decl('integer', 'pivot', 'werte[rechts]', L('letztes Element als Pivot', 'last element as pivot')),
+          decl('integer', 'i', 'links - 1'),
+          decl('integer', 'j', '0'),
+          FOR('j', 'links', 'rechts - 1', '+1',
+            IF('werte[j] <= pivot', [set('i', 'i + 1'), CALL('tausche', ['werte[i]', 'werte[j]'])])),
+          CALL('tausche', ['werte[i + 1]', 'werte[rechts]']),
+          set('result', 'i + 1')),
         tausche: FN('void', [par('integer', 'a', true), par('integer', 'b', true)], undefined,
           decl('integer', 'hilf', 'a'),
           set('a', 'b'),

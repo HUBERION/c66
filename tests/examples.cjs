@@ -7,7 +7,7 @@ const BBE = require('./load.cjs');
 const cdir = process.argv[2];
 const inputs = {
   hello: [], eva: [7, 3], even: [-9], loops: [6], grade: [8, 0, 2], max: [4, 11], ggt: [-48, 18],
-  swap: [], fak: [6], avg: [3, 4, 8, 15], sort: [], words: { de: ['Ada', 'vielleicht', 'ja'], en: ['Ada', 'maybe', 'yes'] }
+  swap: [], quick: [], fak: [6], avg: [3, 4, 8, 15], sort: [], words: { de: ['Ada', 'vielleicht', 'ja'], en: ['Ada', 'maybe', 'yes'] }
 };
 
 let fail = 0;

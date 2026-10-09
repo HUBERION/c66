@@ -235,6 +235,47 @@
       })
     },
     {
+      id: 'quick', level: 4,
+      title: { de: 'Sortieren (Quicksort)', en: 'Sorting (quicksort)' },
+      desc: { de: 'Teile und herrsche: Rekursion mit Arrays, Pivot-Element und Tauschen.', en: 'Divide and conquer: recursion with arrays, pivot element and swapping.' },
+      build: (L) => ({
+        main: S(
+          arr('integer[]', 'zahlen', '9'),
+          decl('integer', 'i', '0'),
+          NOTE(L('Testdaten erzeugen', 'Create test data')),
+          FOR('i', '0', 'zahlen.length - 1', '+1', set('zahlen[i]', '(i * 37 + 11) % 50')),
+          CALL('zeige', ['zahlen']),
+          CALL('quicksort', ['zahlen', '0', 'zahlen.length - 1']),
+          CALL('zeige', ['zahlen'])
+        ),
+        quicksort: FN('void', [par('integer[]', 'werte', true), par('integer', 'links', false), par('integer', 'rechts', false)], undefined,
+          decl('integer', 'p', '0'),
+          IF('links < rechts', [
+            NOTE(L('Aufteilen: kleine Werte links vom Pivot, große rechts', 'Partition: small values left of the pivot, large ones right')),
+            CALL('teile', ['werte', 'links', 'rechts'], 'p'),
+            CALL('quicksort', ['werte', 'links', 'p - 1']),
+            CALL('quicksort', ['werte', 'p + 1', 'rechts'])
+          ])),
+        teile: FN('integer', [par('integer[]', 'werte', true), par('integer', 'links', false), par('integer', 'rechts', false)], '0',
+          decl('integer', 'pivot', 'werte[rechts]', L('letztes Element als Pivot', 'last element as pivot')),
+          decl('integer', 'i', 'links - 1'),
+          decl('integer', 'j', '0'),
+          FOR('j', 'links', 'rechts - 1', '+1',
+            IF('werte[j] <= pivot', [set('i', 'i + 1'), CALL('tausche', ['werte[i]', 'werte[j]'])])),
+          CALL('tausche', ['werte[i + 1]', 'werte[rechts]']),
+          set('result', 'i + 1')),
+        tausche: FN('void', [par('integer', 'a', true), par('integer', 'b', true)], undefined,
+          decl('integer', 'hilf', 'a'),
+          set('a', 'b'),
+          set('b', 'hilf')),
+        zeige: FN('void', [par('integer[]', 'werte', true)], undefined,
+          decl('string', 'zeile', '""'),
+          decl('integer', 'k', '0'),
+          FOR('k', '0', 'werte.length - 1', '+1', set('zeile', 'zeile + werte[k] + " "')),
+          out('zeile'))
+      })
+    },
+    {
       id: 'words', level: 2,
       title: { de: 'Texte vergleichen', en: 'Comparing texts' },
       desc: { de: 'Texte verketten, vergleichen und mit .length messen.', en: 'Concatenate, compare and measure texts with .length.' },
