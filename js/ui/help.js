@@ -13,6 +13,7 @@
   <a href="#h-run">Ausführen</a>
   <a href="#h-c">C-Code</a>
   <a href="#h-files">Dateien</a>
+  <a href="#h-python">Python übernehmen</a>
   <a href="#h-keys">Tastenkürzel</a>
 </nav>
 <div>
@@ -41,7 +42,7 @@
     <tr><td>WENN … DANN … SONST</td><td>Verzweigung; SONST ist optional</td><td><code>n % 2 == 0</code></td></tr>
     <tr><td>FALLS … FALL … SONST</td><td>Mehrfachauswahl nach einem Wert</td><td><code>note</code> mit Fällen 1, 2, 3 …</td></tr>
     <tr><td>SOLANGE</td><td>prüft zuerst – 0 bis n Durchläufe</td><td><code>i &lt;= n</code></td></tr>
-    <tr><td>ZÄHLE</td><td>Zählschleife – genau n Durchläufe</td><td><code>i VON 1 BIS n MIT +1</code></td></tr>
+    <tr><td>FÜR</td><td>Zählschleife – genau n Durchläufe</td><td><code>i VON 1 BIS n SCHRITT +1</code></td></tr>
     <tr><td>WIEDERHOLE … BIS</td><td>prüft am Ende – 1 bis n Durchläufe; endet, wenn die Bedingung <b>wahr</b> ist</td><td><code>BIS note &gt;= 1 &amp;&amp; note &lt;= 5</code></td></tr>
     <tr><td>AUFRUF</td><td>startet ein Unterprogramm</td><td><code>g = ggt(a, b)</code></td></tr>
     <tr><td>KOMMENTAR</td><td>Notiz ohne Wirkung, z. B. für Eingabe – Verarbeitung – Ausgabe</td><td><code>// Verarbeitung</code></td></tr>
@@ -105,6 +106,16 @@
     <li><b>Exportieren</b> erzeugt C-Code oder ein PNG-Bild des aktuellen Diagramms, z. B. für Protokolle.</li>
   </ul>
 </section>
+<section id="h-python">
+  <h3>Python-Programme übernehmen</h3>
+  <p>Beim <b>Öffnen</b> kannst du auch eine <code>.py</code>-Datei wählen (oder auf das Fenster ziehen). Sie wird automatisch in ein Blockbild übersetzt:</p>
+  <ul>
+    <li>Zuweisungen werden zu DEKLARATION bzw. ZUWEISUNG, <code>input()</code> und <code>int(input())</code> zu EINGABE, <code>print()</code> und f-Strings zu AUSGABE.</li>
+    <li><code>if/elif/else</code> → WENN, <code>while</code> → SOLANGE, <code>while True: … if …: break</code> → WIEDERHOLE … BIS, <code>for i in range(…)</code> → FÜR, <code>match/case</code> → FALLS.</li>
+    <li><code>def</code> wird zum Unterprogramm, <code>return</code> zur Ergebnisvariable <code>result</code>; Listen wie <code>[0] * n</code> werden zu Arrays.</li>
+    <li>Was es im Blockbild nicht gibt (Klassen, <code>append</code>, <code>break</code> mitten in Schleifen …), steht danach als ⚠-Kommentar im Diagramm. Eine Liste zeigt alle Stellen.</li>
+  </ul>
+</section>
 <section id="h-keys">
   <h3>Tastenkürzel</h3>
   <div class="keys">
@@ -136,6 +147,7 @@
   <a href="#h-run">Running</a>
   <a href="#h-c">C code</a>
   <a href="#h-files">Files</a>
+  <a href="#h-python">Importing Python</a>
   <a href="#h-keys">Shortcuts</a>
 </nav>
 <div>
@@ -226,6 +238,16 @@
     <li>You can also drop a <code>.bb</code> file onto the window.</li>
     <li>The browser saves your diagram automatically and restores it next time.</li>
     <li><b>Export</b> creates C code or a PNG image of the current diagram, e.g. for reports.</li>
+  </ul>
+</section>
+<section id="h-python">
+  <h3>Importing Python programs</h3>
+  <p>With <b>Open</b> you can also pick a <code>.py</code> file (or drop it onto the window). It is translated into a block diagram automatically:</p>
+  <ul>
+    <li>Assignments become DECLARATION or ASSIGNMENT, <code>input()</code> and <code>int(input())</code> become INPUT, <code>print()</code> and f-strings become OUTPUT.</li>
+    <li><code>if/elif/else</code> → IF, <code>while</code> → WHILE, <code>while True: … if …: break</code> → REPEAT … UNTIL, <code>for i in range(…)</code> → FOR, <code>match/case</code> → SWITCH.</li>
+    <li><code>def</code> becomes a subprogram, <code>return</code> the result variable <code>result</code>; lists like <code>[0] * n</code> become arrays.</li>
+    <li>Anything block diagrams cannot express (classes, <code>append</code>, <code>break</code> in the middle of loops …) appears as a ⚠ comment in the diagram. A list shows every place.</li>
   </ul>
 </section>
 <section id="h-keys">

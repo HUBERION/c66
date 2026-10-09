@@ -96,14 +96,14 @@
     el.btnRun = btn('play', t('tb.run'), () => onRunButton(), { text: true, cls: 'run', key: kb('F5') });
     el.btnStep = btn('step', t('tb.step'), () => stepRun(), { text: true, key: kb('F10') });
     el.btnStop = btn('stop', t('tb.stop'), () => stopRun(true), { key: kb('Shift+F5') });
-    el.speed = h('input', { type: 'range', min: '0', max: String(SPEEDS.length - 1), step: '1', value: String(S.settings.speed), 'aria-label': t('tb.speed') });
-    el.speedOut = h('output');
-    el.speed.addEventListener('input', () => {
-      S.settings.speed = Number(el.speed.value);
-      saveSettings();
-      updateSpeedLabel();
-      if (S.run.state === 'running') { clearTimer(); scheduleLoop(); }
+    el.speed = h('input', { type: 'range', min: '0', max: String(SPEEDS.length - 1), step: '1', 'aria-label': t('tb.speed') });
+    el.speedOut = h('input.speed-ms', { type: 'number', min: '0', max: '10000', step: '50', inputmode: 'numeric', 'aria-label': t('tb.delay'), title: t('tb.delay') });
+    el.speed.addEventListener('input', () => setDelay(SPEEDS[Number(el.speed.value)], 'slider'));
+    el.speedOut.addEventListener('input', () => {
+      const v = Number(el.speedOut.value);
+      if (el.speedOut.value !== '' && Number.isFinite(v)) setDelay(v, 'field');
     });
+    el.speedOut.addEventListener('change', () => updateSpeedLabel());
     el.btnTheme = btn(effectiveTheme() === 'dark' ? 'sun' : 'moon', t('tb.theme'), toggleTheme);
     el.btnExport = btn('share', t('tb.export'), (e) => openExportMenu(e.currentTarget), { text: true });
 
@@ -120,7 +120,7 @@
       h('div.tb-group', null, el.btnUndo, el.btnRedo),
       h('span.tb-sep'),
       h('div.tb-group', null, el.btnRun, el.btnStep, el.btnStop,
-        h('label.speed', { title: t('tb.speed') }, h('span.sr-only', null, t('tb.speed')), el.speed, el.speedOut)),
+        h('div.speed', { title: t('tb.speed') }, el.speed, h('label.speed-field', null, el.speedOut, h('span.speed-unit', null, 'ms')))),
       h('span.tb-spacer'),
       h('div.tb-group', null,
         btn('sliders', t('tb.settings'), showSettings),
@@ -302,7 +302,7 @@
       if (f) f.text().then((txt) => loadFileText(txt, f.name, null));
     });
 
-    el.fileInput = h('input', { type: 'file', accept: '.bb,.json,.txt,application/json', hidden: true });
+    el.fileInput = h('input', { type: 'file', accept: '.bb,.json,.txt,.py,application/json,text/x-python', hidden: true });
     el.fileInput.addEventListener('change', () => {
       const f = el.fileInput.files[0];
       if (f) f.text().then((txt) => loadFileText(txt, f.name, null));
@@ -489,9 +489,29 @@
     document.title = (S.fileName || 'blockbild') + ' · ' + t('appName');
   }
 
+  /** Verzögerung pro Schritt in ms (0 = sofort). */
+  const getDelay = () => (Number.isFinite(S.settings.delay) ? S.settings.delay : SPEEDS[S.settings.speed] ?? 500);
+
+  function setDelay(ms, from) {
+    S.settings.delay = Math.max(0, Math.min(10000, Math.round(ms)));
+    saveSettings();
+    if (from !== 'field') el.speedOut.value = String(S.settings.delay);
+    if (from !== 'slider') el.speed.value = String(nearestSpeed(S.settings.delay));
+    el.speedOut.title = S.settings.delay === 0 ? t('speed.max') : t('tb.delay');
+    if (S.run.state === 'running') { clearTimer(); scheduleLoop(); }
+  }
+
+  function nearestSpeed(ms) {
+    let best = 0;
+    SPEEDS.forEach((s, i) => { if (Math.abs(s - ms) < Math.abs(SPEEDS[best] - ms)) best = i; });
+    return best;
+  }
+
   function updateSpeedLabel() {
-    const ms = SPEEDS[S.settings.speed];
-    el.speedOut.textContent = ms === 0 ? t('speed.max') : ms >= 1000 ? (ms / 1000).toLocaleString(I18N.lang) + ' s' : ms + ' ms';
+    const ms = getDelay();
+    el.speedOut.value = String(ms);
+    el.speed.value = String(nearestSpeed(ms));
+    el.speedOut.title = ms === 0 ? t('speed.max') : t('tb.delay');
   }
 
   // ---- Zoom
@@ -1294,14 +1314,14 @@
 
   function scheduleLoop(immediate) {
     clearTimer();
-    const delay = SPEEDS[S.settings.speed];
+    const delay = getDelay();
     S.run.timer = setTimeout(loop, immediate ? 0 : delay);
   }
 
   function loop() {
     S.run.timer = null;
     if (S.run.state !== 'running') return;
-    const delay = SPEEDS[S.settings.speed];
+    const delay = getDelay();
     if (S.run.interp) { S.run.interp.changed.clear(); S.run.interp.changedElems.clear(); }
     if (delay > 0) {
       advanceVisible(true);
@@ -1582,9 +1602,9 @@
   async function openFile() {
     if (!inSandboxViewer() && window.showOpenFilePicker) {
       try {
-        const [handle] = await window.showOpenFilePicker({ types: [{ description: 'Blockbild', accept: { 'application/json': ['.bb', '.json'] } }] });
+        const [handle] = await window.showOpenFilePicker({ types: [{ description: 'Blockbild', accept: { 'application/json': ['.bb', '.json'] } }, { description: 'Python', accept: { 'text/x-python': ['.py'] } }] });
         const f = await handle.getFile();
-        loadFileText(await f.text(), f.name, handle);
+        loadFileText(await f.text(), f.name, /[.]py$/i.test(f.name) ? null : handle);
         return;
       } catch (e) {
         if (e && e.name === 'AbortError') return;
@@ -1593,7 +1613,37 @@
     el.fileInput.click();
   }
 
+  /** Python-Datei übersetzen und als Blockbild laden. */
+  async function loadPython(text, name) {
+    let res;
+    try {
+      res = BBE.pyimport.convert(text, { t });
+    } catch (e) {
+      const msg = e instanceof BBE.pyimport.PyError ? t('dlg.pyFail', e.line || '?', t(e.key, e.args)) : t('rInternal', e.message);
+      BBE.ui.dialog({ t, title: t('tb.open'), body: msg, actions: [{ label: t('dlg.ok'), value: null, primary: true }] });
+      return;
+    }
+    if (!programIsEmpty() && S.dirty) {
+      const ok = await BBE.ui.dialog({ t, title: t('dlg.newTitle'), body: t('dlg.newText'), actions: [{ label: t('dlg.cancel'), value: null }, { label: t('tb.open'), value: 'ok', primary: true }] });
+      if (ok !== 'ok') return;
+    }
+    // .py wird nie überschrieben: Speichern legt eine neue .bb-Datei an
+    loadProgram(M.programFromBB(res.bb), slug(name.replace(/[.]py$/i, '')), null, { dirty: true });
+    toast(t('toast.pyLoaded', name));
+    if (res.warnings.length) {
+      const list = h('ul.py-warn');
+      for (const w of res.warnings) list.appendChild(h('li', null, h('b', null, t('dlg.pyLine', w.line)), ' ', t(w.key, w.args)));
+      BBE.ui.dialog({ t, title: t('dlg.pyTitle', name), body: [t('dlg.pyText'), list], actions: [{ label: t('dlg.ok'), value: null, primary: true }] });
+    }
+  }
+
+  const looksLikePython = (text) => !/^\s*[{[]/.test(text) && /^[ \t]*(def |import |from |print\(|#|[A-Za-z_]\w*[ \t]*=|if |for |while )/m.test(text);
+
   async function loadFileText(text, name, handle) {
+    if (/[.]py$/i.test(name || '') || (!/[.](bb|json)$/i.test(name || '') && looksLikePython(text))) {
+      loadPython(text, name || 'programm.py');
+      return;
+    }
     let obj;
     try {
       obj = M.parseBB(text);

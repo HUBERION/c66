@@ -63,7 +63,7 @@
     {
       id: 'loops', level: 2,
       title: { de: 'Summe 1 bis n – drei Schleifen', en: 'Sum 1 to n – three loops' },
-      desc: { de: 'Dieselbe Rechnung mit ZÄHLE, SOLANGE und WIEDERHOLE … BIS.', en: 'The same sum with FOR, WHILE and REPEAT … UNTIL.' },
+      desc: { de: 'Dieselbe Rechnung mit FÜR, SOLANGE und WIEDERHOLE … BIS.', en: 'The same sum with FOR, WHILE and REPEAT … UNTIL.' },
       build: (L) => ({
         main: S(
           decl('integer', 'n', '5'),
@@ -72,7 +72,7 @@
           inp(L('"Bis zu welcher Zahl? "', '"Up to which number? "'), 'n'),
           NOTE(L('genau n Durchläufe', 'exactly n iterations')),
           FOR('i', '1', 'n', '+1', set('summe', 'summe + i')),
-          out(L('"ZÄHLE: " + summe', '"FOR: " + summe')),
+          out(L('"FÜR: " + summe', '"FOR: " + summe')),
           NOTE(L('0 bis n Durchläufe', '0 to n iterations')),
           set('summe', '0'),
           set('i', '1'),

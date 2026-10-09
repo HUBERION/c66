@@ -45,6 +45,13 @@ der alten Version wiederherstellen* das zuletzt automatisch gesicherte Diagramm 
   `strcmp` für Textvergleiche, `snprintf` für Verkettungen, `scanf(" %254[^\n]")` statt `gets`,
   Zeiger für InOut-Zahlen, Größenvariablen für Arrays, FALLS mit Text als `if`/`else if`
 
+**Python → Blockbild**
+- *Öffnen* nimmt auch `.py`-Dateien: Zuweisungen, `input`/`print`, f-Strings, `if/elif/else`, `while`,
+  `while True … break` (→ WIEDERHOLE … BIS), `for … in range`, `for x in liste`, `match/case`, `def`/`return`,
+  Listen (`[0] * n`, `[1, 2, 3]`), `len`, `min`/`max`/`abs`, Tupel-Tausch
+- Nicht übertragbare Zeilen bleiben als ⚠-Kommentar im Diagramm, eine Liste zeigt alle Stellen
+- Getestet: die übersetzten Beispielprogramme in `tests/python/` liefern dieselbe Ausgabe wie echtes Python
+
 **Dateien**
 - `.bb` öffnen (Dialog, Drag & Drop aufs Fenster oder Einfügen) – ganz oder nur die Unterprogramme
 - Speichern als `.bb` (in Chrome/Edge direkt in dieselbe Datei), automatische Sicherung im Browser
@@ -72,6 +79,7 @@ js/core/              ohne DOM, auch in Node lauffähig
   interp.js           Interpreter (Generator, ein yield pro sichtbarem Schritt)
   cgen.js             Übersetzung nach C99
   examples.js         eingebaute Beispiele
+  pyimport.js         Python → Blockbild (Tokenizer, Parser, Übersetzung)
 js/ui/                Oberfläche (Darstellung, Drag & Drop, Seitenleiste, Dialoge, App)
 tools/serve.cjs       lokaler Webserver:  node tools/serve.cjs  →  http://localhost:8765/
 tools/build.mjs       baut dist/blockbild-editor.html
@@ -83,6 +91,7 @@ Tests:
 ```bash
 node tests/unit.cjs
 node tests/examples.cjs
+node tests/python.cjs          # braucht Python 3.10+ (py oder python3)
 node tests/smoke-original.cjs <ordner-mit-alten-.bb-dateien>
 ```
 

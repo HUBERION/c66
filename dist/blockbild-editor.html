@@ -104,6 +104,15 @@
 
 /* ------------------------------------------------------------------ Grundlagen */
 * { box-sizing: border-box; }
+/* Scrollleisten: schmal und unaufdringlich */
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--fg-3) 45%, transparent) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--fg-3) 45%, transparent); border-radius: 10px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--fg-3); }
+/* Leisten, die nur bei Bedarf scrollen: Leiste unsichtbar, bis man darüberfährt */
+.palette, .side-tabs { scrollbar-color: transparent transparent; }
+.palette:hover, .palette:focus-within { scrollbar-color: color-mix(in srgb, var(--fg-3) 45%, transparent) transparent; }
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -164,12 +173,14 @@ kbd {
 .btn.icon { padding: 0; width: 34px; justify-content: center; }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .btn.primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); border-color: var(--accent); }
-.btn.run { background: var(--ok); color: #fff; border-color: var(--ok); padding: 0 14px 0 11px; font-weight: 600; }
+.btn.run { background: var(--ok); color: #fff; border-color: var(--ok); padding: 0 14px 0 12px; font-weight: 600; justify-content: center; min-width: 42px; }
+.btn.run svg.ic { fill: currentColor; stroke-width: 1.5; width: 16px; height: 16px; }
 .btn.run:hover:not(:disabled) { background: var(--ok); filter: brightness(1.07); border-color: var(--ok); }
 :root[data-theme="dark"] .btn.run { color: #0f131b; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.run { color: #0f131b; } }
 .btn.run.pause { background: var(--warn); border-color: var(--warn); }
 .btn .lbl-hide { display: inline; }
+.btn.run .lbl-hide { min-width: 3.6em; text-align: left; }
 .btn.danger { color: var(--err); }
 .btn.subtle { color: var(--fg-2); }
 .btn.sm { height: 28px; padding: 0 8px; font-size: 13px; border-radius: 6px; }
@@ -178,7 +189,18 @@ kbd {
 
 .speed { display: flex; align-items: center; gap: 6px; padding: 0 4px 0 8px; color: var(--fg-2); font-size: 12px; }
 .speed input[type="range"] { width: 92px; accent-color: var(--accent); }
-.speed output { min-width: 4.5em; font-variant-numeric: tabular-nums; }
+.speed-field {
+  display: inline-flex; align-items: center; height: 30px; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--surface); padding: 0 8px 0 2px; gap: 2px; cursor: text;
+}
+.speed-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.speed-ms {
+  width: 4.6em; border: 0; background: transparent; text-align: right; font: 500 13px var(--font-code);
+  font-variant-numeric: tabular-nums; color: var(--fg); padding: 0 2px; -moz-appearance: textfield; appearance: textfield;
+}
+.speed-ms::-webkit-outer-spin-button, .speed-ms::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.speed-ms:focus { outline: none; }
+.speed-unit { font-size: 12px; color: var(--fg-3); user-select: none; }
 
 /* ------------------------------------------------------------------ Hauptbereich */
 .main {
@@ -214,9 +236,9 @@ kbd {
 }
 .pal-item .pal-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
 .pal-item .pal-txt { display: flex; flex-direction: column; min-width: 0; }
-.pal-item .pal-name { font-weight: 600; font-size: 13.5px; line-height: 1.2; }
+.pal-item .pal-name { font-weight: 600; font-size: 13.5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pal-item .pal-desc { font-size: 11.5px; color: var(--fg-3); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pal-item.component .pal-name::after { content: " ⤵"; color: var(--fg-3); font-weight: 400; }
+
 
 .cat-data { --kc: var(--c-data); --tint: var(--c-data-bg); }
 .cat-io { --kc: var(--c-io); --tint: var(--c-io-bg); }
@@ -236,8 +258,9 @@ kbd {
 .tabs {
   display: flex; align-items: flex-end; gap: 2px; padding: 8px 12px 0;
   background: var(--surface-2); border-bottom: 1px solid var(--line);
-  overflow-x: auto; scrollbar-width: thin;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
 }
+.tabs::-webkit-scrollbar, .side-tabs::-webkit-scrollbar { display: none; }
 .tab {
   display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 6px 0 12px;
   border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0;
@@ -513,7 +536,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 
 /* ------------------------------------------------------------------ Seitenleiste */
 .side { background: var(--surface); border-left: 1px solid var(--line); display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; min-width: 0; }
-.side-tabs { display: flex; gap: 2px; padding: 8px 12px 0; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.side-tabs { display: flex; gap: 2px; padding: 8px 12px 0; border-bottom: 1px solid var(--line); background: var(--surface-2); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .side-tab {
   height: 34px; padding: 0 12px; white-space: nowrap; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0;
   background: transparent; color: var(--fg-2); display: inline-flex; align-items: center; gap: 6px; position: relative; top: 1px; font-weight: 500;
@@ -664,8 +687,9 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .menu .m-sep { height: 1px; background: var(--line); margin: 4px 2px; }
 .menu .m-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--fg-3); padding: 6px 10px 3px; }
 .menu .mi .pal-ic { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; background: var(--tint); color: var(--kc); flex: none; }
-.menu .mi .pal-ic svg { width: 17px; height: 17px; stroke-width: 1.6; color: inherit; }
-.menu.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; min-width: 300px; }
+.menu .mi .pal-ic svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; color: inherit; }
+.menu.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; min-width: min(420px, calc(100vw - 24px)); }
+.menu .mi > span:not(.mi-key):not(.pal-ic) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .menu.grid .m-title { grid-column: 1 / -1; }
 
 dialog.dlg {
@@ -686,6 +710,8 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
 .dlg-foot .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .dlg-foot .btn.danger-fill { background: var(--err); border-color: var(--err); color: #fff; }
 .dlg textarea { width: 100%; min-height: 220px; font: 12px/1.45 var(--font-code); border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--surface-2); resize: vertical; }
+.py-warn { margin: 0; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--fg-2); max-height: 45vh; overflow: auto; }
+.py-warn b { color: var(--fg); font-variant-numeric: tabular-nums; }
 .dlg img.export-img { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
 
 .set-list { display: flex; flex-direction: column; gap: 16px; }
@@ -759,8 +785,8 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
 
 /* ------------------------------------------------------------------ Schmale Bildschirme */
 @media (max-width: 1180px) {
-  .main { grid-template-columns: 184px minmax(0, 1fr) minmax(290px, 330px); }
-  .main.side-collapsed { grid-template-columns: 184px minmax(0, 1fr) 52px; }
+  .main { grid-template-columns: 200px minmax(0, 1fr) minmax(290px, 330px); }
+  .main.side-collapsed { grid-template-columns: 200px minmax(0, 1fr) 52px; }
   .palette { padding-left: 12px; padding-right: 8px; }
   .pal-item .pal-desc { display: none; }
   .btn .lbl-hide { display: none; }
@@ -812,7 +838,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
   .topbar .tb-spacer { flex: 1 0 8px; }
   .topbar .tb-sep { margin: 0 2px; }
   .topbar .brand-name { display: none; }
-  .topbar .speed output { display: none; }
+  .topbar .speed input[type="range"] { display: none; }
   .topbar .file-name { width: 12ch; }
   .topbar .btn.icon { width: 36px; }
 }
@@ -876,7 +902,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
   .topbar { padding: 8px 12px; gap: 4px; }
   .brand-text .brand-name { font-size: 14px; }
   .tb-sep { display: none; }
-  .speed output { display: none; }
+  .speed input[type="range"] { display: none; }
   .fnview { min-width: 0; }
   .diagram { min-width: 300px; }
   .statusbar .st-hide-sm { display: none; }
@@ -896,7 +922,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
   </style>
 </head>
 <body>
-  <!-- Blockbild-Editor 3.0 · gebaut 2026-10-08 · eine Datei, keine externen Abhängigkeiten -->
+  <!-- Blockbild-Editor 3.0 · gebaut 2026-10-09 · eine Datei, keine externen Abhängigkeiten -->
   <div id="app" class="app">
     <noscript>Der Blockbild-Editor benötigt JavaScript.</noscript>
   </div>
@@ -914,7 +940,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     // Schlüsselwörter im Diagramm
     'kw.decl': 'DEKLARATION', 'kw.input': 'EINGABE', 'kw.output': 'AUSGABE', 'kw.assign': 'ZUWEISUNG',
     'kw.if': 'WENN', 'kw.then': 'DANN', 'kw.else': 'SONST', 'kw.switch': 'FALLS', 'kw.case': 'FALL',
-    'kw.while': 'SOLANGE', 'kw.for': 'ZÄHLE', 'kw.forFrom': 'VON', 'kw.forTo': 'BIS', 'kw.forStep': 'MIT',
+    'kw.while': 'SOLANGE', 'kw.for': 'FÜR', 'kw.forFrom': 'VON', 'kw.forTo': 'BIS', 'kw.forStep': 'SCHRITT',
     'kw.until': 'WIEDERHOLE', 'kw.untilBar': 'WH', 'kw.untilFoot': 'BIS', 'kw.call': 'AUFRUF', 'kw.comment': 'KOMMENTAR',
     'kw.yes': 'ja', 'kw.no': 'nein', 'kw.returnPre': 'gib', 'kw.returnPost': 'zurück',
     'type.integer': 'Zahl', 'type.string': 'Text', 'type.integer[]': 'Zahl[]', 'type.string[]': 'Text[]', 'type.void': 'void',
@@ -925,16 +951,16 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     'grp.data': 'Daten', 'grp.io': 'Ein- und Ausgabe', 'grp.branch': 'Verzweigungen', 'grp.loop': 'Schleifen', 'grp.misc': 'Struktur',
     'pal.decl': 'Deklaration', 'pal.decl.d': 'Variable anlegen',
     'pal.assign': 'Zuweisung', 'pal.assign.d': 'Wert berechnen und speichern',
-    'pal.input': 'Eingabe', 'pal.input.d': 'Wert einlesen',
+    'pal.input': 'Eingabe', 'pal.input.d': 'Wert von der Tastatur lesen',
     'pal.output': 'Ausgabe', 'pal.output.d': 'Text oder Wert anzeigen',
-    'pal.if': 'Wenn', 'pal.if.d': 'Bedingte Verzweigung',
-    'pal.else': 'Sonst', 'pal.else.d': 'Auf WENN oder FALLS ziehen',
-    'pal.switch': 'Falls', 'pal.switch.d': 'Mehrfachauswahl',
-    'pal.case': 'Fall', 'pal.case.d': 'Auf FALLS ziehen',
-    'pal.while': 'Solange', 'pal.while.d': 'Kopfgesteuert, 0 bis n Mal',
-    'pal.for': 'Zähle', 'pal.for.d': 'Zählschleife, genau n Mal',
-    'pal.until': 'Wiederhole … bis', 'pal.until.d': 'Fußgesteuert, 1 bis n Mal',
-    'pal.call': 'Aufruf', 'pal.call.d': 'Unterprogramm aufrufen',
+    'pal.if': 'Verzweigung', 'pal.if.d': 'WENN … DANN … SONST',
+    'pal.else': 'Sonst-Zweig', 'pal.else.d': 'auf eine Verzweigung ziehen',
+    'pal.switch': 'Mehrfachauswahl', 'pal.switch.d': 'FALLS … FALL … SONST',
+    'pal.case': 'Fall-Zweig', 'pal.case.d': 'auf eine Mehrfachauswahl ziehen',
+    'pal.while': 'Solange-Schleife', 'pal.while.d': 'SOLANGE – prüft zuerst',
+    'pal.for': 'Zählschleife', 'pal.for.d': 'FÜR i VON … BIS …',
+    'pal.until': 'Wiederhole-Schleife', 'pal.until.d': 'WIEDERHOLE … BIS – prüft am Ende',
+    'pal.call': 'Unterprogramm-Aufruf', 'pal.call.d': 'AUFRUF eines Unterprogramms',
     'pal.comment': 'Kommentar', 'pal.comment.d': 'Notiz ohne Wirkung',
 
     // Platzhalter
@@ -944,11 +970,11 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     'ph.fn': 'Unterprogramm wählen', 'ph.doc': 'Beschreibung', 'ph.text': 'Notiz', 'ph.fnName': 'name', 'ph.target': 'Ergebnis in …',
 
     // Werkzeugleiste
-    'tb.new': 'Neu', 'tb.open': 'Öffnen', 'tb.save': 'Speichern', 'tb.examples': 'Beispiele', 'tb.export': 'Exportieren',
+    'tb.new': 'Neu', 'tb.open': 'Öffnen (.bb oder .py)', 'tb.save': 'Speichern', 'tb.examples': 'Beispiele', 'tb.export': 'Exportieren',
     'tb.undo': 'Rückgängig', 'tb.redo': 'Wiederholen', 'tb.run': 'Start', 'tb.pause': 'Pause', 'tb.continue': 'Weiter',
     'tb.step': 'Schritt', 'tb.stop': 'Stopp', 'tb.speed': 'Tempo', 'tb.settings': 'Einstellungen', 'tb.help': 'Hilfe',
     'tb.theme': 'Hell/Dunkel', 'tb.fileName': 'Dateiname', 'tb.more': 'Mehr',
-    'speed.slow': 'langsam', 'speed.fast': 'schnell', 'speed.max': 'sofort',
+    'tb.delay': 'Verzögerung pro Schritt in Millisekunden (0 = sofort)', 'speed.slow': 'langsam', 'speed.fast': 'schnell', 'speed.max': 'sofort',
     'exp.c': 'C-Code herunterladen (.c)', 'exp.png': 'Diagramm als Bild (.png)', 'exp.bb': 'Blockbild speichern (.bb)',
     'exp.copyBB': 'Blockbild als Text kopieren', 'exp.recoverOld': 'Diagramm der alten Version wiederherstellen',
 
@@ -1099,6 +1125,31 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     cHeader1: 'Erzeugt mit dem Blockbild-Editor.',
     cHeader2: 'Zahl -> int, Text -> char[MAX_STRING_SIZE], InOut-Zahl -> Zeiger.',
 
+    // Python-Import
+    'dlg.pyTitle': '„{0}“ aus Python übersetzt', 'dlg.pyOk': 'Alles übersetzt – das Blockbild ist bereit.',
+    'dlg.pyText': 'Diese Stellen ließen sich nicht 1:1 übertragen. Nicht übersetzte Zeilen stehen als ⚠-Kommentar im Diagramm.',
+    'dlg.pyLine': 'Zeile {0}', 'dlg.pyFail': 'Die Python-Datei konnte nicht gelesen werden: {1} (Zeile {0})',
+    'toast.pyLoaded': 'Python-Programm „{0}“ übersetzt',
+    pyNote: '⚠ Zeile {0} nicht übersetzt: {1}', pyTmp: 'hilf',
+    pyIndent: 'Einrückung passt nicht', pyString: 'Text ohne schließendes Anführungszeichen', pyChar: 'Unerwartetes Zeichen „{0}“',
+    pyExpected: '„{0}“ erwartet, gefunden „{1}“', pyIndentExpected: 'Eingerückter Block erwartet', pyUnexpected: 'Unerwartet: „{0}“',
+    pyWalrus: ':= wird nicht unterstützt', pyLambda: 'lambda wird nicht unterstützt', pyComplex: 'Komplexe Zahlen werden nicht unterstützt',
+    pyFString: 'f-String nicht lesbar', pyRedefined: '„{0}“ ist mehrfach definiert', pyRenamed: '„{0}“ wurde in „{1}“ umbenannt (Name ist reserviert)',
+    pyReturnArray: '„{0}“ gibt eine Liste zurück – das geht im Blockbild nicht',
+    pyNone: 'None wurde als 0 übernommen', pyOperator: 'Operator {0} gibt es im Blockbild nicht – bitte prüfen',
+    pySlice: 'Teilbereiche [a:b] gibt es im Blockbild nicht', pyComplexIndex: 'Nur Variablen lassen sich indizieren', pyStringIndex: 'Einzelne Zeichen von „{0}“ lassen sich nicht ansprechen',
+    pyAttr: 'Attribut .{0} gibt es im Blockbild nicht', pyCollection: 'Listen/Tupel/Dictionaries sind hier nicht möglich',
+    pyExpr: 'Ausdruck wird nicht unterstützt', pyMethod: 'Methode .{0}() gibt es im Blockbild nicht', pyRound: 'round() wurde weggelassen',
+    pyBuiltin: 'Funktion {0}() gibt es im Blockbild nicht', pyVoidValue: '{0}() liefert kein Ergebnis', pyTarget: 'Diese Zuweisung lässt sich nicht übertragen',
+    pyUndeclared: '„{0}“ wird verändert, bevor es einen Wert hat', pyReturnMain: 'return außerhalb einer Funktion wurde ignoriert',
+    pyEarlyReturn: 'return mitten im Ablauf: im Blockbild läuft das Unterprogramm danach weiter', pyReturnVoid: 'return-Wert in einer Funktion ohne Ergebnis',
+    pyBreak: '{0} gibt es im Blockbild nicht', pyNestedDef: 'Verschachtelte Funktion „{0}“ wird nicht unterstützt', pyStatement: 'Anweisung „{0}“ wird nicht unterstützt',
+    pyPrintEnd: 'print(…, end=…) – im Blockbild endet jede Ausgabe mit Zeilenumbruch', pyExprStmt: 'Ausdruck ohne Wirkung wurde übersprungen',
+    pyInputNumber: '„{0}“ ist eine Zahl, wird aber ohne int() eingelesen', pyListReassign: 'Liste „{0}“ wird neu zugewiesen – Arrays haben feste Länge',
+    pyEmptyList: 'Leere Liste „{0}“ – Arrays haben im Blockbild eine feste Länge, append() geht nicht', pyResultName: '„result“ ist im Unterprogramm schon die Ergebnisvariable',
+    pyLoopElse: 'else nach einer Schleife wird nicht unterstützt', pyComplexCond: 'Die Bedingung enthält einen Aufruf – bitte prüfen, ob sie bei jedem Durchlauf neu berechnet wird',
+    pyRangeStep: 'Schrittweite ist keine feste Zahl – positiv angenommen', pyForIter: 'Diese for-Schleife lässt sich nicht übertragen (nur range() und Listen)',
+    pyMatchGuard: 'case … if wird ohne Bedingung übernommen',
     'help.title': 'Hilfe'
   };
 
@@ -1120,14 +1171,14 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     'pal.assign': 'Assignment', 'pal.assign.d': 'Compute and store a value',
     'pal.input': 'Input', 'pal.input.d': 'Read a value',
     'pal.output': 'Output', 'pal.output.d': 'Show text or a value',
-    'pal.if': 'If', 'pal.if.d': 'Conditional branch',
-    'pal.else': 'Else', 'pal.else.d': 'Drop onto IF or SWITCH',
-    'pal.switch': 'Switch', 'pal.switch.d': 'Multiple choice',
-    'pal.case': 'Case', 'pal.case.d': 'Drop onto SWITCH',
-    'pal.while': 'While', 'pal.while.d': 'Pre-test, 0 to n times',
-    'pal.for': 'For', 'pal.for.d': 'Counting loop, exactly n times',
-    'pal.until': 'Repeat … until', 'pal.until.d': 'Post-test, 1 to n times',
-    'pal.call': 'Call', 'pal.call.d': 'Call a subprogram',
+    'pal.if': 'Branch', 'pal.if.d': 'IF … THEN … ELSE',
+    'pal.else': 'Else branch', 'pal.else.d': 'drop onto a branch',
+    'pal.switch': 'Multiple choice', 'pal.switch.d': 'SWITCH … CASE … ELSE',
+    'pal.case': 'Case branch', 'pal.case.d': 'drop onto a multiple choice',
+    'pal.while': 'While loop', 'pal.while.d': 'WHILE – checks first',
+    'pal.for': 'Counting loop', 'pal.for.d': 'FOR i = … TO …',
+    'pal.until': 'Repeat loop', 'pal.until.d': 'REPEAT … UNTIL – checks at the end',
+    'pal.call': 'Subprogram call', 'pal.call.d': 'CALL a subprogram',
     'pal.comment': 'Comment', 'pal.comment.d': 'Note without effect',
 
     'ph.name': 'name', 'ph.value': 'value', 'ph.expr': 'expression', 'ph.cond': 'condition', 'ph.var': 'variable',
@@ -1135,11 +1186,11 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     'ph.from': 'start', 'ph.to': 'end', 'ph.step': '+1', 'ph.case': 'value', 'ph.arg': 'argument',
     'ph.fn': 'choose subprogram', 'ph.doc': 'description', 'ph.text': 'note', 'ph.fnName': 'name', 'ph.target': 'store in …',
 
-    'tb.new': 'New', 'tb.open': 'Open', 'tb.save': 'Save', 'tb.examples': 'Examples', 'tb.export': 'Export',
+    'tb.new': 'New', 'tb.open': 'Open (.bb or .py)', 'tb.save': 'Save', 'tb.examples': 'Examples', 'tb.export': 'Export',
     'tb.undo': 'Undo', 'tb.redo': 'Redo', 'tb.run': 'Run', 'tb.pause': 'Pause', 'tb.continue': 'Continue',
     'tb.step': 'Step', 'tb.stop': 'Stop', 'tb.speed': 'Speed', 'tb.settings': 'Settings', 'tb.help': 'Help',
     'tb.theme': 'Light/Dark', 'tb.fileName': 'File name', 'tb.more': 'More',
-    'speed.slow': 'slow', 'speed.fast': 'fast', 'speed.max': 'instant',
+    'tb.delay': 'Delay per step in milliseconds (0 = instant)', 'speed.slow': 'slow', 'speed.fast': 'fast', 'speed.max': 'instant',
     'exp.c': 'Download C code (.c)', 'exp.png': 'Diagram as image (.png)', 'exp.bb': 'Save diagram (.bb)',
     'exp.copyBB': 'Copy diagram as text', 'exp.recoverOld': 'Recover diagram from the old version',
 
@@ -1281,6 +1332,30 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     cHeader1: 'Generated with the block diagram editor.',
     cHeader2: 'Number -> int, Text -> char[MAX_STRING_SIZE], InOut number -> pointer.',
 
+    'dlg.pyTitle': '“{0}” translated from Python', 'dlg.pyOk': 'Everything translated – the diagram is ready.',
+    'dlg.pyText': 'These places could not be transferred 1:1. Lines that were not translated appear as ⚠ comments in the diagram.',
+    'dlg.pyLine': 'Line {0}', 'dlg.pyFail': 'The Python file could not be read: {1} (line {0})',
+    'toast.pyLoaded': 'Python program “{0}” translated',
+    pyNote: '⚠ line {0} not translated: {1}', pyTmp: 'tmp',
+    pyIndent: 'Indentation does not match', pyString: 'Text without closing quote', pyChar: 'Unexpected character “{0}”',
+    pyExpected: '“{0}” expected, found “{1}”', pyIndentExpected: 'Indented block expected', pyUnexpected: 'Unexpected: “{0}”',
+    pyWalrus: ':= is not supported', pyLambda: 'lambda is not supported', pyComplex: 'Complex numbers are not supported',
+    pyFString: 'f-string not readable', pyRedefined: '“{0}” is defined twice', pyRenamed: '“{0}” was renamed to “{1}” (reserved name)',
+    pyReturnArray: '“{0}” returns a list – not possible in a block diagram',
+    pyNone: 'None was taken as 0', pyOperator: 'Operator {0} does not exist in block diagrams – please check',
+    pySlice: 'Slices [a:b] do not exist in block diagrams', pyComplexIndex: 'Only variables can be indexed', pyStringIndex: 'Single characters of “{0}” cannot be accessed',
+    pyAttr: 'Attribute .{0} does not exist in block diagrams', pyCollection: 'Lists/tuples/dictionaries are not possible here',
+    pyExpr: 'Expression not supported', pyMethod: 'Method .{0}() does not exist in block diagrams', pyRound: 'round() was left out',
+    pyBuiltin: 'Function {0}() does not exist in block diagrams', pyVoidValue: '{0}() returns no value', pyTarget: 'This assignment cannot be transferred',
+    pyUndeclared: '“{0}” is changed before it has a value', pyReturnMain: 'return outside a function was ignored',
+    pyEarlyReturn: 'return in the middle: in the block diagram the subprogram continues afterwards', pyReturnVoid: 'return value in a function without result',
+    pyBreak: '{0} does not exist in block diagrams', pyNestedDef: 'Nested function “{0}” is not supported', pyStatement: 'Statement “{0}” is not supported',
+    pyPrintEnd: 'print(…, end=…) – in block diagrams every output ends with a line break', pyExprStmt: 'Expression without effect was skipped',
+    pyInputNumber: '“{0}” is a number but is read without int()', pyListReassign: 'List “{0}” is reassigned – arrays have a fixed length',
+    pyEmptyList: 'Empty list “{0}” – arrays have a fixed length, append() is not possible', pyResultName: '“result” is already the result variable of the subprogram',
+    pyLoopElse: 'else after a loop is not supported', pyComplexCond: 'The condition contains a call – check whether it is recomputed in every iteration',
+    pyRangeStep: 'Step is not a constant – assumed positive', pyForIter: 'This for loop cannot be transferred (only range() and lists)',
+    pyMatchGuard: 'case … if is taken without its condition',
     'help.title': 'Help'
   };
 
@@ -3285,7 +3360,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     {
       id: 'loops', level: 2,
       title: { de: 'Summe 1 bis n – drei Schleifen', en: 'Sum 1 to n – three loops' },
-      desc: { de: 'Dieselbe Rechnung mit ZÄHLE, SOLANGE und WIEDERHOLE … BIS.', en: 'The same sum with FOR, WHILE and REPEAT … UNTIL.' },
+      desc: { de: 'Dieselbe Rechnung mit FÜR, SOLANGE und WIEDERHOLE … BIS.', en: 'The same sum with FOR, WHILE and REPEAT … UNTIL.' },
       build: (L) => ({
         main: S(
           decl('integer', 'n', '5'),
@@ -3294,7 +3369,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
           inp(L('"Bis zu welcher Zahl? "', '"Up to which number? "'), 'n'),
           NOTE(L('genau n Durchläufe', 'exactly n iterations')),
           FOR('i', '1', 'n', '+1', set('summe', 'summe + i')),
-          out(L('"ZÄHLE: " + summe', '"FOR: " + summe')),
+          out(L('"FÜR: " + summe', '"FOR: " + summe')),
           NOTE(L('0 bis n Durchläufe', '0 to n iterations')),
           set('summe', '0'),
           set('i', '1'),
@@ -3484,6 +3559,1453 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
   }
 
   BBE.examples = { list, build };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* js/core/pyimport.js */
+/* Blockbild-Editor – Python → Blockbild
+ *
+ * Übersetzt die im Unterricht übliche Teilmenge von Python in ein Blockbild (.bb-Format):
+ *   Zuweisungen, input()/int(input()), print(), if/elif/else, while, while True … break (→ WIEDERHOLE … BIS),
+ *   for … in range(…), for x in liste, match/case, def mit return, Listen ([0] * n, [1, 2, 3]), len(),
+ *   f-Strings, Kommentare. Was nicht passt, wird als markierter Kommentar übernommen.
+ * Ergebnis: { bb, warnings: [{ line, key, args }] }
+ */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+
+  class PyError extends Error {
+    constructor(key, args, line) { super(key); this.key = key; this.args = args || []; this.line = line; }
+  }
+
+  // ================================================================ Tokenizer
+
+  const OPS3 = ['**=', '//=', '...', '>>=', '<<='];
+  const OPS2 = ['==', '!=', '<=', '>=', '//', '**', '+=', '-=', '*=', '/=', '%=', '->', ':=', '<<', '>>', '&=', '|=', '^='];
+  const OPS1 = '+-*/%()[]{},:.=<>@~^&|;';
+
+  function tokenize(src) {
+    const s = String(src).replace(/\r\n?/g, '\n').replace(/^﻿/, '');
+    const toks = [];
+    const indents = [0];
+    let i = 0, line = 1, depth = 0, atStart = true;
+    const push = (t, v, extra) => toks.push(Object.assign({ t, v, line }, extra));
+    const lastIs = (t) => toks.length && toks[toks.length - 1].t === t;
+
+    while (i < s.length) {
+      if (atStart && depth === 0) {
+        let col = 0;
+        while (s[i] === ' ' || s[i] === '\t') { col = s[i] === '\t' ? col + 8 - (col % 8) : col + 1; i++; }
+        if (i >= s.length) break;
+        if (s[i] === '\n') { i++; line++; continue; }
+        if (s[i] === '#') {
+          let j = i;
+          while (j < s.length && s[j] !== '\n') j++;
+          push('comment', s.slice(i + 1, j).trim(), { col });
+          i = j;
+          continue;
+        }
+        if (col > indents[indents.length - 1]) { indents.push(col); push('indent'); }
+        while (col < indents[indents.length - 1]) { indents.pop(); push('dedent'); }
+        if (col !== indents[indents.length - 1]) throw new PyError('pyIndent', [], line);
+        atStart = false;
+      }
+      const c = s[i];
+      if (c === ' ' || c === '\t' || c === '\f') { i++; continue; }
+      if (c === '\\' && s[i + 1] === '\n') { i += 2; line++; continue; }
+      if (c === '\n') {
+        i++;
+        if (depth === 0) { if (!lastIs('newline') && toks.length) push('newline'); atStart = true; }
+        line++;
+        continue;
+      }
+      if (c === '#') { while (i < s.length && s[i] !== '\n') i++; continue; }
+
+      // Zeichenketten (mit Präfix r, f, b, u)
+      const pm = /^([rRbBfFuU]{0,2})(['"])/.exec(s.slice(i, i + 3));
+      if (pm && (pm[1] === '' || /^[rRbBfFuU]+$/.test(pm[1]))) {
+        const prefix = pm[1].toLowerCase();
+        const q = pm[2];
+        let j = i + pm[1].length;
+        const triple = s.substr(j, 3) === q + q + q;
+        j += triple ? 3 : 1;
+        const startLine = line;
+        let raw = '';
+        for (;;) {
+          if (j >= s.length) throw new PyError('pyString', [], startLine);
+          const d = s[j];
+          if (d === '\\' && !prefix.includes('r')) { raw += d + (s[j + 1] || ''); if (s[j + 1] === '\n') line++; j += 2; continue; }
+          if (triple ? s.substr(j, 3) === q + q + q : d === q) break;
+          if (d === '\n') { if (!triple) throw new PyError('pyString', [], startLine); line++; }
+          raw += d;
+          j++;
+        }
+        j += triple ? 3 : 1;
+        const value = prefix.includes('r') ? raw : unescape(raw);
+        toks.push({ t: prefix.includes('f') ? 'fstr' : 'str', v: value, raw, line: startLine, triple });
+        i = j;
+        continue;
+      }
+      if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(s[i + 1] || ''))) {
+        const m = /^(0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|(\d[\d_]*)?\.?\d[\d_]*([eE][+-]?\d+)?j?|\d[\d_]*\.)/.exec(s.slice(i));
+        const rawNum = m[0].replace(/_/g, '');
+        push('num', rawNum);
+        i += m[0].length;
+        continue;
+      }
+      if (/[\p{L}_]/u.test(c)) {
+        let j = i + 1;
+        while (j < s.length && /[\p{L}\p{N}_]/u.test(s[j])) j++;
+        push('name', s.slice(i, j));
+        i = j;
+        continue;
+      }
+      const three = s.substr(i, 3), two = s.substr(i, 2);
+      if (OPS3.includes(three)) { push('op', three); i += 3; continue; }
+      if (OPS2.includes(two)) { push('op', two); i += 2; continue; }
+      if (OPS1.includes(c)) {
+        if ('([{'.includes(c)) depth++;
+        if (')]}'.includes(c)) depth = Math.max(0, depth - 1);
+        push('op', c);
+        i++;
+        continue;
+      }
+      throw new PyError('pyChar', [c], line);
+    }
+    if (toks.length && !lastIs('newline')) push('newline');
+    while (indents.length > 1) { indents.pop(); push('dedent'); }
+    push('eof');
+    return toks;
+  }
+
+  function unescape(raw) {
+    return raw.replace(/\\(\n|[\\'"abfnrtv0]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4})/g, (m, e) => {
+      if (e === '\n') return '';
+      const map = { n: '\n', t: '\t', r: '\r', '\\': '\\', "'": "'", '"': '"', a: '\x07', b: '\b', f: '\f', v: '\v', 0: '\0' };
+      if (e in map) return map[e];
+      return String.fromCharCode(parseInt(e.slice(1), 16));
+    });
+  }
+
+  // ================================================================ Parser
+
+  function parse(src) {
+    const toks = tokenize(src);
+    const lines = String(src).replace(/\r\n?/g, '\n').split('\n');
+    let p = 0;
+    const peek = (o = 0) => toks[p + o];
+    const next = () => toks[p++];
+    const isOp = (v) => peek().t === 'op' && peek().v === v;
+    const isName = (v) => peek().t === 'name' && peek().v === v;
+    const eat = (v) => { if (isOp(v) || isName(v)) return next(); return null; };
+    const expect = (v) => {
+      const tk = eat(v);
+      if (!tk) throw new PyError('pyExpected', [v, describe(peek())], peek().line);
+      return tk;
+    };
+    const srcLine = (n) => (lines[n - 1] || '').trim();
+
+    function block() {
+      // nach ':' – entweder einzeilig oder eingerückter Block
+      if (peek().t !== 'newline') {
+        const st = simpleStmts();
+        return st;
+      }
+      next();
+      const body = [];
+      while (peek().t === 'comment') body.push(commentStmt());
+      if (peek().t !== 'indent') throw new PyError('pyIndentExpected', [], peek().line);
+      next();
+      while (peek().t !== 'dedent' && peek().t !== 'eof') body.push(...statement());
+      if (peek().t === 'dedent') next();
+      return body;
+    }
+
+    function commentStmt() {
+      const tk = next();
+      return { k: 'comment', text: tk.v, line: tk.line };
+    }
+
+    function statement() {
+      const tk = peek();
+      if (tk.t === 'comment') return [commentStmt()];
+      if (tk.t === 'newline') { next(); return []; }
+      if (tk.t === 'indent') throw new PyError('pyIndent', [], tk.line);
+      if (tk.t === 'name') {
+        switch (tk.v) {
+          case 'if': return [ifStmt()];
+          case 'while': return [whileStmt()];
+          case 'for': return [forStmt()];
+          case 'def': return [defStmt()];
+          case 'match': if (peek(1).t !== 'op' || peek(1).v === '(' ) { const m = tryMatch(); if (m) return [m]; } break;
+          case 'class': case 'try': case 'with': case 'async': case 'lambda': return [skipCompound()];
+          default: break;
+        }
+        if (tk.v === '@') return [skipCompound()];
+      }
+      if (tk.t === 'op' && tk.v === '@') return [skipCompound()];
+      const save = p;
+      try {
+        return simpleStmts();
+      } catch (e) {
+        // nicht unterstützter Ausdruck: nur diese Zeile überspringen
+        if (!(e instanceof PyError) || !['pyLambda', 'pyWalrus', 'pyComplex', 'pyFString'].includes(e.key)) throw e;
+        p = save;
+        const line = peek().line;
+        while (peek().t !== 'newline' && peek().t !== 'eof') next();
+        if (peek().t === 'newline') next();
+        return [{ k: 'unsupported', line, text: srcLine(line), reason: e.key }];
+      }
+    }
+
+    function skipCompound() {
+      const line = peek().line;
+      const text = srcLine(line);
+      const kw = peek().v;
+      // bis zum Ende des Blocks überspringen – samt except/else/finally bei try
+      const skipBlock = () => {
+        let d = 0;
+        while (peek().t !== 'eof') {
+          const t = next();
+          if (t.t === 'indent') d++;
+          if (t.t === 'dedent') { d--; if (d <= 0) break; }
+          if (t.t === 'newline' && d === 0 && peek().t !== 'indent') break;
+        }
+      };
+      skipBlock();
+      while (peek().t === 'name' && (peek().v === 'except' || peek().v === 'finally' || (kw === 'try' && peek().v === 'else'))) skipBlock();
+      return { k: 'unsupported', line, text };
+    }
+
+    function simpleStmts() {
+      const out = [];
+      for (;;) {
+        out.push(smallStmt());
+        if (!eat(';')) break;
+        if (peek().t === 'newline') break;
+      }
+      if (peek().t === 'newline') next();
+      else if (peek().t !== 'eof' && peek().t !== 'dedent') throw new PyError('pyUnexpected', [describe(peek())], peek().line);
+      return out;
+    }
+
+    function smallStmt() {
+      const tk = peek();
+      const line = tk.line;
+      if (tk.t === 'name') {
+        switch (tk.v) {
+          case 'pass': next(); return { k: 'pass', line };
+          case 'break': next(); return { k: 'break', line };
+          case 'continue': next(); return { k: 'continue', line };
+          case 'return': {
+            next();
+            const value = peek().t === 'newline' || isOp(';') ? null : exprList();
+            return { k: 'return', value, line };
+          }
+          case 'import': case 'from': case 'global': case 'nonlocal': case 'assert': case 'del': case 'raise': case 'yield': {
+            while (peek().t !== 'newline' && peek().t !== 'eof' && !isOp(';')) next();
+            return { k: tk.v === 'import' || tk.v === 'from' ? 'import' : (tk.v === 'global' || tk.v === 'nonlocal' ? 'skip' : 'unsupported'), line, text: srcLine(line) };
+          }
+          default: break;
+        }
+      }
+      const first = exprList();
+      if (isOp('=')) {
+        const targets = [first];
+        let value;
+        while (eat('=')) {
+          value = exprList();
+          if (isOp('=')) targets.push(value);
+        }
+        return { k: 'assign', targets, value, line };
+      }
+      if (peek().t === 'op' && /^(\+|-|\*|\/|\/\/|%|\*\*)=$/.test(peek().v)) {
+        const op = next().v.slice(0, -1);
+        return { k: 'aug', target: first, op, value: exprList(), line };
+      }
+      if (isOp(':')) {
+        next();
+        const ann = ternary();
+        let value = null;
+        if (eat('=')) value = exprList();
+        return value ? { k: 'assign', targets: [first], value, ann, line } : { k: 'annotation', target: first, ann, line };
+      }
+      return { k: 'expr', value: first, line };
+    }
+
+    function ifStmt() {
+      const line = next().line;
+      const test = namedExpr();
+      expect(':');
+      const body = block();
+      let orelse = [];
+      while (peek().t === 'comment' && peek(1) && peek(1).t === 'name' && (peek(1).v === 'elif' || peek(1).v === 'else')) next();
+      if (isName('elif')) {
+        orelse = [ifStmt()];
+      } else if (isName('else')) {
+        next();
+        expect(':');
+        orelse = block();
+      }
+      return { k: 'if', test, body, orelse, line };
+    }
+
+    function whileStmt() {
+      const line = next().line;
+      const test = namedExpr();
+      expect(':');
+      const body = block();
+      let orelse = null;
+      if (isName('else')) { next(); expect(':'); orelse = block(); }
+      return { k: 'while', test, body, orelse, line };
+    }
+
+    function forStmt() {
+      const line = next().line;
+      const target = targetList();
+      expect('in');
+      const iter = exprList();
+      expect(':');
+      const body = block();
+      let orelse = null;
+      if (isName('else')) { next(); expect(':'); orelse = block(); }
+      return { k: 'for', target, iter, body, orelse, line };
+    }
+
+    function targetList() {
+      const first = arith();
+      if (!isOp(',')) return first;
+      const elts = [first];
+      while (eat(',')) { if (isName('in')) break; elts.push(arith()); }
+      return { k: 'tuple', elts };
+    }
+
+    function defStmt() {
+      const line = next().line;
+      const name = next();
+      if (name.t !== 'name') throw new PyError('pyExpected', ['name', describe(name)], line);
+      expect('(');
+      const params = [];
+      while (!isOp(')')) {
+        if (isOp('*') || isOp('**') || isOp('/')) { next(); if (peek().t === 'name') next(); eat(','); continue; }
+        const pn = next();
+        let ann = null, def = null;
+        if (eat(':')) ann = ternary();
+        if (eat('=')) def = ternary();
+        params.push({ name: pn.v, ann, def });
+        if (!eat(',')) break;
+      }
+      expect(')');
+      let returns = null;
+      if (eat('->')) returns = ternary();
+      expect(':');
+      const body = block();
+      return { k: 'def', name: name.v, params, returns, body, line };
+    }
+
+    function tryMatch() {
+      // "match" ist nur ein weiches Schlüsselwort
+      const save = p;
+      const line = next().line;
+      try {
+        const subject = namedExpr();
+        if (!isOp(':')) { p = save; return null; }
+        next();
+        if (peek().t !== 'newline') { p = save; return null; }
+        next();
+        while (peek().t === 'comment') next();
+        if (peek().t !== 'indent') { p = save; return null; }
+        next();
+        const cases = [];
+        while (isName('case')) {
+          next();
+          const patterns = [pattern()];
+          while (eat('|')) patterns.push(pattern());
+          let guard = null;
+          if (eat('if')) guard = namedExpr();
+          expect(':');
+          cases.push({ patterns, guard, body: block() });
+          while (peek().t === 'comment') next();
+        }
+        if (peek().t === 'dedent') next();
+        return { k: 'match', subject, cases, line };
+      } catch (e) {
+        p = save;
+        return null;
+      }
+    }
+
+    function pattern() {
+      if (isName('_')) { next(); return { k: 'wild' }; }
+      return orExpr();
+    }
+
+    // ---------------------------------------------------------- Ausdrücke
+
+    function exprList() {
+      const first = namedExpr();
+      if (!isOp(',')) return first;
+      const elts = [first];
+      while (eat(',')) {
+        if (peek().t === 'newline' || isOp('=') || isOp(')') || isOp(';')) break;
+        elts.push(namedExpr());
+      }
+      return { k: 'tuple', elts };
+    }
+
+    function namedExpr() {
+      const e = ternary();
+      if (isOp(':=')) throw new PyError('pyWalrus', [], peek().line);
+      return e;
+    }
+
+    function ternary() {
+      if (isName('lambda')) throw new PyError('pyLambda', [], peek().line);
+      const a = orExpr();
+      if (isName('if') ) {
+        const save = p;
+        next();
+        const test = orExpr();
+        if (!eat('else')) { p = save; return a; }
+        const b = ternary();
+        return { k: 'ifexp', test, body: a, orelse: b };
+      }
+      return a;
+    }
+
+    function orExpr() {
+      let a = andExpr();
+      while (isName('or')) { next(); a = { k: 'boolop', op: 'or', a, b: andExpr() }; }
+      return a;
+    }
+    function andExpr() {
+      let a = notExpr();
+      while (isName('and')) { next(); a = { k: 'boolop', op: 'and', a, b: notExpr() }; }
+      return a;
+    }
+    function notExpr() {
+      if (isName('not')) { next(); return { k: 'not', a: notExpr() }; }
+      return comparison();
+    }
+    function comparison() {
+      const left = arith();
+      const ops = [], rights = [];
+      for (;;) {
+        let op = null;
+        if (peek().t === 'op' && ['<', '>', '==', '>=', '<=', '!='].includes(peek().v)) op = next().v;
+        else if (isName('in')) { next(); op = 'in'; }
+        else if (isName('not') && peek(1).t === 'name' && peek(1).v === 'in') { next(); next(); op = 'not in'; }
+        else if (isName('is')) { next(); op = eat('not') ? 'is not' : 'is'; }
+        if (!op) break;
+        ops.push(op);
+        rights.push(arith());
+      }
+      return ops.length ? { k: 'cmp', left, ops, rights } : left;
+    }
+    function arith() {
+      let a = term();
+      while (peek().t === 'op' && (peek().v === '+' || peek().v === '-')) { const op = next().v; a = { k: 'bin', op, a, b: term() }; }
+      return a;
+    }
+    function term() {
+      let a = factor();
+      while (peek().t === 'op' && ['*', '/', '//', '%', '@'].includes(peek().v)) { const op = next().v; a = { k: 'bin', op, a, b: factor() }; }
+      return a;
+    }
+    function factor() {
+      if (peek().t === 'op' && (peek().v === '-' || peek().v === '+' || peek().v === '~')) { const op = next().v; return { k: 'un', op, a: factor() }; }
+      return power();
+    }
+    function power() {
+      const a = atomExpr();
+      if (eat('**')) return { k: 'bin', op: '**', a, b: factor() };
+      return a;
+    }
+    function atomExpr() {
+      let e = atom();
+      for (;;) {
+        if (isOp('(')) {
+          next();
+          const args = [], kwargs = {};
+          while (!isOp(')')) {
+            if (peek().t === 'name' && peek(1).t === 'op' && peek(1).v === '=') {
+              const k = next().v; next();
+              kwargs[k] = namedExpr();
+            } else {
+              if (isOp('*') || isOp('**')) next();
+              const a = namedExpr();
+              if (isName('for')) { comprehensionSkip(); args.push({ k: 'comp' }); break; }
+              args.push(a);
+            }
+            if (!eat(',')) break;
+          }
+          expect(')');
+          e = { k: 'call', func: e, args, kwargs };
+        } else if (isOp('[')) {
+          next();
+          let index;
+          if (isOp(':')) { index = sliceRest(null); } else {
+            index = namedExpr();
+            if (isOp(':')) index = sliceRest(index);
+          }
+          expect(']');
+          e = { k: 'sub', value: e, index };
+        } else if (isOp('.')) {
+          next();
+          const n = next();
+          e = { k: 'attr', value: e, name: n.v };
+        } else {
+          return e;
+        }
+      }
+    }
+    function sliceRest(lower) {
+      next();
+      let upper = null;
+      if (!isOp(']') && !isOp(':')) upper = namedExpr();
+      if (eat(':') && !isOp(']')) namedExpr();
+      return { k: 'slice', lower, upper };
+    }
+    function comprehensionSkip() {
+      let d = 0;
+      while (peek().t !== 'eof') {
+        if (peek().t === 'op' && '([{'.includes(peek().v)) d++;
+        if (peek().t === 'op' && ')]}'.includes(peek().v)) { if (d === 0) return; d--; }
+        next();
+      }
+    }
+    function atom() {
+      const tk = next();
+      switch (tk.t) {
+        case 'num': {
+          if (/j$/.test(tk.v)) throw new PyError('pyComplex', [], tk.line);
+          let raw = tk.v;
+          if (/^0[xXbBoO]/.test(raw)) raw = String(Number(raw));
+          if (raw.endsWith('.')) raw = raw.slice(0, -1);
+          return { k: 'num', v: Number(raw), raw };
+        }
+        case 'str': case 'fstr': {
+          let parts = [tk];
+          while (peek().t === 'str' || peek().t === 'fstr') parts.push(next());
+          if (parts.every((x) => x.t === 'str')) return { k: 'str', v: parts.map((x) => x.v).join('') };
+          return { k: 'fstr', parts: parts.flatMap((x) => (x.t === 'str' ? [x.v] : fstringParts(x, tk.line))) };
+        }
+        case 'name':
+          if (tk.v === 'True') return { k: 'bool', v: true };
+          if (tk.v === 'False') return { k: 'bool', v: false };
+          if (tk.v === 'None') return { k: 'none' };
+          return { k: 'name', id: tk.v };
+        case 'op':
+          if (tk.v === '(') {
+            if (eat(')')) return { k: 'tuple', elts: [] };
+            const e = namedExpr();
+            if (isName('for')) { comprehensionSkip(); expect(')'); return { k: 'comp' }; }
+            if (isOp(',')) {
+              const elts = [e];
+              while (eat(',')) { if (isOp(')')) break; elts.push(namedExpr()); }
+              expect(')');
+              return { k: 'tuple', elts };
+            }
+            expect(')');
+            return { k: 'paren', e };
+          }
+          if (tk.v === '[') {
+            const elts = [];
+            while (!isOp(']')) {
+              const e = namedExpr();
+              if (isName('for')) { comprehensionSkip(); expect(']'); return { k: 'comp' }; }
+              elts.push(e);
+              if (!eat(',')) break;
+            }
+            expect(']');
+            return { k: 'list', elts };
+          }
+          if (tk.v === '{') {
+            let d = 1;
+            while (d && peek().t !== 'eof') { const t = next(); if (t.t === 'op' && t.v === '{') d++; if (t.t === 'op' && t.v === '}') d--; }
+            return { k: 'dict' };
+          }
+          break;
+        default: break;
+      }
+      throw new PyError('pyUnexpected', [describe(tk)], tk.line);
+    }
+
+    function fstringParts(tk, line) {
+      // f"…{ausdruck[:format]}…" → Teile: Text | Ausdruck
+      const raw = tk.triple ? tk.v : tk.v;
+      const out = [];
+      let i = 0, buf = '';
+      while (i < raw.length) {
+        const c = raw[i];
+        if (c === '{' && raw[i + 1] === '{') { buf += '{'; i += 2; continue; }
+        if (c === '}' && raw[i + 1] === '}') { buf += '}'; i += 2; continue; }
+        if (c === '{') {
+          if (buf) { out.push(buf); buf = ''; }
+          let d = 1, j = i + 1, inner = '';
+          while (j < raw.length && d) {
+            if (raw[j] === '{') d++;
+            if (raw[j] === '}') { d--; if (!d) break; }
+            inner += raw[j];
+            j++;
+          }
+          // Formatangabe / Konvertierung abtrennen
+          let depth2 = 0, cut = inner.length;
+          for (let k = 0; k < inner.length; k++) {
+            const ch = inner[k];
+            if ('([{'.includes(ch)) depth2++;
+            if (')]}'.includes(ch)) depth2--;
+            if (depth2 === 0 && (ch === ':' || (ch === '!' && inner[k + 1] !== '='))) { cut = k; break; }
+          }
+          const exprSrc = inner.slice(0, cut).trim().replace(/=$/, '');
+          const sub = parse(exprSrc).body;
+          const st = sub[0];
+          if (!st || st.k !== 'expr') throw new PyError('pyFString', [], line);
+          out.push(st.value);
+          i = j + 1;
+          continue;
+        }
+        buf += c;
+        i++;
+      }
+      if (buf) out.push(buf);
+      return out;
+    }
+
+    const body = [];
+    while (peek().t !== 'eof') {
+      if (peek().t === 'dedent') { next(); continue; }
+      body.push(...statement());
+    }
+    return { body, lines };
+  }
+
+  function describe(tk) {
+    if (!tk) return '…';
+    if (tk.t === 'newline') return '⏎';
+    if (tk.t === 'eof') return '…';
+    if (tk.t === 'indent' || tk.t === 'dedent') return '⇥';
+    if (tk.t === 'str' || tk.t === 'fstr') return '"' + tk.v + '"';
+    return String(tk.v);
+  }
+
+  // ================================================================ Übersetzung
+
+  const S = (...st) => ({ type: 'Statements', statements: st });
+  const DEFAULT = { integer: '0', string: '""' };
+  const PY_TYPES = { int: 'integer', float: 'integer', bool: 'integer', str: 'string' };
+
+  function annType(a) {
+    if (!a) return null;
+    if (a.k === 'name') return PY_TYPES[a.id] || (a.id === 'list' ? 'integer[]' : null);
+    if (a.k === 'sub' && a.value.k === 'name' && (a.value.id === 'list' || a.value.id === 'List')) {
+      const inner = annType(a.index);
+      return inner && !inner.endsWith('[]') ? inner + '[]' : 'integer[]';
+    }
+    if (a.k === 'str') return annType({ k: 'name', id: a.v });
+    return null;
+  }
+
+  const isArray = (t) => typeof t === 'string' && t.endsWith('[]');
+  const strip = (e) => (e && e.k === 'paren' ? strip(e.e) : e);
+  const isCallTo = (e, name) => { const x = strip(e); return x && x.k === 'call' && x.func.k === 'name' && x.func.id === name; };
+
+  /** Stark vereinfachte Typableitung für Python-Ausdrücke. */
+  function pyType(e, scope, fns) {
+    e = strip(e);
+    if (!e) return '?';
+    switch (e.k) {
+      case 'num': case 'bool': return 'integer';
+      case 'str': case 'fstr': return 'string';
+      case 'name': return scope.get(e.id) || '?';
+      case 'list': {
+        if (!e.elts.length) return 'integer[]';
+        const t = pyType(e.elts[0], scope, fns);
+        return (t === 'string' ? 'string' : 'integer') + '[]';
+      }
+      case 'bin': {
+        if (e.op === '*' && (strip(e.a).k === 'list' || strip(e.b).k === 'list')) return pyType(strip(e.a).k === 'list' ? e.a : e.b, scope, fns);
+        if (e.op === '+') {
+          const a = pyType(e.a, scope, fns), b = pyType(e.b, scope, fns);
+          if (a === 'string' || b === 'string') return 'string';
+          if (isArray(a)) return a;
+          return a === '?' && b === '?' ? '?' : 'integer';
+        }
+        if (e.op === '*' && (pyType(e.a, scope, fns) === 'string' || pyType(e.b, scope, fns) === 'string')) return 'string';
+        return 'integer';
+      }
+      case 'un': case 'not': case 'cmp': case 'boolop': return 'integer';
+      case 'sub': { const t = pyType(e.value, scope, fns); return isArray(t) ? t.slice(0, -2) : t === 'string' ? 'string' : '?'; }
+      case 'ifexp': { const t = pyType(e.body, scope, fns); return t !== '?' ? t : pyType(e.orelse, scope, fns); }
+      case 'call': {
+        if (e.func.k === 'name') {
+          const n = e.func.id;
+          if (['int', 'float', 'len', 'abs', 'round', 'min', 'max', 'sum', 'bool', 'ord'].includes(n)) return 'integer';
+          if (['str', 'input', 'chr'].includes(n)) return 'string';
+          const f = fns.get(n);
+          if (f) return f.returnType === 'void' ? '?' : f.returnType;
+        }
+        if (e.func.k === 'attr' && ['upper', 'lower', 'strip', 'capitalize', 'title', 'replace'].includes(e.func.name)) return 'string';
+        return '?';
+      }
+      default: return '?';
+    }
+  }
+
+  function convert(src, opts = {}) {
+    const tr = opts.t || ((k) => k);
+    const mod = parse(src);
+    const warnings = [];
+    const warn = (line, key, args) => warnings.push({ line, key, args: args || [] });
+
+    // -------------------------------------------------------- Funktionen sammeln
+    const defs = mod.body.filter((s) => s.k === 'def');
+    let mainBody = mod.body.filter((s) => s.k !== 'def');
+    const fns = new Map();
+    for (const d of defs) {
+      if (fns.has(d.name)) warn(d.line, 'pyRedefined', [d.name]);
+      fns.set(d.name, {
+        def: d, name: d.name,
+        params: d.params.map((p) => ({ name: p.name, type: annType(p.ann) })),
+        returnType: d.returns ? (annType(d.returns) || (d.returns.k === 'none' ? 'void' : null)) : null,
+        scope: new Map()
+      });
+    }
+
+    // Muster "def main(): …" + main() bzw. if __name__ == "__main__": main()
+    const isMainCall = (s) => s.k === 'expr' && isCallTo(s.value, 'main') && !s.value.args.length;
+    const isGuard = (s) => s.k === 'if' && s.test.k === 'cmp' && strip(s.test.left).k === 'name' && strip(s.test.left).id === '__name__' && s.body.every((x) => isMainCall(x) || x.k === 'comment' || x.k === 'pass');
+    const realMain = mainBody.filter((s) => s.k !== 'comment' && s.k !== 'import' && s.k !== 'pass');
+    if (fns.has('main') && realMain.length && realMain.every((s) => isMainCall(s) || isGuard(s))) {
+      const m = fns.get('main');
+      mainBody = mainBody.filter((s) => s.k === 'comment').concat(m.def.body);
+      fns.delete('main');
+    } else if (fns.has('main')) {
+      // Name "main" ist im Blockbild reserviert
+      const m = fns.get('main');
+      fns.delete('main');
+      m.name = 'main_';
+      fns.set('main_', m);
+      warn(m.def.line, 'pyRenamed', ['main', 'main_']);
+    }
+
+    // -------------------------------------------------------- Typen ableiten (mehrere Durchläufe)
+    const mainScope = new Map();
+    const scanAssign = (body, scope, fnInfo) => {
+      const visit = (list) => {
+        for (const s of list) {
+          if (s.k === 'assign') {
+            const v = s.value;
+            for (const tg of s.targets) {
+              const t = strip(tg);
+              if (t.k === 'name' && !scope.has(t.id)) {
+                let ty = annType(s.ann) || pyType(v, scope, fns);
+                if (isCallTo(v, 'input')) ty = 'string';
+                if (ty !== '?') scope.set(t.id, ty);
+              }
+              if (t.k === 'tuple' && strip(v).k === 'tuple') {
+                t.elts.forEach((x, i) => { const xx = strip(x); if (xx.k === 'name' && !scope.has(xx.id)) { const ty = pyType(strip(v).elts[i], scope, fns); if (ty !== '?') scope.set(xx.id, ty); } });
+              }
+            }
+          }
+          if (s.k === 'aug') { const t = strip(s.target); if (t.k === 'name' && !scope.has(t.id)) { const ty = pyType(s.value, scope, fns); if (ty !== '?') scope.set(t.id, ty); } }
+          if (s.k === 'for') {
+            const t = strip(s.target);
+            if (t.k === 'name' && !scope.has(t.id)) {
+              if (isCallTo(s.iter, 'range')) scope.set(t.id, 'integer');
+              else { const it = pyType(s.iter, scope, fns); if (isArray(it)) scope.set(t.id, it.slice(0, -2)); }
+            }
+          }
+          if (s.k === 'if') { visit(s.body); visit(s.orelse); }
+          if (s.k === 'while' || s.k === 'for') visit(s.body);
+          if (s.k === 'match') s.cases.forEach((c) => visit(c.body));
+          if (s.k === 'return' && fnInfo && s.value && !fnInfo.returnTypeFixed) {
+            const ty = pyType(s.value, scope, fns);
+            if (ty !== '?' && !fnInfo.returnType) fnInfo.returnType = isArray(ty) ? 'integer' : ty;
+          }
+        }
+      };
+      visit(body);
+    };
+    const callSites = (body, scope) => {
+      const walkE = (e) => {
+        if (!e || typeof e !== 'object') return;
+        if (e.k === 'call' && e.func.k === 'name' && fns.has(e.func.id)) {
+          const f = fns.get(e.func.id);
+          e.args.forEach((a, i) => {
+            if (f.params[i] && !f.params[i].type) { const ty = pyType(a, scope, fns); if (ty !== '?') f.params[i].type = ty; }
+          });
+        }
+        for (const v of Object.values(e)) {
+          if (Array.isArray(v)) v.forEach(walkE); else if (v && typeof v === 'object') walkE(v);
+        }
+      };
+      body.forEach(walkE);
+    };
+    for (const f of fns.values()) f.returnTypeFixed = !!f.returnType;
+    for (let round = 0; round < 4; round++) {
+      scanAssign(mainBody, mainScope, null);
+      callSites(mainBody, mainScope);
+      for (const f of fns.values()) {
+        f.params.forEach((p) => { if (p.type) f.scope.set(p.name, p.type); });
+        scanAssign(f.def.body, f.scope, f);
+        callSites(f.def.body, f.scope);
+      }
+    }
+    for (const f of fns.values()) {
+      f.params.forEach((p) => { if (!p.type) p.type = 'integer'; f.scope.set(p.name, p.type); });
+      const hasValueReturn = (list) => list.some((s) => (s.k === 'return' && s.value) || (s.body && hasValueReturn(s.body)) || (s.orelse && hasValueReturn(s.orelse)) || (s.cases && s.cases.some((c) => hasValueReturn(c.body))));
+      if (!f.returnType) f.returnType = hasValueReturn(f.def.body) ? 'integer' : 'void';
+      if (isArray(f.returnType)) { warn(f.def.line, 'pyReturnArray', [f.name]); f.returnType = 'void'; }
+    }
+
+    // -------------------------------------------------------- Anweisungen übersetzen
+
+    function makeCtx(scope, fnInfo) {
+      return { scope, fn: fnInfo, declared: new Set(fnInfo ? fnInfo.params.map((p) => p.name) : []), top: [], tmp: 0, pre: null, depth: 0 };
+    }
+
+    const unsupportedNote = (s) => ({ type: 'CommentStatement', comment: tr('pyNote', s.line, (mod.lines[s.line - 1] || '').trim()) });
+
+    function tmpName(ctx, base) {
+      let n;
+      do { n = (base || tr('pyTmp')) + (++ctx.tmp); } while (ctx.scope.has(n) || ctx.declared.has(n));
+      return n;
+    }
+
+    /** Variable deklarieren (falls nötig). Auf oberster Ebene direkt, sonst am Anfang des Unterprogramms. */
+    function ensureDecl(ctx, name, type, out, init) {
+      if (ctx.declared.has(name)) return false;
+      ctx.declared.add(name);
+      const ty = type && type !== '?' ? type : (ctx.scope.get(name) || 'integer');
+      if (!ctx.scope.has(name)) ctx.scope.set(name, ty);
+      if (isArray(ty)) {
+        const d = { type: 'DeclarationStatement', variableType: ty, variableName: name, arrayLength: init != null ? init : '0', isArray: true };
+        (ctx.depth === 0 ? out : ctx.top).push(d);
+        return true;
+      }
+      if (ctx.depth === 0 && init != null) {
+        out.push({ type: 'DeclarationStatement', variableType: ty, variableName: name, initializationValue: init, isArray: false });
+        return true;
+      }
+      ctx.top.push({ type: 'DeclarationStatement', variableType: ty, variableName: name, initializationValue: DEFAULT[ty] || '0', isArray: false });
+      return false;
+    }
+
+    function flush(ctx, out) {
+      if (ctx.pre && ctx.pre.length) out.push(...ctx.pre);
+      ctx.pre = null;
+    }
+    const pre = (ctx) => (ctx.pre = ctx.pre || []);
+
+    // ---- Ausdrücke in Blockbild-Syntax
+    const PREC = { or: 1, and: 2, '==': 3, '!=': 3, '<': 4, '<=': 4, '>': 4, '>=': 4, '+': 5, '-': 5, '*': 6, '/': 6, '%': 6 };
+
+    function ex(ctx, e, line, minPrec = 0) {
+      e = e && e.k === 'paren' ? { k: 'paren', e: e.e } : e;
+      const wrap = (s, prec) => (prec < minPrec ? '(' + s + ')' : s);
+      switch (e.k) {
+        case 'paren': return ex(ctx, e.e, line, minPrec);
+        case 'num': return e.raw;
+        case 'bool': return e.v ? '1' : '0';
+        case 'none': warn(line, 'pyNone'); return '0';
+        case 'str': return JSON.stringify(e.v);
+        case 'name':
+          if (ctx.fn && e.id === 'result' && ctx.fn.returnType !== 'void') return 'result';
+          return e.id;
+        case 'fstr': {
+          const parts = e.parts.map((p) => (typeof p === 'string' ? JSON.stringify(p) : ex(ctx, p, line, 6)));
+          if (!parts.length) return '""';
+          if (typeof e.parts[0] !== 'string') parts.unshift('""');
+          return wrap(mergeLiterals(parts).join(' + '), 5);
+        }
+        case 'un':
+          if (e.op === '~') { warn(line, 'pyOperator', ['~']); return ex(ctx, e.a, line, 7); }
+          return wrap(e.op + ex(ctx, e.a, line, 7), 7);
+        case 'not': return wrap('!' + ex(ctx, e.a, line, 7), 7);
+        case 'boolop': {
+          const op = e.op === 'and' ? '&&' : '||';
+          return wrap(ex(ctx, e.a, line, PREC[e.op]) + ' ' + op + ' ' + ex(ctx, e.b, line, PREC[e.op] + 1), PREC[e.op]);
+        }
+        case 'cmp': {
+          const parts = [];
+          let left = e.left;
+          e.ops.forEach((op, i) => {
+            const right = e.rights[i];
+            let o = op;
+            if (op === 'is') o = '==';
+            else if (op === 'is not') o = '!=';
+            else if (op === 'in' || op === 'not in') {
+              const r = strip(right);
+              if (r.k === 'tuple' || r.k === 'list') {
+                const one = r.elts.map((x) => ex(ctx, left, line, 4) + (op === 'in' ? ' == ' : ' != ') + ex(ctx, x, line, 4));
+                parts.push(one.length ? '(' + one.join(op === 'in' ? ' || ' : ' && ') + ')' : (op === 'in' ? '0' : '1'));
+                left = right;
+                return;
+              }
+              warn(line, 'pyOperator', [op]);
+              o = '==';
+            }
+            parts.push(ex(ctx, left, line, 4) + ' ' + o + ' ' + ex(ctx, right, line, 4));
+            left = right;
+          });
+          return parts.length > 1 ? wrap(parts.join(' && '), 2) : wrap(parts[0], 3);
+        }
+        case 'bin': {
+          if (e.op === '//') {
+            const a = ex(ctx, e.a, line, 6), b = ex(ctx, e.b, line, 7);
+            return wrap('(' + a + ' - ' + a + ' % ' + b + ') / ' + b, 6);
+          }
+          if (e.op === '**') {
+            const n = strip(e.b);
+            if (n.k === 'num' && Number.isInteger(n.v) && n.v >= 0 && n.v <= 4) {
+              if (n.v === 0) return '1';
+              const base = ex(ctx, e.a, line, 7);
+              return wrap(Array(n.v).fill(base).join(' * '), 6);
+            }
+            warn(line, 'pyOperator', ['**']);
+            return wrap(ex(ctx, e.a, line, 6) + ' * ' + ex(ctx, e.a, line, 7), 6);
+          }
+          if (e.op === '*' && (pyType(e.a, ctx.scope, fns) === 'string' || pyType(e.b, ctx.scope, fns) === 'string')) {
+            warn(line, 'pyOperator', ['"text" * n']);
+          }
+          if (e.op === '@') { warn(line, 'pyOperator', ['@']); return '0'; }
+          const prec = PREC[e.op];
+          if (e.op === '+' && pyType(e, ctx.scope, fns) === 'string') {
+            // Python: Text + Zahl ist ein Fehler, im Blockbild erlaubt – Reihenfolge bleibt erhalten
+            return wrap(ex(ctx, e.a, line, prec) + ' + ' + ex(ctx, e.b, line, prec + 1), prec);
+          }
+          return wrap(ex(ctx, e.a, line, prec) + ' ' + e.op + ' ' + ex(ctx, e.b, line, prec + 1), prec);
+        }
+        case 'sub': {
+          const v = strip(e.value);
+          if (e.index.k === 'slice') { warn(line, 'pySlice'); return ex(ctx, e.value, line, 7); }
+          const idx = strip(e.index);
+          const base = ex(ctx, e.value, line, 8);
+          if (v.k !== 'name') warn(line, 'pyComplexIndex');
+          if (pyType(e.value, ctx.scope, fns) === 'string') warn(line, 'pyStringIndex', [base]);
+          if (idx.k === 'un' && idx.op === '-' && strip(idx.a).k === 'num') return base + '[' + base + '.length - ' + strip(idx.a).raw + ']';
+          return base + '[' + ex(ctx, e.index, line, 0) + ']';
+        }
+        case 'call': return exCall(ctx, e, line, minPrec);
+        case 'ifexp': {
+          const ty = pyType(e, ctx.scope, fns);
+          const t = tmpName(ctx);
+          ctx.scope.set(t, ty === '?' ? 'integer' : ty);
+          ctx.declared.add(t);
+          ctx.top.push({ type: 'DeclarationStatement', variableType: ctx.scope.get(t), variableName: t, initializationValue: DEFAULT[ctx.scope.get(t)] || '0', isArray: false });
+          const c = ex(ctx, e.test, line);
+          const a = ex(ctx, e.body, line);
+          const b = ex(ctx, e.orelse, line);
+          pre(ctx).push({ type: 'IfStatement', condition: c, thenStatements: S({ type: 'AssignmentStatement', variableName: t, assignmentValue: a }), elseStatements: S({ type: 'AssignmentStatement', variableName: t, assignmentValue: b }) });
+          return t;
+        }
+        case 'attr':
+          warn(line, 'pyAttr', [e.name]);
+          return ex(ctx, e.value, line, minPrec);
+        case 'list': case 'tuple': case 'dict': case 'comp': case 'slice':
+          warn(line, 'pyCollection');
+          return '0';
+        case 'wild': return '_';
+        default:
+          warn(line, 'pyExpr');
+          return '0';
+      }
+    }
+
+    function hoistValue(ctx, type, line, build) {
+      const t = tmpName(ctx);
+      const ty = type === '?' ? 'integer' : type;
+      ctx.scope.set(t, ty);
+      ctx.declared.add(t);
+      ctx.top.push({ type: 'DeclarationStatement', variableType: ty, variableName: t, initializationValue: DEFAULT[ty] || '0', isArray: false });
+      build(t, pre(ctx));
+      return t;
+    }
+
+    function exCall(ctx, e, line, minPrec) {
+      const f = e.func;
+      if (f.k === 'attr') {
+        const m = f.name;
+        const obj = ex(ctx, f.value, line, 8);
+        if (m === 'upper' || m === 'lower' || m === 'strip' || m === 'capitalize' || m === 'title') { warn(line, 'pyMethod', [m]); return obj; }
+        if (m === 'format') { warn(line, 'pyMethod', [m]); return obj; }
+        warn(line, 'pyMethod', [m]);
+        return obj;
+      }
+      if (f.k !== 'name') { warn(line, 'pyExpr'); return '0'; }
+      const n = f.id;
+      const args = e.args;
+      switch (n) {
+        case 'len': {
+          const a = strip(args[0]);
+          if (a && a.k === 'name') return a.id + '.length';
+          return '(' + ex(ctx, args[0], line, 8) + ').length';
+        }
+        case 'int': case 'float': case 'round': case 'bool':
+          if (!args.length) return '0';
+          if (isCallTo(args[0], 'input')) {
+            return hoistValue(ctx, 'integer', line, (t, list) => list.push({ type: 'InputStatement', prompt: promptOf(ctx, args[0], line), variableName: t }));
+          }
+          if (n === 'round') warn(line, 'pyRound');
+          if (n === 'int' && pyType(args[0], ctx.scope, fns) === 'integer') {
+            // int(a / b) → ganzzahlige Division
+            const a = strip(args[0]);
+            if (a.k === 'bin' && a.op === '/') return ex(ctx, { k: 'bin', op: '//', a: a.a, b: a.b }, line, minPrec);
+          }
+          return ex(ctx, args[0], line, minPrec);
+        case 'str':
+          if (!args.length) return '""';
+          if (pyType(args[0], ctx.scope, fns) === 'string') return ex(ctx, args[0], line, minPrec);
+          return (minPrec > 5 ? '(' : '') + '"" + ' + ex(ctx, args[0], line, 6) + (minPrec > 5 ? ')' : '');
+        case 'input':
+          return hoistValue(ctx, 'string', line, (t, list) => list.push({ type: 'InputStatement', prompt: promptOf(ctx, e, line), variableName: t }));
+        case 'abs':
+          return hoistValue(ctx, 'integer', line, (t, list) => {
+            list.push({ type: 'AssignmentStatement', variableName: t, assignmentValue: ex(ctx, args[0], line) });
+            list.push({ type: 'IfStatement', condition: t + ' < 0', thenStatements: S({ type: 'AssignmentStatement', variableName: t, assignmentValue: '-' + t }), elseStatements: null });
+          });
+        case 'min': case 'max': {
+          if (args.length < 2) { warn(line, 'pyBuiltin', [n]); return '0'; }
+          const vals = args.map((a) => ex(ctx, a, line));
+          return hoistValue(ctx, pyType(args[0], ctx.scope, fns), line, (t, list) => {
+            list.push({ type: 'AssignmentStatement', variableName: t, assignmentValue: vals[0] });
+            for (const v of vals.slice(1)) {
+              list.push({ type: 'IfStatement', condition: v + (n === 'min' ? ' < ' : ' > ') + t, thenStatements: S({ type: 'AssignmentStatement', variableName: t, assignmentValue: v }), elseStatements: null });
+            }
+          });
+        }
+        case 'print':
+          warn(line, 'pyExpr');
+          return '""';
+        default: {
+          const fi = fns.get(n);
+          if (!fi) { warn(line, 'pyBuiltin', [n]); return '0'; }
+          const callArgs = args.map((a) => ex(ctx, a, line));
+          if (fi.returnType === 'void') { warn(line, 'pyVoidValue', [n]); }
+          return hoistValue(ctx, fi.returnType === 'void' ? 'integer' : fi.returnType, line, (t, list) => {
+            list.push({ type: 'FunctionCallStatement', functionName: fi.name, parameters: callArgs.map((value) => ({ value })), variableName: fi.returnType === 'void' ? undefined : t });
+          });
+        }
+      }
+    }
+
+    /** Benachbarte Textliterale zusammenfassen: "a" + " " + x → "a " + x */
+    function mergeLiterals(parts) {
+      const out = [];
+      const isLit = (s) => /^"(?:[^"\\]|\\.)*"$/.test(s);
+      for (const part of parts) {
+        if (out.length && isLit(part) && isLit(out[out.length - 1]) && !(out.length === 1 && part === '""')) {
+          out[out.length - 1] = JSON.stringify(JSON.parse(out[out.length - 1]) + JSON.parse(part));
+        } else out.push(part);
+      }
+      if (out.length > 1 && out[0] === '""' && isLit(out[1])) out.shift();
+      return out;
+    }
+
+    function promptOf(ctx, inputCall, line) {
+      const c = strip(inputCall);
+      if (!c.args.length) return '""';
+      return ex(ctx, c.args[0], line);
+    }
+
+    // ---- "liefert immer" – für frühe returns
+    const alwaysReturns = (list) => {
+      const last = list.filter((s) => s.k !== 'comment' && s.k !== 'pass').slice(-1)[0];
+      if (!last) return false;
+      if (last.k === 'return') return true;
+      if (last.k === 'if') return alwaysReturns(last.body) && last.orelse.length > 0 && alwaysReturns(last.orelse);
+      return false;
+    };
+
+    /** Liste von Python-Anweisungen → Blockbild-Anweisungen. */
+    function block(ctx, list, tail) {
+      const out = [];
+      for (let i = 0; i < list.length; i++) {
+        const s = list[i];
+        const rest = list.slice(i + 1);
+        // if … : return …   (ohne else) gefolgt von weiteren Anweisungen → Rest wird zum SONST-Zweig
+        if (ctx.fn && s.k === 'if' && !s.orelse.length && alwaysReturns(s.body) && rest.some((x) => x.k !== 'comment')) {
+          stmt(ctx, Object.assign({}, s, { orelse: rest }), out, tail);
+          return out;
+        }
+        stmt(ctx, s, out, tail && i === list.length - 1);
+      }
+      return out;
+    }
+
+    function sub(ctx, list, tail) {
+      ctx.depth++;
+      const r = block(ctx, list, tail);
+      ctx.depth--;
+      return S(...r);
+    }
+
+    function assignTo(ctx, target, valueSrc, valueType, out, line) {
+      const t = strip(target);
+      if (t.k === 'name') {
+        const isNew = !ctx.declared.has(t.id);
+        if (isNew) {
+          flush(ctx, out);
+          if (ensureDecl(ctx, t.id, valueType, out, valueSrc)) return;
+        }
+        flush(ctx, out);
+        out.push({ type: 'AssignmentStatement', variableName: t.id, assignmentValue: valueSrc });
+        return;
+      }
+      if (t.k === 'sub') {
+        const tg = ex(ctx, t, line);
+        flush(ctx, out);
+        out.push({ type: 'AssignmentStatement', variableName: tg, assignmentValue: valueSrc });
+        return;
+      }
+      flush(ctx, out);
+      warn(line, 'pyTarget');
+      out.push({ type: 'CommentStatement', comment: tr('pyNote', line, (mod.lines[line - 1] || '').trim()) });
+    }
+
+    function stmt(ctx, s, out, tail) {
+      const line = s.line;
+      switch (s.k) {
+        case 'comment':
+          out.push({ type: 'CommentStatement', comment: s.text });
+          return;
+        case 'pass': case 'skip': return;
+        case 'import':
+          return;
+        case 'annotation': {
+          const t = strip(s.target);
+          if (t.k === 'name') ensureDecl(ctx, t.id, annType(s.ann), out, null);
+          return;
+        }
+        case 'expr': return exprStmt(ctx, s, out);
+        case 'assign': return assignStmt(ctx, s, out);
+        case 'aug': {
+          const t = strip(s.target);
+          const tgt = t.k === 'name' ? t.id : ex(ctx, t, line);
+          const op = s.op === '//' ? '//' : s.op;
+          const val = ex(ctx, { k: 'bin', op, a: s.target, b: { k: 'paren', e: s.value } }, line);
+          if (t.k === 'name' && !ctx.declared.has(t.id)) { warn(line, 'pyUndeclared', [t.id]); ensureDecl(ctx, t.id, pyType(s.value, ctx.scope, fns), out, null); }
+          flush(ctx, out);
+          out.push({ type: 'AssignmentStatement', variableName: tgt, assignmentValue: val });
+          return;
+        }
+        case 'if': {
+          const cond = ex(ctx, s.test, line);
+          flush(ctx, out);
+          out.push({
+            type: 'IfStatement', condition: cond,
+            thenStatements: sub(ctx, s.body, tail),
+            elseStatements: s.orelse.length ? sub(ctx, s.orelse, tail) : null
+          });
+          return;
+        }
+        case 'while': return whileStmt(ctx, s, out);
+        case 'for': return forStmt(ctx, s, out);
+        case 'match': return matchStmt(ctx, s, out, tail);
+        case 'return': {
+          if (!ctx.fn) { warn(line, 'pyReturnMain'); return; }
+          if (!tail) warn(line, 'pyEarlyReturn');
+          if (!s.value) return;
+          if (ctx.fn.returnType === 'void') { warn(line, 'pyReturnVoid'); return; }
+          const v = ex(ctx, s.value, line);
+          flush(ctx, out);
+          out.push({ type: 'AssignmentStatement', variableName: 'result', assignmentValue: v });
+          return;
+        }
+        case 'break': case 'continue':
+          warn(line, 'pyBreak', [s.k]);
+          out.push(unsupportedNote(s));
+          return;
+        case 'def':
+          warn(line, 'pyNestedDef', [s.name]);
+          out.push(unsupportedNote(s));
+          return;
+        default:
+          if (s.reason) warn(line, s.reason);
+          else warn(line, 'pyStatement', [(s.text || '').split(/[\s:(]/)[0] || '?']);
+          out.push(unsupportedNote(s));
+      }
+    }
+
+    function exprStmt(ctx, s, out) {
+      const e = strip(s.value);
+      const line = s.line;
+      if (e.k === 'str') return; // Docstring
+      if (e.k === 'call' && e.func.k === 'name' && e.func.id === 'print') {
+        const sepArg = e.kwargs.sep;
+        const sep = sepArg ? (strip(sepArg).k === 'str' ? strip(sepArg).v : ' ') : ' ';
+        if (e.kwargs.end && !(strip(e.kwargs.end).k === 'str' && strip(e.kwargs.end).v === '\n')) warn(line, 'pyPrintEnd');
+        const parts = e.args.map((a) => ex(ctx, a, line, e.args.length > 1 ? 6 : 0));
+        let text;
+        if (!parts.length) text = '""';
+        else {
+          const joined = [];
+          parts.forEach((x, i) => { if (i > 0 && sep) joined.push(JSON.stringify(sep)); joined.push(x); });
+          // ohne Trennzeichen würden zwei Zahlen addiert statt aneinandergehängt
+          if (joined.length > 1 && !sep && pyType(e.args[0], ctx.scope, fns) !== 'string') joined.unshift('""');
+          text = mergeLiterals(joined).join(' + ');
+        }
+        flush(ctx, out);
+        out.push({ type: 'OutputStatement', outputString: text });
+        return;
+      }
+      if (e.k === 'call' && e.func.k === 'name' && e.func.id === 'input') {
+        const t = tmpName(ctx);
+        ctx.scope.set(t, 'string');
+        ctx.declared.add(t);
+        ctx.top.push({ type: 'DeclarationStatement', variableType: 'string', variableName: t, initializationValue: '""', isArray: false });
+        out.push({ type: 'InputStatement', prompt: promptOf(ctx, e, line), variableName: t });
+        return;
+      }
+      if (e.k === 'call' && e.func.k === 'name' && fns.has(e.func.id)) {
+        const fi = fns.get(e.func.id);
+        const args = e.args.map((a) => ex(ctx, a, line));
+        flush(ctx, out);
+        out.push({ type: 'FunctionCallStatement', functionName: fi.name, parameters: args.map((value) => ({ value })) });
+        return;
+      }
+      if (e.k === 'call' && e.func.k === 'attr') {
+        warn(line, 'pyMethod', [e.func.name]);
+        out.push(unsupportedNote(s));
+        return;
+      }
+      warn(line, 'pyExprStmt');
+      out.push(unsupportedNote(s));
+    }
+
+    function assignStmt(ctx, s, out) {
+      const line = s.line;
+      const v = strip(s.value);
+      for (const target of s.targets) {
+        const t = strip(target);
+        // Tupel-Zuweisung: a, b = b, a
+        if (t.k === 'tuple') {
+          if (v.k !== 'tuple' || v.elts.length !== t.elts.length) { warn(line, 'pyTarget'); out.push(unsupportedNote(s)); return; }
+          const temps = v.elts.map((x) => {
+            const ty = pyType(x, ctx.scope, fns);
+            const val = ex(ctx, x, line);
+            const tmp = tmpName(ctx);
+            ctx.scope.set(tmp, ty === '?' ? 'integer' : ty);
+            ctx.declared.add(tmp);
+            ctx.top.push({ type: 'DeclarationStatement', variableType: ctx.scope.get(tmp), variableName: tmp, initializationValue: DEFAULT[ctx.scope.get(tmp)] || '0', isArray: false });
+            flush(ctx, out);
+            out.push({ type: 'AssignmentStatement', variableName: tmp, assignmentValue: val });
+            return tmp;
+          });
+          t.elts.forEach((x, i) => assignTo(ctx, x, temps[i], ctx.scope.get(temps[i]), out, line));
+          continue;
+        }
+        // Eingabe
+        const isInput = isCallTo(v, 'input');
+        const isNumInput = v.k === 'call' && v.func.k === 'name' && ['int', 'float'].includes(v.func.id) && v.args[0] && isCallTo(v.args[0], 'input');
+        if ((isInput || isNumInput) && t.k !== 'tuple') {
+          const prompt = promptOf(ctx, isInput ? v : v.args[0], line);
+          const ty = isInput ? (annType(s.ann) || 'string') : 'integer';
+          if (t.k === 'name') {
+            if (!ctx.declared.has(t.id)) {
+              if (ctx.scope.get(t.id) && ctx.scope.get(t.id) !== ty && isInput) {
+                // erst Text, später Zahl: als Zahl einlesen
+              }
+              ensureDecl(ctx, t.id, ctx.scope.get(t.id) || ty, out, DEFAULT[ctx.scope.get(t.id) || ty]);
+            }
+            if (isInput && ctx.scope.get(t.id) === 'integer') warn(line, 'pyInputNumber', [t.id]);
+          }
+          flush(ctx, out);
+          out.push({ type: 'InputStatement', prompt, variableName: t.k === 'name' ? t.id : ex(ctx, t, line) });
+          continue;
+        }
+        // Listen
+        const listInfo = listLiteral(v);
+        if (listInfo && t.k === 'name') {
+          const elemType = listInfo.elemType || (ctx.scope.get(t.id) && isArray(ctx.scope.get(t.id)) ? ctx.scope.get(t.id).slice(0, -2) : 'integer');
+          const arrType = elemType + '[]';
+          if (ctx.declared.has(t.id)) { warn(line, 'pyListReassign', [t.id]); out.push(unsupportedNote(s)); continue; }
+          let length;
+          if (listInfo.kind === 'repeat') length = ex(ctx, listInfo.count, line);
+          else length = String(listInfo.items.length);
+          if (listInfo.kind === 'literal' && !listInfo.items.length) warn(line, 'pyEmptyList', [t.id]);
+          ctx.scope.set(t.id, arrType);
+          ctx.declared.add(t.id);
+          flush(ctx, out);
+          (ctx.depth === 0 ? out : ctx.top).push({ type: 'DeclarationStatement', variableType: arrType, variableName: t.id, arrayLength: length, isArray: true });
+          if (listInfo.kind === 'literal') {
+            listInfo.items.forEach((x, i) => {
+              const val = ex(ctx, x, line);
+              flush(ctx, out);
+              out.push({ type: 'AssignmentStatement', variableName: t.id + '[' + i + ']', assignmentValue: val });
+            });
+          } else {
+            const fill = strip(listInfo.value);
+            const isDefault = (fill.k === 'num' && fill.v === 0) || (fill.k === 'str' && fill.v === '') || (fill.k === 'bool' && !fill.v);
+            if (!isDefault) {
+              const ix = tmpName(ctx, 'i');
+              ctx.scope.set(ix, 'integer');
+              ctx.declared.add(ix);
+              ctx.top.push({ type: 'DeclarationStatement', variableType: 'integer', variableName: ix, initializationValue: '0', isArray: false });
+              const val = ex(ctx, listInfo.value, line);
+              flush(ctx, out);
+              out.push({ type: 'ForStatement', counterName: ix, fromValue: '0', toValue: t.id + '.length - 1', counterShift: '+1', loopStatements: S({ type: 'AssignmentStatement', variableName: t.id + '[' + ix + ']', assignmentValue: val }) });
+            }
+          }
+          continue;
+        }
+        // Funktionsaufruf mit Ergebnis
+        if (v.k === 'call' && v.func.k === 'name' && fns.has(v.func.id) && t.k === 'name') {
+          const fi = fns.get(v.func.id);
+          const args = v.args.map((a) => ex(ctx, a, line));
+          if (!ctx.declared.has(t.id)) ensureDecl(ctx, t.id, fi.returnType === 'void' ? 'integer' : fi.returnType, out, null);
+          flush(ctx, out);
+          if (fi.returnType === 'void') warn(line, 'pyVoidValue', [fi.name]);
+          out.push({ type: 'FunctionCallStatement', functionName: fi.name, parameters: args.map((value) => ({ value })), variableName: fi.returnType === 'void' ? undefined : t.id });
+          continue;
+        }
+        if (t.k === 'name' && ctx.fn && t.id === 'result' && ctx.fn.returnType !== 'void') warn(line, 'pyResultName');
+        const ty = annType(s.ann) || pyType(v, ctx.scope, fns);
+        const val = ex(ctx, s.value, line);
+        assignTo(ctx, t, val, ty, out, line);
+      }
+    }
+
+    function listLiteral(v) {
+      v = strip(v);
+      if (v.k === 'list') {
+        const first = v.elts[0];
+        return { kind: 'literal', items: v.elts, elemType: first ? (pyType(first, new Map(), fns) === 'string' ? 'string' : 'integer') : null };
+      }
+      if (v.k === 'bin' && v.op === '*') {
+        const a = strip(v.a), b = strip(v.b);
+        const lst = a.k === 'list' ? a : b.k === 'list' ? b : null;
+        if (lst && lst.elts.length === 1) {
+          const count = lst === a ? v.b : v.a;
+          const value = lst.elts[0];
+          return { kind: 'repeat', count, value, elemType: pyType(value, new Map(), fns) === 'string' ? 'string' : 'integer' };
+        }
+      }
+      return null;
+    }
+
+    function whileStmt(ctx, s, out) {
+      const line = s.line;
+      if (s.orelse) warn(line, 'pyLoopElse');
+      const test = strip(s.test);
+      const isTrue = (test.k === 'bool' && test.v) || (test.k === 'num' && test.v !== 0);
+      // while True: … if bedingung: break  → WIEDERHOLE … BIS bedingung
+      const body = s.body.filter((x) => x.k !== 'pass');
+      const last = body[body.length - 1];
+      const breaksElsewhere = (list) => list.some((x) => x.k === 'break' || (x.k === 'if' && (breaksElsewhere(x.body) || breaksElsewhere(x.orelse))));
+      if (isTrue && last && last.k === 'if' && !last.orelse.length && last.body.length === 1 && last.body[0].k === 'break' && !breaksElsewhere(body.slice(0, -1))) {
+        const inner = sub(ctx, body.slice(0, -1), false);
+        const cond = ex(ctx, last.test, last.line);
+        if (ctx.pre) { warn(line, 'pyComplexCond'); flush(ctx, inner.statements); }
+        out.push({ type: 'DoWhileStatement', condition: cond, loopStatements: inner });
+        return;
+      }
+      if (breaksElsewhere(body)) warn(line, 'pyBreak', ['break']);
+      const cond = ex(ctx, s.test, line);
+      if (ctx.pre) warn(line, 'pyComplexCond');
+      flush(ctx, out);
+      out.push({ type: 'WhileStatement', condition: cond, loopStatements: sub(ctx, s.body, false) });
+    }
+
+    function forStmt(ctx, s, out) {
+      const line = s.line;
+      if (s.orelse) warn(line, 'pyLoopElse');
+      const t = strip(s.target);
+      if (t.k !== 'name') { warn(line, 'pyTarget'); out.push(unsupportedNote(s)); return; }
+      const it = strip(s.iter);
+      if (isCallTo(it, 'range')) {
+        const a = it.args;
+        let from = '0', toExpr, step = '+1', stepVal = 1;
+        if (a.length === 1) toExpr = a[0];
+        else { from = ex(ctx, a[0], line); toExpr = a[1]; }
+        if (a.length >= 3) {
+          const st = strip(a[2]);
+          const lit = st.k === 'num' ? st.v : (st.k === 'un' && st.op === '-' && strip(st.a).k === 'num' ? -strip(st.a).v : null);
+          if (lit === null) { warn(line, 'pyRangeStep'); stepVal = 1; step = ex(ctx, a[2], line); }
+          else { stepVal = lit; step = (lit > 0 ? '+' : '') + lit; }
+        }
+        const te = strip(toExpr);
+        let to;
+        const d = stepVal > 0 ? -1 : 1;
+        if (te.k === 'num' && Number.isInteger(te.v)) to = String(te.v + d);
+        else if (te.k === 'bin' && (te.op === '+' || te.op === '-') && strip(te.b).k === 'num' && Number.isInteger(strip(te.b).v)) {
+          // n + 1 → n,  n + 2 → n + 1,  n - 1 → n - 2
+          const c = (te.op === '+' ? 1 : -1) * strip(te.b).v + d;
+          const base = ex(ctx, te.a, line, 5);
+          to = c === 0 ? base : base + (c > 0 ? ' + ' + c : ' - ' + (-c));
+        } else to = ex(ctx, toExpr, line, 5) + (d < 0 ? ' - 1' : ' + 1');
+        if (!ctx.declared.has(t.id)) { ctx.scope.set(t.id, 'integer'); ctx.declared.add(t.id); ctx.top.push({ type: 'DeclarationStatement', variableType: 'integer', variableName: t.id, initializationValue: '0', isArray: false }); }
+        flush(ctx, out);
+        out.push({ type: 'ForStatement', counterName: t.id, fromValue: from, toValue: to, counterShift: step, loopStatements: sub(ctx, s.body, false) });
+        return;
+      }
+      const itType = pyType(it, ctx.scope, fns);
+      if (isArray(itType) && it.k === 'name') {
+        const ix = tmpName(ctx, 'i');
+        ctx.scope.set(ix, 'integer');
+        ctx.declared.add(ix);
+        ctx.top.push({ type: 'DeclarationStatement', variableType: 'integer', variableName: ix, initializationValue: '0', isArray: false });
+        if (!ctx.declared.has(t.id)) {
+          const et = itType.slice(0, -2);
+          ctx.scope.set(t.id, et);
+          ctx.declared.add(t.id);
+          ctx.top.push({ type: 'DeclarationStatement', variableType: et, variableName: t.id, initializationValue: DEFAULT[et], isArray: false });
+        }
+        const body = sub(ctx, s.body, false);
+        body.statements.unshift({ type: 'AssignmentStatement', variableName: t.id, assignmentValue: it.id + '[' + ix + ']' });
+        out.push({ type: 'ForStatement', counterName: ix, fromValue: '0', toValue: it.id + '.length - 1', counterShift: '+1', loopStatements: body });
+        return;
+      }
+      warn(line, 'pyForIter');
+      out.push(unsupportedNote(s));
+    }
+
+    function matchStmt(ctx, s, out, tail) {
+      const line = s.line;
+      const subj = ex(ctx, s.subject, line);
+      flush(ctx, out);
+      const cases = [];
+      let els = null;
+      for (const c of s.cases) {
+        if (c.guard) warn(line, 'pyMatchGuard');
+        const body = sub(ctx, c.body, tail);
+        for (const p of c.patterns) {
+          if (p.k === 'wild' || (p.k === 'name' && !fns.has(p.id) && !ctx.scope.has(p.id))) { els = body; continue; }
+          cases.push({ caseValue: ex(ctx, p, line), caseStatements: JSON.parse(JSON.stringify(body)) });
+        }
+      }
+      out.push({ type: 'SwitchStatement', variableName: subj, casesStatements: cases, elseStatements: els });
+    }
+
+    function convertBody(list, ctx) {
+      const stmts = block(ctx, list, true);
+      return ctx.top.concat(stmts);
+    }
+
+    // -------------------------------------------------------- Ergebnis zusammensetzen
+    const bb = {};
+    const mctx = makeCtx(mainScope, null);
+    bb.main = S(...convertBody(mainBody, mctx));
+    for (const f of fns.values()) {
+      const ctx = makeCtx(f.scope, f);
+      if (f.returnType !== 'void') ctx.declared.add('result');
+      const stmts = convertBody(f.def.body, ctx);
+      bb[f.name] = {
+        parameters: f.params.map((p) => ({ type: p.type, name: p.name, onlyIn: !isArray(p.type) })),
+        statements: S(...stmts),
+        returnType: f.returnType,
+        resultInitializationValue: f.returnType === 'void' ? undefined : DEFAULT[f.returnType]
+      };
+    }
+    // doppelte Hinweise je Zeile zusammenfassen
+    const seen = new Set();
+    const uniq = warnings.filter((w) => { const k = w.line + w.key + w.args.join(); if (seen.has(k)) return false; seen.add(k); return true; }).sort((a, b) => a.line - b.line);
+    return { bb, warnings: uniq };
+  }
+
+  BBE.pyimport = { tokenize, parse, convert, PyError };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 ;
@@ -4852,6 +6374,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
   <a href="#h-run">Ausführen</a>
   <a href="#h-c">C-Code</a>
   <a href="#h-files">Dateien</a>
+  <a href="#h-python">Python übernehmen</a>
   <a href="#h-keys">Tastenkürzel</a>
 </nav>
 <div>
@@ -4880,7 +6403,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     <tr><td>WENN … DANN … SONST</td><td>Verzweigung; SONST ist optional</td><td><code>n % 2 == 0</code></td></tr>
     <tr><td>FALLS … FALL … SONST</td><td>Mehrfachauswahl nach einem Wert</td><td><code>note</code> mit Fällen 1, 2, 3 …</td></tr>
     <tr><td>SOLANGE</td><td>prüft zuerst – 0 bis n Durchläufe</td><td><code>i &lt;= n</code></td></tr>
-    <tr><td>ZÄHLE</td><td>Zählschleife – genau n Durchläufe</td><td><code>i VON 1 BIS n MIT +1</code></td></tr>
+    <tr><td>FÜR</td><td>Zählschleife – genau n Durchläufe</td><td><code>i VON 1 BIS n SCHRITT +1</code></td></tr>
     <tr><td>WIEDERHOLE … BIS</td><td>prüft am Ende – 1 bis n Durchläufe; endet, wenn die Bedingung <b>wahr</b> ist</td><td><code>BIS note &gt;= 1 &amp;&amp; note &lt;= 5</code></td></tr>
     <tr><td>AUFRUF</td><td>startet ein Unterprogramm</td><td><code>g = ggt(a, b)</code></td></tr>
     <tr><td>KOMMENTAR</td><td>Notiz ohne Wirkung, z. B. für Eingabe – Verarbeitung – Ausgabe</td><td><code>// Verarbeitung</code></td></tr>
@@ -4944,6 +6467,16 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     <li><b>Exportieren</b> erzeugt C-Code oder ein PNG-Bild des aktuellen Diagramms, z. B. für Protokolle.</li>
   </ul>
 </section>
+<section id="h-python">
+  <h3>Python-Programme übernehmen</h3>
+  <p>Beim <b>Öffnen</b> kannst du auch eine <code>.py</code>-Datei wählen (oder auf das Fenster ziehen). Sie wird automatisch in ein Blockbild übersetzt:</p>
+  <ul>
+    <li>Zuweisungen werden zu DEKLARATION bzw. ZUWEISUNG, <code>input()</code> und <code>int(input())</code> zu EINGABE, <code>print()</code> und f-Strings zu AUSGABE.</li>
+    <li><code>if/elif/else</code> → WENN, <code>while</code> → SOLANGE, <code>while True: … if …: break</code> → WIEDERHOLE … BIS, <code>for i in range(…)</code> → FÜR, <code>match/case</code> → FALLS.</li>
+    <li><code>def</code> wird zum Unterprogramm, <code>return</code> zur Ergebnisvariable <code>result</code>; Listen wie <code>[0] * n</code> werden zu Arrays.</li>
+    <li>Was es im Blockbild nicht gibt (Klassen, <code>append</code>, <code>break</code> mitten in Schleifen …), steht danach als ⚠-Kommentar im Diagramm. Eine Liste zeigt alle Stellen.</li>
+  </ul>
+</section>
 <section id="h-keys">
   <h3>Tastenkürzel</h3>
   <div class="keys">
@@ -4975,6 +6508,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
   <a href="#h-run">Running</a>
   <a href="#h-c">C code</a>
   <a href="#h-files">Files</a>
+  <a href="#h-python">Importing Python</a>
   <a href="#h-keys">Shortcuts</a>
 </nav>
 <div>
@@ -5065,6 +6599,16 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     <li>You can also drop a <code>.bb</code> file onto the window.</li>
     <li>The browser saves your diagram automatically and restores it next time.</li>
     <li><b>Export</b> creates C code or a PNG image of the current diagram, e.g. for reports.</li>
+  </ul>
+</section>
+<section id="h-python">
+  <h3>Importing Python programs</h3>
+  <p>With <b>Open</b> you can also pick a <code>.py</code> file (or drop it onto the window). It is translated into a block diagram automatically:</p>
+  <ul>
+    <li>Assignments become DECLARATION or ASSIGNMENT, <code>input()</code> and <code>int(input())</code> become INPUT, <code>print()</code> and f-strings become OUTPUT.</li>
+    <li><code>if/elif/else</code> → IF, <code>while</code> → WHILE, <code>while True: … if …: break</code> → REPEAT … UNTIL, <code>for i in range(…)</code> → FOR, <code>match/case</code> → SWITCH.</li>
+    <li><code>def</code> becomes a subprogram, <code>return</code> the result variable <code>result</code>; lists like <code>[0] * n</code> become arrays.</li>
+    <li>Anything block diagrams cannot express (classes, <code>append</code>, <code>break</code> in the middle of loops …) appears as a ⚠ comment in the diagram. A list shows every place.</li>
   </ul>
 </section>
 <section id="h-keys">
@@ -5191,14 +6735,14 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     el.btnRun = btn('play', t('tb.run'), () => onRunButton(), { text: true, cls: 'run', key: kb('F5') });
     el.btnStep = btn('step', t('tb.step'), () => stepRun(), { text: true, key: kb('F10') });
     el.btnStop = btn('stop', t('tb.stop'), () => stopRun(true), { key: kb('Shift+F5') });
-    el.speed = h('input', { type: 'range', min: '0', max: String(SPEEDS.length - 1), step: '1', value: String(S.settings.speed), 'aria-label': t('tb.speed') });
-    el.speedOut = h('output');
-    el.speed.addEventListener('input', () => {
-      S.settings.speed = Number(el.speed.value);
-      saveSettings();
-      updateSpeedLabel();
-      if (S.run.state === 'running') { clearTimer(); scheduleLoop(); }
+    el.speed = h('input', { type: 'range', min: '0', max: String(SPEEDS.length - 1), step: '1', 'aria-label': t('tb.speed') });
+    el.speedOut = h('input.speed-ms', { type: 'number', min: '0', max: '10000', step: '50', inputmode: 'numeric', 'aria-label': t('tb.delay'), title: t('tb.delay') });
+    el.speed.addEventListener('input', () => setDelay(SPEEDS[Number(el.speed.value)], 'slider'));
+    el.speedOut.addEventListener('input', () => {
+      const v = Number(el.speedOut.value);
+      if (el.speedOut.value !== '' && Number.isFinite(v)) setDelay(v, 'field');
     });
+    el.speedOut.addEventListener('change', () => updateSpeedLabel());
     el.btnTheme = btn(effectiveTheme() === 'dark' ? 'sun' : 'moon', t('tb.theme'), toggleTheme);
     el.btnExport = btn('share', t('tb.export'), (e) => openExportMenu(e.currentTarget), { text: true });
 
@@ -5215,7 +6759,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       h('div.tb-group', null, el.btnUndo, el.btnRedo),
       h('span.tb-sep'),
       h('div.tb-group', null, el.btnRun, el.btnStep, el.btnStop,
-        h('label.speed', { title: t('tb.speed') }, h('span.sr-only', null, t('tb.speed')), el.speed, el.speedOut)),
+        h('div.speed', { title: t('tb.speed') }, el.speed, h('label.speed-field', null, el.speedOut, h('span.speed-unit', null, 'ms')))),
       h('span.tb-spacer'),
       h('div.tb-group', null,
         btn('sliders', t('tb.settings'), showSettings),
@@ -5397,7 +6941,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       if (f) f.text().then((txt) => loadFileText(txt, f.name, null));
     });
 
-    el.fileInput = h('input', { type: 'file', accept: '.bb,.json,.txt,application/json', hidden: true });
+    el.fileInput = h('input', { type: 'file', accept: '.bb,.json,.txt,.py,application/json,text/x-python', hidden: true });
     el.fileInput.addEventListener('change', () => {
       const f = el.fileInput.files[0];
       if (f) f.text().then((txt) => loadFileText(txt, f.name, null));
@@ -5584,9 +7128,29 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     document.title = (S.fileName || 'blockbild') + ' · ' + t('appName');
   }
 
+  /** Verzögerung pro Schritt in ms (0 = sofort). */
+  const getDelay = () => (Number.isFinite(S.settings.delay) ? S.settings.delay : SPEEDS[S.settings.speed] ?? 500);
+
+  function setDelay(ms, from) {
+    S.settings.delay = Math.max(0, Math.min(10000, Math.round(ms)));
+    saveSettings();
+    if (from !== 'field') el.speedOut.value = String(S.settings.delay);
+    if (from !== 'slider') el.speed.value = String(nearestSpeed(S.settings.delay));
+    el.speedOut.title = S.settings.delay === 0 ? t('speed.max') : t('tb.delay');
+    if (S.run.state === 'running') { clearTimer(); scheduleLoop(); }
+  }
+
+  function nearestSpeed(ms) {
+    let best = 0;
+    SPEEDS.forEach((s, i) => { if (Math.abs(s - ms) < Math.abs(SPEEDS[best] - ms)) best = i; });
+    return best;
+  }
+
   function updateSpeedLabel() {
-    const ms = SPEEDS[S.settings.speed];
-    el.speedOut.textContent = ms === 0 ? t('speed.max') : ms >= 1000 ? (ms / 1000).toLocaleString(I18N.lang) + ' s' : ms + ' ms';
+    const ms = getDelay();
+    el.speedOut.value = String(ms);
+    el.speed.value = String(nearestSpeed(ms));
+    el.speedOut.title = ms === 0 ? t('speed.max') : t('tb.delay');
   }
 
   // ---- Zoom
@@ -6389,14 +7953,14 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
 
   function scheduleLoop(immediate) {
     clearTimer();
-    const delay = SPEEDS[S.settings.speed];
+    const delay = getDelay();
     S.run.timer = setTimeout(loop, immediate ? 0 : delay);
   }
 
   function loop() {
     S.run.timer = null;
     if (S.run.state !== 'running') return;
-    const delay = SPEEDS[S.settings.speed];
+    const delay = getDelay();
     if (S.run.interp) { S.run.interp.changed.clear(); S.run.interp.changedElems.clear(); }
     if (delay > 0) {
       advanceVisible(true);
@@ -6677,9 +8241,9 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
   async function openFile() {
     if (!inSandboxViewer() && window.showOpenFilePicker) {
       try {
-        const [handle] = await window.showOpenFilePicker({ types: [{ description: 'Blockbild', accept: { 'application/json': ['.bb', '.json'] } }] });
+        const [handle] = await window.showOpenFilePicker({ types: [{ description: 'Blockbild', accept: { 'application/json': ['.bb', '.json'] } }, { description: 'Python', accept: { 'text/x-python': ['.py'] } }] });
         const f = await handle.getFile();
-        loadFileText(await f.text(), f.name, handle);
+        loadFileText(await f.text(), f.name, /[.]py$/i.test(f.name) ? null : handle);
         return;
       } catch (e) {
         if (e && e.name === 'AbortError') return;
@@ -6688,7 +8252,37 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     el.fileInput.click();
   }
 
+  /** Python-Datei übersetzen und als Blockbild laden. */
+  async function loadPython(text, name) {
+    let res;
+    try {
+      res = BBE.pyimport.convert(text, { t });
+    } catch (e) {
+      const msg = e instanceof BBE.pyimport.PyError ? t('dlg.pyFail', e.line || '?', t(e.key, e.args)) : t('rInternal', e.message);
+      BBE.ui.dialog({ t, title: t('tb.open'), body: msg, actions: [{ label: t('dlg.ok'), value: null, primary: true }] });
+      return;
+    }
+    if (!programIsEmpty() && S.dirty) {
+      const ok = await BBE.ui.dialog({ t, title: t('dlg.newTitle'), body: t('dlg.newText'), actions: [{ label: t('dlg.cancel'), value: null }, { label: t('tb.open'), value: 'ok', primary: true }] });
+      if (ok !== 'ok') return;
+    }
+    // .py wird nie überschrieben: Speichern legt eine neue .bb-Datei an
+    loadProgram(M.programFromBB(res.bb), slug(name.replace(/[.]py$/i, '')), null, { dirty: true });
+    toast(t('toast.pyLoaded', name));
+    if (res.warnings.length) {
+      const list = h('ul.py-warn');
+      for (const w of res.warnings) list.appendChild(h('li', null, h('b', null, t('dlg.pyLine', w.line)), ' ', t(w.key, w.args)));
+      BBE.ui.dialog({ t, title: t('dlg.pyTitle', name), body: [t('dlg.pyText'), list], actions: [{ label: t('dlg.ok'), value: null, primary: true }] });
+    }
+  }
+
+  const looksLikePython = (text) => !/^\s*[{[]/.test(text) && /^[ \t]*(def |import |from |print\(|#|[A-Za-z_]\w*[ \t]*=|if |for |while )/m.test(text);
+
   async function loadFileText(text, name, handle) {
+    if (/[.]py$/i.test(name || '') || (!/[.](bb|json)$/i.test(name || '') && looksLikePython(text))) {
+      loadPython(text, name || 'programm.py');
+      return;
+    }
     let obj;
     try {
       obj = M.parseBB(text);
