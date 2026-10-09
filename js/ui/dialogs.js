@@ -13,7 +13,9 @@
     if (openMenu) {
       const m = openMenu;
       openMenu = null;
-      m.el.remove();
+      // sanft ausblenden
+      m.el.classList.add('out');
+      setTimeout(() => m.el.remove(), 130);
       document.removeEventListener('pointerdown', m.outside, true);
       document.removeEventListener('keydown', m.keys, true);
       window.removeEventListener('blur', closeMenu);
@@ -89,8 +91,10 @@
       const finish = (value) => {
         if (finished) return;
         finished = true;
-        if (dlg.open) { try { dlg.close(); } catch (e) { dlg.removeAttribute('open'); } }
-        dlg.remove();
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const done = () => { if (dlg.open) { try { dlg.close(); } catch (e) { dlg.removeAttribute('open'); } } dlg.remove(); };
+        if (reduce || document.hidden) done();
+        else { dlg.classList.add('out'); setTimeout(done, 140); }
         if (opts.onClose) opts.onClose(value);
         resolve(value);
       };

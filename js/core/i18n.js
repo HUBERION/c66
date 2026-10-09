@@ -57,7 +57,7 @@
     'call.none': '– Unterprogramm –', 'call.noFns': 'Noch kein Unterprogramm – über + anlegen',
 
     // Leere Bereiche
-    'seq.empty': 'Block hierher ziehen', 'seq.emptyShort': '∅', 'seq.add': 'Block einfügen',
+    'dnd.trash': 'Hier loslassen zum Löschen', 'seq.empty': 'Block hierher ziehen', 'seq.emptyShort': '∅', 'seq.add': 'Block einfügen',
     'canvas.emptyTitle': 'Leeres Programm', 'canvas.emptyText': 'Zieh einen Baustein aus der Palette hierher oder tippe ihn an.',
 
     // Kontextmenü
@@ -271,7 +271,7 @@
     'param.arrayRef': 'Arrays are always passed as the original', 'param.remove': 'Remove parameter',
     'call.none': '– subprogram –', 'call.noFns': 'No subprogram yet – add one with +',
 
-    'seq.empty': 'Drop a block here', 'seq.emptyShort': '∅', 'seq.add': 'Insert block',
+    'dnd.trash': 'Drop here to delete', 'seq.empty': 'Drop a block here', 'seq.emptyShort': '∅', 'seq.add': 'Insert block',
     'canvas.emptyTitle': 'Empty program', 'canvas.emptyText': 'Drag a block from the palette or tap it.',
 
     'ctx.comment': 'Edit comment', 'ctx.duplicate': 'Duplicate', 'ctx.copy': 'Copy', 'ctx.cut': 'Cut',

@@ -228,7 +228,10 @@ kbd {
   background: transparent; text-align: left; user-select: none; touch-action: manipulation;
   cursor: grab;
 }
+.pal-item { transition: background-color .16s ease, border-color .16s ease, opacity .16s ease; }
+.pal-item .pal-ic { transition: transform .16s ease; }
 .pal-item:hover { background: var(--surface-2); border-color: var(--line); }
+.pal-item:hover .pal-ic { transform: scale(1.06); }
 .pal-item:active { cursor: grabbing; }
 .pal-item .pal-ic {
   width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center;
@@ -256,25 +259,46 @@ kbd {
 }
 .sel-bar .btn.icon { width: 44px; height: 40px; }
 .tabs {
-  display: flex; align-items: flex-end; gap: 2px; padding: 8px 12px 0;
+  display: flex; align-items: center; gap: 4px; padding: 7px 12px;
   background: var(--surface-2); border-bottom: 1px solid var(--line);
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
 }
 .tabs::-webkit-scrollbar, .side-tabs::-webkit-scrollbar { display: none; }
 .tab {
-  display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 6px 0 12px;
-  border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0;
-  background: transparent; color: var(--fg-2); white-space: nowrap; position: relative; top: 1px;
+  display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 7px; flex: none;
+  border: 1px solid transparent; border-radius: 9px;
+  background: transparent; color: var(--fg-2); white-space: nowrap; position: relative;
   font-family: var(--font-code); font-size: 13px;
+  transition: background-color .16s ease, color .16s ease, box-shadow .16s ease, border-color .16s ease;
 }
-.tab:hover { color: var(--fg); background: var(--surface-3); }
-.tab.active { background: var(--paper); color: var(--fg); border-color: var(--line); font-weight: 600; }
-.tab .tab-kind { font: 600 10px/1 var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-3); }
-.tab .tab-x { width: 20px; height: 20px; border-radius: 4px; display: grid; place-items: center; border: 0; background: transparent; color: var(--fg-3); padding: 0; }
+.tab:hover { color: var(--fg); background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.tab.active {
+  background: var(--surface); color: var(--fg); border-color: var(--line); font-weight: 600;
+  box-shadow: 0 1px 2px rgba(28, 35, 49, 0.06), 0 2px 8px rgba(28, 35, 49, 0.06);
+}
+.tab-ic {
+  width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; flex: none;
+  background: var(--c-call-bg); color: var(--c-call); transition: background-color .16s ease, color .16s ease;
+}
+.tab-ic.main { background: var(--accent-soft); color: var(--accent); }
+.tab-ic svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.tab:not(.active) .tab-ic { background: transparent; color: var(--fg-3); }
+.tab .tab-name { padding-right: 2px; }
+.tab .tab-par { color: var(--fg-3); font-weight: 400; margin-left: -6px; }
+.tab .tab-x {
+  width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; border: 0; background: transparent; color: var(--fg-3); padding: 0;
+  opacity: 0; transition: opacity .14s ease, background-color .14s ease, color .14s ease;
+}
+.tab:hover .tab-x, .tab.active .tab-x, .tab .tab-x:focus-visible { opacity: 1; }
 .tab .tab-x:hover { background: var(--err-soft); color: var(--err); }
 .tab .tab-x svg { width: 13px; height: 13px; }
-.tab .tab-run { width: 7px; height: 7px; border-radius: 50%; background: var(--hl-line); box-shadow: 0 0 0 3px var(--hl-mark); }
-.tab-add { border: 1px dashed var(--line-strong); background: transparent; color: var(--fg-2); height: 28px; margin-bottom: 4px; margin-left: 6px; border-radius: 7px; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px 0 8px; font-size: 13px; white-space: nowrap; }
+.tab .tab-run { position: absolute; top: 4px; left: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--hl-line); box-shadow: 0 0 0 2px var(--surface-2); }
+.tab-sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; flex: none; }
+.tab-add {
+  border: 1px dashed var(--line-strong); background: transparent; color: var(--fg-2); height: 30px; margin-left: 4px; flex: none;
+  border-radius: 9px; display: inline-flex; align-items: center; gap: 5px; padding: 0 11px 0 8px; font-size: 13px; white-space: nowrap;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
 .tab-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .tab-add svg { width: 15px; height: 15px; }
 
@@ -533,6 +557,30 @@ kbd {
 .drag-ghost .ghost-count { background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 0 6px; font-size: 11px; }
 .dragging-src { opacity: .35; }
 body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
+body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-select: none !important; }
+
+/* Lösch-Zone über dem Baukasten */
+.trash-zone {
+  position: fixed; z-index: 950; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: color-mix(in srgb, var(--surface) 95%, transparent); backdrop-filter: blur(3px); box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--surface) 95%, transparent);
+  border: 2px dashed color-mix(in srgb, var(--err) 55%, var(--line)); border-radius: 14px;
+  color: var(--err); font-weight: 600; font-size: 13.5px; text-align: center; padding: 16px;
+  opacity: 0; transform: scale(.98); transition: opacity .16s ease, transform .16s ease, background-color .16s ease, border-color .16s ease;
+}
+.trash-zone.on { opacity: 1; transform: none; }
+.trash-zone svg.ic { width: 34px; height: 34px; stroke-width: 1.6; transition: transform .16s ease; }
+.trash-zone.hot { background: color-mix(in srgb, var(--err) 12%, var(--surface)); border-style: solid; border-color: var(--err); }
+.trash-zone.hot svg.ic { transform: scale(1.15) rotate(-6deg); }
+.drag-ghost.to-trash { border-color: var(--err); color: var(--err); box-shadow: 0 0 0 3px var(--err-soft), var(--shadow-pop); }
+
+/* Auswahlrahmen */
+.marquee {
+  position: absolute; z-index: 25; pointer-events: none; border-radius: 3px;
+  border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent);
+  animation: fade-in .1s ease-out;
+}
+.marquee.out { animation: fade-out .14s ease-in forwards; }
+.blk::after { transition: border-color .12s ease; }
 
 /* ------------------------------------------------------------------ Seitenleiste */
 .side { background: var(--surface); border-left: 1px solid var(--line); display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; min-width: 0; }
@@ -541,6 +589,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   height: 34px; padding: 0 12px; white-space: nowrap; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0;
   background: transparent; color: var(--fg-2); display: inline-flex; align-items: center; gap: 6px; position: relative; top: 1px; font-weight: 500;
 }
+.side-tab { transition: color .16s ease, background-color .16s ease; }
 .side-tab:hover { color: var(--fg); }
 .side-tab.active { background: var(--surface); color: var(--fg); border-color: var(--line); }
 .side-tab .badge { font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: inline-grid; place-items: center; }
@@ -641,7 +690,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start;
   padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); text-align: left; width: 100%;
 }
-.prob:hover { border-color: var(--accent); }
+.prob { transition: border-color .14s ease, background-color .14s ease; }
+.prob:hover { border-color: var(--accent); background: var(--accent-soft); }
 .prob svg { width: 16px; height: 16px; margin-top: 1px; }
 .prob.error svg { color: var(--err); }
 .prob.warn svg { color: var(--warn); }
@@ -678,7 +728,20 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 0; border-radius: 6px; background: transparent;
   text-align: left; width: 100%; font-size: 13.5px;
 }
+.menu .mi { transition: background-color .14s ease, color .14s ease; }
+.menu .mi svg { transition: color .14s ease; }
 .menu .mi:hover, .menu .mi:focus-visible { background: var(--accent-soft); outline: none; }
+.menu .mi:hover svg, .menu .mi:focus-visible svg { color: var(--accent); }
+.menu .mi.danger:hover { background: var(--err-soft); }
+.menu .mi.danger:hover svg { color: var(--err); }
+.menu .mi .pal-ic { transition: transform .14s ease; }
+.menu .mi:hover .pal-ic { transform: scale(1.08); }
+.menu { animation: pop-in .14s ease-out; transform-origin: top left; }
+.menu.out, .ac-pop.out { animation: pop-out .12s ease-in forwards; pointer-events: none; }
+.ac-pop { animation: pop-in .12s ease-out; transform-origin: top left; }
+.ac-pop .ac-item { transition: background-color .12s ease; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(-4px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes pop-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-3px) scale(.98); } }
 .menu .mi:disabled { opacity: .45; cursor: default; background: transparent; }
 .menu .mi svg { width: 16px; height: 16px; color: var(--fg-2); }
 .menu .mi .mi-key { margin-left: auto; color: var(--fg-3); font-size: 11.5px; padding-left: 16px; }
@@ -697,7 +760,14 @@ dialog.dlg {
   box-shadow: var(--shadow-pop); width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px);
 }
 dialog.dlg.wide { width: min(860px, calc(100vw - 32px)); }
-dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur(2px); }
+dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur(2px); animation: fade-in .18s ease-out; }
+dialog.dlg[open] { animation: dlg-in .18s cubic-bezier(.2, .8, .3, 1); }
+dialog.dlg.out { animation: dlg-out .14s ease-in forwards; }
+dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
+@keyframes dlg-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes dlg-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(6px) scale(.985); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
 .dlg-inner { display: flex; flex-direction: column; max-height: calc(100vh - 50px); }
 .dlg-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px 6px; }
 .dlg-head h2 { margin: 0; font: 650 18px/1.25 var(--font-display); letter-spacing: -0.01em; text-wrap: balance; }
@@ -737,7 +807,8 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
   display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 10px;
   border: 1px solid var(--line); background: var(--surface);
 }
-.ex-card:hover { border-color: var(--accent); background: var(--accent-soft); }
+.ex-card { transition: background-color .16s ease, border-color .16s ease, transform .16s ease, box-shadow .16s ease; }
+.ex-card:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); box-shadow: var(--shadow); }
 .ex-card .ex-title { font-weight: 650; font-size: 14px; }
 .ex-card .ex-desc { font-size: 12.5px; color: var(--fg-2); }
 .ex-card .ex-meta { display: flex; gap: 4px; margin-top: 4px; }
@@ -987,7 +1058,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     'call.none': '– Unterprogramm –', 'call.noFns': 'Noch kein Unterprogramm – über + anlegen',
 
     // Leere Bereiche
-    'seq.empty': 'Block hierher ziehen', 'seq.emptyShort': '∅', 'seq.add': 'Block einfügen',
+    'dnd.trash': 'Hier loslassen zum Löschen', 'seq.empty': 'Block hierher ziehen', 'seq.emptyShort': '∅', 'seq.add': 'Block einfügen',
     'canvas.emptyTitle': 'Leeres Programm', 'canvas.emptyText': 'Zieh einen Baustein aus der Palette hierher oder tippe ihn an.',
 
     // Kontextmenü
@@ -1201,7 +1272,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     'param.arrayRef': 'Arrays are always passed as the original', 'param.remove': 'Remove parameter',
     'call.none': '– subprogram –', 'call.noFns': 'No subprogram yet – add one with +',
 
-    'seq.empty': 'Drop a block here', 'seq.emptyShort': '∅', 'seq.add': 'Insert block',
+    'dnd.trash': 'Drop here to delete', 'seq.empty': 'Drop a block here', 'seq.emptyShort': '∅', 'seq.add': 'Insert block',
     'canvas.emptyTitle': 'Empty program', 'canvas.emptyText': 'Drag a block from the palette or tap it.',
 
     'ctx.comment': 'Edit comment', 'ctx.duplicate': 'Duplicate', 'ctx.copy': 'Copy', 'ctx.cut': 'Cut',
@@ -5227,6 +5298,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
     more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
     wrap: '<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="8" y="9" width="10" height="9" rx="1"/>',
+    home: '<path d="m3 10.5 9-7.5 9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     runTo: '<path d="M5 12h10"/><path d="m11 6 6 6-6 6"/><path d="M20 4v16"/>'
   };
 
@@ -5667,6 +5739,8 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     let drag = null;      // laufender Ziehvorgang
     let suppressClick = false;
     let line = null;
+    let trash = null;     // Lösch-Zone über dem Baukasten
+    let mq = null;        // Auswahlrahmen
 
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('click', (e) => {
@@ -5692,7 +5766,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     function onDown(e) {
       if (e.button !== 0 || drag) return;
       const src = sourceOf(e.target);
-      if (!src) return;
+      if (!src) { marqueeStart(e); return; }
       canvas = getCanvas();
       pending = { src, x: e.clientX, y: e.clientY, pointerId: e.pointerId, type: e.pointerType, timer: null };
       if (e.pointerType === 'touch') {
@@ -5767,6 +5841,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       document.body.appendChild(drag.ghost);
       document.body.classList.add('is-dragging');
       if (ids) ids.forEach((id) => { const el = canvas.querySelector('.blk[data-id="' + id + '"]'); if (el) el.classList.add('dragging-src'); });
+      if (src.type === 'move') showTrash();
       app.closePopups();
       moveGhost();
       updateTarget();
@@ -5784,9 +5859,38 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       canvas.querySelectorAll('.drop-target-comp').forEach((el) => el.classList.remove('drop-target-comp'));
     }
 
+    function showTrash() {
+      const pal = document.querySelector('.palette');
+      if (!pal) return;
+      const r = pal.getBoundingClientRect();
+      if (r.width < 20 || r.height < 20) return;
+      trash = document.createElement('div');
+      trash.className = 'trash-zone';
+      trash.style.left = r.left + 'px';
+      trash.style.top = r.top + 'px';
+      trash.style.width = r.width + 'px';
+      trash.style.height = r.height + 'px';
+      trash.appendChild(BBE.icons.icon('trash'));
+      const txt = document.createElement('span');
+      txt.textContent = app.t('dnd.trash');
+      trash.appendChild(txt);
+      document.body.appendChild(trash);
+      requestAnimationFrame(() => trash && trash.classList.add('on'));
+    }
+
+    function overTrash() {
+      if (!trash) return false;
+      const r = trash.getBoundingClientRect();
+      return drag.x >= r.left && drag.x <= r.right && drag.y >= r.top && drag.y <= r.bottom;
+    }
+
     function updateTarget() {
       clearMarks();
       drag.target = null;
+      const hot = overTrash();
+      if (trash) trash.classList.toggle('hot', hot);
+      drag.ghost.classList.toggle('to-trash', hot);
+      if (hot) { drag.target = { trash: true }; return; }
       const el = document.elementFromPoint(drag.x, drag.y);
       if (!el || !canvas.contains(el)) return;
 
@@ -5860,6 +5964,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       cancelAnimationFrame(drag.raf);
       drag.ghost.remove();
       document.body.classList.remove('is-dragging');
+      if (trash) { const tz = trash; trash = null; tz.classList.remove('on'); setTimeout(() => tz.remove(), 160); }
       canvas.querySelectorAll('.dragging-src').forEach((el) => el.classList.remove('dragging-src'));
       clearMarks();
       drag = null;
@@ -5881,10 +5986,113 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
         if (d.isComponent) app.componentHint(d.kind);
         return;
       }
+      if (d.target.trash) { app.deleteIds(d.ids); return; }
       if (d.target.comp) { app.addComponent(d.kind, d.target.comp); return; }
       const { owner, key, index } = d.target;
       if (d.src.type === 'new') app.insertNew(d.kind, owner, key, index);
       else app.moveNodes(d.ids, owner, key, index, copy);
+    }
+
+    // ---------------------------------------------------------------- Auswahlrahmen (wie im Explorer)
+
+    function marqueeStart(e) {
+      const t = e.target;
+      if (e.pointerType === 'touch' || !(t instanceof Element)) return false;
+      canvas = getCanvas();
+      if (!canvas.contains(t)) return false;
+      if (t.closest('.blk, .fn-head, .canvas-tools, input, select, button, textarea, .sel-bar, .menu')) return false;
+      const cr = canvas.getBoundingClientRect();
+      // nicht auf den Scrollleisten starten
+      if (e.clientX > cr.left + canvas.clientWidth || e.clientY > cr.top + canvas.clientHeight) return false;
+      mq = {
+        pointerId: e.pointerId, x: e.clientX, y: e.clientY,
+        x0: e.clientX - cr.left + canvas.scrollLeft, y0: e.clientY - cr.top + canvas.scrollTop,
+        additive: e.ctrlKey || e.metaKey || e.shiftKey, base: app.selectionIds(), box: null, raf: 0
+      };
+      window.addEventListener('pointermove', mqMove, true);
+      window.addEventListener('pointerup', mqUp, true);
+      window.addEventListener('pointercancel', mqUp, true);
+      return true;
+    }
+
+    function mqMove(e) {
+      if (!mq || e.pointerId !== mq.pointerId) return;
+      mq.x = e.clientX;
+      mq.y = e.clientY;
+      if (!mq.box) {
+        const cr = canvas.getBoundingClientRect();
+        if (Math.hypot(mq.x - (mq.x0 + cr.left - canvas.scrollLeft), mq.y - (mq.y0 + cr.top - canvas.scrollTop)) < 4) return;
+        mq.box = document.createElement('div');
+        mq.box.className = 'marquee';
+        canvas.appendChild(mq.box);
+        document.body.classList.add('is-selecting');
+        app.closePopups();
+        mqTick();
+      }
+      e.preventDefault();
+      mqUpdate();
+    }
+
+    function mqRect() {
+      const cr = canvas.getBoundingClientRect();
+      const x1 = mq.x - cr.left + canvas.scrollLeft, y1 = mq.y - cr.top + canvas.scrollTop;
+      return { left: Math.min(mq.x0, x1), top: Math.min(mq.y0, y1), right: Math.max(mq.x0, x1), bottom: Math.max(mq.y0, y1), cr };
+    }
+
+    function mqUpdate() {
+      const r = mqRect();
+      Object.assign(mq.box.style, { left: r.left + 'px', top: r.top + 'px', width: (r.right - r.left) + 'px', height: (r.bottom - r.top) + 'px' });
+      // in Bildschirmkoordinaten vergleichen
+      const sx = r.cr.left - canvas.scrollLeft, sy = r.cr.top - canvas.scrollTop;
+      const box = { left: r.left + sx, top: r.top + sy, right: r.right + sx, bottom: r.bottom + sy };
+      const hits = [];
+      const visit = (seqEl) => {
+        for (const blk of seqEl.children) {
+          if (!blk.classList.contains('blk') || !blk.dataset.id) continue;
+          const b = blk.getBoundingClientRect();
+          const meets = b.left < box.right && b.right > box.left && b.top < box.bottom && b.bottom > box.top;
+          if (!meets) continue;
+          const inside = b.left >= box.left && b.right <= box.right && b.top >= box.top && b.bottom <= box.bottom;
+          const inner = blk.querySelectorAll(':scope > .seq');
+          // ganz umrahmt oder einfacher Block → auswählen; sonst in die Zweige schauen
+          if (inside || !inner.length) hits.push(blk.dataset.id);
+          else inner.forEach(visit);
+        }
+      };
+      canvas.querySelectorAll('.seq.root').forEach(visit);
+      const ids = mq.additive ? Array.from(new Set(mq.base.concat(hits))) : hits;
+      app.setSelection(ids);
+    }
+
+    function mqTick() {
+      if (!mq || !mq.box) return;
+      const r = canvas.getBoundingClientRect();
+      let dx = 0, dy = 0;
+      if (mq.y < r.top + EDGE) dy = -Math.ceil((r.top + EDGE - mq.y) / 5);
+      else if (mq.y > r.bottom - EDGE) dy = Math.ceil((mq.y - (r.bottom - EDGE)) / 5);
+      if (mq.x < r.left + EDGE) dx = -Math.ceil((r.left + EDGE - mq.x) / 5);
+      else if (mq.x > r.right - EDGE) dx = Math.ceil((mq.x - (r.right - EDGE)) / 5);
+      if (dx || dy) { canvas.scrollLeft += dx; canvas.scrollTop += dy; mqUpdate(); }
+      mq.raf = requestAnimationFrame(mqTick);
+    }
+
+    function mqUp(e) {
+      if (!mq || e.pointerId !== mq.pointerId) return;
+      window.removeEventListener('pointermove', mqMove, true);
+      window.removeEventListener('pointerup', mqUp, true);
+      window.removeEventListener('pointercancel', mqUp, true);
+      cancelAnimationFrame(mq.raf);
+      if (mq.box) {
+        const box = mq.box;
+        box.classList.add('out');
+        setTimeout(() => box.remove(), 140);
+        document.body.classList.remove('is-selecting');
+        // der folgende Klick auf die Fläche würde die Auswahl wieder aufheben
+        suppressClick = true;
+        setTimeout(() => { suppressClick = false; }, 0);
+        canvas.focus({ preventScroll: true });
+      }
+      mq = null;
     }
 
     return { isDragging: () => !!drag };
@@ -6160,7 +6368,9 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     if (openMenu) {
       const m = openMenu;
       openMenu = null;
-      m.el.remove();
+      // sanft ausblenden
+      m.el.classList.add('out');
+      setTimeout(() => m.el.remove(), 130);
       document.removeEventListener('pointerdown', m.outside, true);
       document.removeEventListener('keydown', m.keys, true);
       window.removeEventListener('blur', closeMenu);
@@ -6236,8 +6446,10 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       const finish = (value) => {
         if (finished) return;
         finished = true;
-        if (dlg.open) { try { dlg.close(); } catch (e) { dlg.removeAttribute('open'); } }
-        dlg.remove();
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const done = () => { if (dlg.open) { try { dlg.close(); } catch (e) { dlg.removeAttribute('open'); } } dlg.remove(); };
+        if (reduce || document.hidden) done();
+        else { dlg.classList.add('out'); setTimeout(done, 140); }
         if (opts.onClose) opts.onClose(value);
         resolve(value);
       };
@@ -6973,7 +7185,10 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
     for (const fn of S.program.fns) {
       const tab = h('button.tab' + (fn.id === S.activeFnId ? '.active' : ''), { type: 'button', role: 'tab', dataset: { fn: fn.id }, 'aria-selected': String(fn.id === S.activeFnId) });
       if (S.run.hl && S.run.hl.fnId === fn.id && isRunning()) tab.appendChild(h('span.tab-run'));
-      tab.appendChild(h('span', null, fn.isMain ? 'main' : (fn.name || '?')));
+      tab.appendChild(h('span.tab-ic' + (fn.isMain ? '.main' : ''), null, fn.isMain ? icon('home') : kindIcon('call')));
+      tab.appendChild(h('span.tab-name', null, fn.isMain ? 'main' : (fn.name || '?')));
+      if (!fn.isMain) tab.appendChild(h('span.tab-par', null, '()'));
+      tab.title = fn.isMain ? t('fn.main') : t('fn.sub') + ' ' + (fn.name || '');
       if (!fn.isMain) {
         const x = h('span.tab-x', { role: 'button', title: t('tab.close'), 'aria-label': t('tab.close') }, icon('x'));
         x.addEventListener('click', (e) => { e.stopPropagation(); deleteFunction(fn); });
@@ -6987,6 +7202,7 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       });
       el.tabs.appendChild(tab);
     }
+    if (S.program.fns.length) el.tabs.appendChild(h('span.tab-sep'));
     const add = h('button.tab-add', { type: 'button', title: t('tab.add') }, icon('plus'), t('fn.sub'));
     add.addEventListener('click', addFunction);
     el.tabs.appendChild(add);
@@ -8570,7 +8786,20 @@ dialog.dlg::backdrop { background: rgba(15, 19, 27, 0.45); backdrop-filter: blur
       return [id];
     },
     closePopups() { BBE.ui.closeMenu(); },
-    componentHint, addComponent, insertNew, moveNodes
+    componentHint, addComponent, insertNew, moveNodes,
+    deleteIds(ids) {
+      S.sel = new Set(ids);
+      S.anchor = ids[ids.length - 1];
+      deleteSelection();
+    },
+    selectionIds() { return Array.from(S.sel); },
+    setSelection(ids) {
+      const same = ids.length === S.sel.size && ids.every((id) => S.sel.has(id));
+      if (same) return;
+      S.sel = new Set(ids);
+      S.anchor = ids.length ? ids[ids.length - 1] : null;
+      applySelection();
+    }
   };
 
   // ================================================================ Start

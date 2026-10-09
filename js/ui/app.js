@@ -334,7 +334,10 @@
     for (const fn of S.program.fns) {
       const tab = h('button.tab' + (fn.id === S.activeFnId ? '.active' : ''), { type: 'button', role: 'tab', dataset: { fn: fn.id }, 'aria-selected': String(fn.id === S.activeFnId) });
       if (S.run.hl && S.run.hl.fnId === fn.id && isRunning()) tab.appendChild(h('span.tab-run'));
-      tab.appendChild(h('span', null, fn.isMain ? 'main' : (fn.name || '?')));
+      tab.appendChild(h('span.tab-ic' + (fn.isMain ? '.main' : ''), null, fn.isMain ? icon('home') : kindIcon('call')));
+      tab.appendChild(h('span.tab-name', null, fn.isMain ? 'main' : (fn.name || '?')));
+      if (!fn.isMain) tab.appendChild(h('span.tab-par', null, '()'));
+      tab.title = fn.isMain ? t('fn.main') : t('fn.sub') + ' ' + (fn.name || '');
       if (!fn.isMain) {
         const x = h('span.tab-x', { role: 'button', title: t('tab.close'), 'aria-label': t('tab.close') }, icon('x'));
         x.addEventListener('click', (e) => { e.stopPropagation(); deleteFunction(fn); });
@@ -348,6 +351,7 @@
       });
       el.tabs.appendChild(tab);
     }
+    if (S.program.fns.length) el.tabs.appendChild(h('span.tab-sep'));
     const add = h('button.tab-add', { type: 'button', title: t('tab.add') }, icon('plus'), t('fn.sub'));
     add.addEventListener('click', addFunction);
     el.tabs.appendChild(add);
@@ -1931,7 +1935,20 @@
       return [id];
     },
     closePopups() { BBE.ui.closeMenu(); },
-    componentHint, addComponent, insertNew, moveNodes
+    componentHint, addComponent, insertNew, moveNodes,
+    deleteIds(ids) {
+      S.sel = new Set(ids);
+      S.anchor = ids[ids.length - 1];
+      deleteSelection();
+    },
+    selectionIds() { return Array.from(S.sel); },
+    setSelection(ids) {
+      const same = ids.length === S.sel.size && ids.every((id) => S.sel.has(id));
+      if (same) return;
+      S.sel = new Set(ids);
+      S.anchor = ids.length ? ids[ids.length - 1] : null;
+      applySelection();
+    }
   };
 
   // ================================================================ Start

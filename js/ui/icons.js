@@ -51,6 +51,7 @@
     history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
     more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
     wrap: '<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="8" y="9" width="10" height="9" rx="1"/>',
+    home: '<path d="m3 10.5 9-7.5 9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     runTo: '<path d="M5 12h10"/><path d="m11 6 6 6-6 6"/><path d="M20 4v16"/>'
   };
 
