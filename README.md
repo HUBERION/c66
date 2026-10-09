@@ -107,3 +107,5 @@ Idee, Bedienkonzept und das `.bb`-Dateiformat stammen von ihnen – vielen Dank 
 
 Version 3 ist eine Neuentwicklung; aus dem alten Projekt wurde kein Code übernommen.
 Im Editor stehen die Credits unter *Einstellungen* und am Ende der *Hilfe*.
+
+Für die Weiterentwicklung (auch mit KI-Assistenten) siehe [CLAUDE.md](CLAUDE.md).

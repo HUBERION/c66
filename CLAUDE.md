@@ -1,0 +1,167 @@
+# Blockbild-Editor 3 – Übergabe und Arbeitskontext
+
+Diese Datei ist der Einstieg für Menschen **und KI-Assistenten**, die am Projekt weiterarbeiten.
+Sie fasst zusammen, was gebaut wurde, warum, wie es zusammenhängt und worauf man achten muss.
+Ansprechpartner ab jetzt: **Martin** (vorher: Markus Huber).
+
+## Worum es geht
+
+Ein Struktogramm-Editor (Nassi-Shneiderman / „Blockbild“) für den Programmierunterricht an Schulen.
+Schüler bauen Programme aus Blöcken, führen sie Schritt für Schritt aus (mit Stack-Ansicht) und
+exportieren sie als C-Code. Zielgruppe: Unterricht in Österreich, daher **Deutsch ist die Hauptsprache**
+(Englisch als zweite Sprache).
+
+- Live: **https://c66.xeox.at/** (GitHub Pages, Repo `HUBERION/c66`, Branch `main`, Ordner `/`, Datei `CNAME`)
+- Vorgänger: Blockbild-Editor 2.2 von Stefan Egger und Michael Delfser
+  (https://github.com/eggers97/block-diagram-editor, GPL-3.0, lief auf c65.at/BE/pages/Blocks-Editor.html).
+  **Version 3 ist eine komplette Neuentwicklung** – kein Code übernommen, nur Bedienidee und Dateiformat.
+  Die Credits für Egger/Delfser stehen in Einstellungen, Hilfe und README und sollen bleiben.
+
+## Harte Anforderungen (nicht brechen)
+
+1. **Keine Abhängigkeiten, kein Build-Zwang.** Reines HTML/CSS/JS, klassische `<script>`-Dateien
+   (keine ES-Module, damit `index.html` auch per `file://` läuft). Keine CDNs, keine Google Fonts
+   (DSGVO an Schulen) – nur System-Schriften.
+2. **`.bb`-Dateiformat kompatibel mit Version 2.x** – in beide Richtungen.
+   - Top-Level-Objekt: `main` + je ein Schlüssel pro Unterprogramm. **Keine weiteren Top-Level-Schlüssel
+     hinzufügen** – der alte Editor hält jeden Schlüssel außer `main` für ein Unterprogramm.
+   - Feldnamen der Anweisungen exakt wie im Original (`DeclarationStatement`, `variableName`,
+     `initializationValue`, `DoWhileStatement` für WIEDERHOLE…BIS, `onlyIn: false` = InOut, …).
+   - Typen intern `integer|string|integer[]|string[]`; beim Laden werden auch alte Anzeigenamen
+     (`Number`, `Zahl`, `Text[]` …) akzeptiert (`model.normType`).
+   - Die Ergebnisvariable heißt immer `result` (im alten DE-Modus hieß sie `resultat`, war dort aber kaputt).
+3. **Simulation = C-Code = (bei Import) Python.** Gleiche Eingaben müssen gleiche Ausgaben liefern.
+   Das ist durch Tests abgesichert (siehe unten) – nach Änderungen an `interp.js`, `cgen.js` oder
+   `pyimport.js` immer die Tests laufen lassen und den C-Code mit gcc übersetzen.
+4. **Bedienbar auf Desktop, Tablet und Handy** (Touch: Antippen fügt ein, langes Drücken zieht).
+5. Alle sichtbaren Texte über `BBE.i18n.t(key)` – **immer DE und EN** pflegen (`js/core/i18n.js`).
+
+## Aufbau
+
+```
+index.html          Entwicklungs-Einstieg, lädt die Einzeldateien in fester Reihenfolge
+css/app.css         gesamte Gestaltung; Farb-Tokens oben (:root hell, dunkel per Media-Query + [data-theme])
+js/core/            ohne DOM, auch in Node lauffähig (Tests!)
+  i18n.js           alle Texte DE/EN, t(key, ...args) mit {0}-Platzhaltern
+  expr.js           Tokenizer + Pratt-Parser für Ausdrücke (gemeinsamer AST für Prüfung, Interpreter, C)
+  model.js          Datenmodell, Traversierung (walkSeq, childSeqs, getSeq), .bb laden/speichern
+  analyze.js        Gültigkeitsbereiche (Variablen gelten im ganzen Unterprogramm), Typen, Live-Prüfung
+  interp.js         Interpreter als Generator: jeder yield = ein sichtbarer Schritt
+  cgen.js           Übersetzung nach C99
+  examples.js       eingebaute Beispiele (im .bb-Format, Texte je Sprache über L(de, en))
+  pyimport.js       Python → Blockbild (eigener Tokenizer/Parser für die Schul-Teilmenge)
+js/ui/              Oberfläche
+  dom.js            h()-Helfer, Autosize von Feldern, Toasts, localStorage-Wrapper, Download
+  icons.js          Inline-SVG-Icons (P) und Mini-Struktogramme der Bausteine (K)
+  render.js         baut das Diagramm-DOM aus dem Modell (auch statisch für PNG-Export)
+  dnd.js            Ziehen & Ablegen (Pointer-Events), Lösch-Zone über dem Baukasten, Auswahlrahmen
+  panels.js         Stack-Ansicht, Konsole (mit Eingabezeile), C-Code-Hervorhebung, Prüfliste
+  dialogs.js        Menüs, modale Dialoge, Autovervollständigung
+  help.js           Hilfetexte DE/EN (HTML)
+  app.js            Zustand, Befehle, Verlauf (Undo), Ausführung, Dateien, Einstellungen – der Kleber
+tools/serve.cjs     lokaler Server:  node tools/serve.cjs  → http://localhost:8765/
+tools/build.mjs     baut dist/blockbild-editor.html (eine Datei, alles inline)
+tests/              Node-Tests ohne Abhängigkeiten (siehe unten)
+dist/               gebaute Einzeldatei (wird mit eingecheckt); artifact.html ist ignoriert
+```
+
+Alle Module hängen an `window.BBE` (bzw. `globalThis.BBE` in Node). Reihenfolge in `index.html` und
+`tests/load.cjs` beachten, wenn ein Modul dazukommt (core vor ui; `app.js` zuletzt).
+
+### Datenmodell
+
+```js
+program = { fns: [ main, ...unterprogramme ] }
+fn      = { id, name, isMain, returnType: 'void'|'integer'|'string', params: [{id,type,name,byRef,doc}], resultInit, body: [...] }
+block   = { id, kind, ...felder, comment }
+kind    = decl | input | output | assign | if | while | until | for | switch | call | comment
+if: { cond, then: [], else: [] | null }        switch: { expr, cases: [{id, value, body}], else }
+for: { counter, from, to, step, body }         call: { fn, target, args: [] }
+```
+
+Felder enthalten **Ausdrucks-Text** (z. B. `"Summe: " + s`); geparst wird bei Bedarf (`expr.parseCached`).
+IDs sind nur zur Laufzeit da und werden nicht gespeichert.
+
+### Ausführung (interp.js ↔ app.js)
+
+`Interpreter.run()` ist ein Generator. Ereignisse: `step` (Block/Teil ausgeführt, `part` = head/foot/result/return/end),
+`input` (Antwort per `gen.next(wert|null)`, `null` = abgebrochen → Variable behält Wert), `break` (Haltepunkt, vor dem Block),
+`tick` (unsichtbar, verhindert Endlosschleifen ohne Schritt). `app.js` treibt den Generator per `setTimeout`
+(Verzögerung = `settings.delay` in ms, 0 = so schnell wie möglich in 14-ms-Häppchen).
+Laufzeitfehler sind `RunError(key, args)`; der Speicherstand wird beim Fehler gesichert (`e.snapshot`, `e.where`).
+Speichermodell: jede Variable 8 Byte, Rahmen werden beim Rücksprung freigegeben; InOut-Parameter teilen die Zelle
+des Aufrufers (gleiche Adresse in der Stack-Ansicht).
+
+### C-Export (cgen.js)
+
+Zahl → `int` (Kommastellen fallen weg – bekannter, dokumentierter Unterschied), Text → `char[MAX_STRING_SIZE]`,
+InOut-Zahl → Zeiger, Arrays → `name[]` + `nameSize` (nur angelegt, wenn `.length` genutzt oder übergeben),
+Text-Verkettung → `snprintf` (mit Hilfspuffer, wenn das Ziel selbst vorkommt), Textvergleich → `strcmp`,
+FALLS mit Text → `if/else if`, verschachtelte Deklarationen werden an den Funktionsanfang gehoben.
+Bekannte harmlose gcc-Hinweise mit `-Wall -Wextra`: `-Wformat-truncation` bei `snprintf`, ungenutzter
+`…Size`-Parameter, wenn ein Unterprogramm die Array-Länge nicht braucht.
+
+### Python-Import (pyimport.js)
+
+Öffnen akzeptiert `.py` (oder Datei aufs Fenster ziehen). Unterstützt: Zuweisungen (erste Zuweisung → DEKLARATION,
+in Blöcken an den Anfang gehoben), `input`/`int(input())`, `print` (inkl. `sep`), f-Strings, `if/elif/else`,
+`while`, `while True … if c: break` → WIEDERHOLE…BIS, `for … in range(…)`, `for x in liste`, `match/case`,
+`def`/`return` (frühes `if … return` wird zu WENN/SONST umgebaut), Listen `[0]*n` / `[1,2,3]`, `len`, `min`, `max`,
+`abs`, Tupel-Tausch, `def main()` + `if __name__ == "__main__"`. Nicht Übertragbares wird zu einem
+`⚠ Zeile n nicht übersetzt: …`-Kommentar und landet in der Warnliste (Dialog nach dem Import).
+Typen werden in mehreren Durchläufen abgeleitet (Zuweisungen, Aufrufstellen, Rückgabewerte, Annotationen).
+
+## Arbeiten am Projekt
+
+```bash
+node tools/serve.cjs                 # Entwicklung: http://localhost:8765/  (index.html mit Einzeldateien)
+node tests/unit.cjs                  # 24 Grenzfälle: Parser, Interpreter, Prüfung, .bb-Format
+node tests/examples.cjs [ordner]     # alle eingebauten Beispiele DE+EN; mit Ordner: .c + .in schreiben
+node tests/python.cjs                # Python-Beispiele: Ausgabe von echtem Python vs. übersetztem Blockbild
+node tests/smoke-original.cjs <ordner-mit-alten-.bb>   # Original-Beispiele des 2.x-Editors
+sh tests/compile-c.sh <ordner>       # (Linux/WSL) gcc -std=c99 -Wall -Wextra + Ausführen mit .in-Dateien
+node tools/build.mjs                 # vor jedem Commit: dist/blockbild-editor.html neu bauen
+```
+
+Deployment: `git push` auf `main` – GitHub Pages liefert `index.html` aus dem Repo-Root aus (Live nach ~1–2 Min.).
+`dist/blockbild-editor.html` ist die Einzeldatei zum Hochladen auf andere Server oder zum Offline-Weitergeben.
+
+Commit-Stil bisher: deutsche Betreffzeile, kurze Aufzählung im Text.
+
+## Stolpersteine, die wir schon gefunden haben
+
+- **CSS-Kaskade:** Die Kategorie-Farben laufen über `--kc`/`--tint` aus `.cat-*`-Klassen. Keine späteren
+  Regeln mit gleicher Spezifität setzen, die diese Variablen überschreiben (hatte alle Farben gelöscht).
+- **`font:`-Kurzschreibweise** setzt `font-variant-ligatures` zurück. Die Regel, die Ligaturen abschaltet
+  (sonst zeigt „Cascadia Code“ `<=` als `≤`), steht deshalb **am Ende** von `app.css`.
+- **SVG in `display:grid; place-items:center`** wurde in einem Fall an falscher Stelle gezeichnet (Reiter-Icon
+  im Nachbarknopf) – Icon-Container mit Flexbox zentrieren.
+- **`<dialog>`-`close`-Ereignis** kommt in verdeckten Fenstern erst beim Neuzeichnen. `dialogs.js` schließt
+  deshalb selbst (`finish`) und hört zusätzlich auf `cancel`/`close`.
+- **iOS:** Felder < 16 px zoomen beim Antippen hinein → `maximum-scale=1` wird nur auf iOS gesetzt.
+  Ziffernblock (`inputmode=decimal`) hat kein Minus → Konsole nutzt die normale Tastatur.
+- **Android:** langes Drücken öffnet das Kontextmenü → wird während des Ziehens unterdrückt (`dnd.js`).
+- **Artifact-Vorschau (claude.ai):** Downloads, `alert/confirm/prompt`, `window.print` sind dort gesperrt.
+  `dom.inSandboxViewer()` erkennt das; Speichern läuft dort über `claude.use('downloads')` mit erlaubten
+  Endungen (`.bb.json`, `.c.txt`, `.png`). `tools/build.mjs` erzeugt dafür `dist/artifact.html`.
+- **Shell-Escaping:** Beim Patchen per Heredoc/Node-Einzeiler gingen Backslashes in Regexen mehrfach kaputt –
+  lieber Dateien direkt bearbeiten.
+
+## Bedienkonzept (Kurzfassung)
+
+Palette links (Klick fügt nach dem markierten Block ein, Ziehen legt gezielt ab; SONST/FALL dockt an WENN/FALLS an),
+Zeichenfläche mit Zoom, Reiter pro Unterprogramm, rechts Ablauf (Stack + Konsole) / C-Code / Prüfung.
+Blöcke verschieben (Strg = kopieren), auf den Baukasten ziehen = löschen, Auswahlrahmen auf freier Fläche,
+Kontextmenü bzw. ⋯/Aktionsleiste (Touch), Undo/Redo, Haltepunkte (F9), Darstellung „Blockbild“ (Beschriftung
+links, wie der Vorgänger) oder „Nassi-Shneiderman“ (Zweige nebeneinander), hell/dunkel, DE/EN.
+Automatische Sicherung im `localStorage` (`bbe3.autosave`, `bbe3.settings`); das alte Autosave
+(`autoSavedDiagram`) lässt sich über Exportieren wiederherstellen.
+
+## Offene Ideen / mögliche nächste Schritte
+
+- Echte Ganzzahl-Semantik für „Zahl“ als Einstellung (damit Simulation und C bei Division gleich rechnen).
+- Python-Import erweitern (`break`/`continue` per Merker-Variable, String-Methoden, `+=` auf Listen).
+- C-Export: ungenutzte `…Size`-Parameter mit `(void)` markieren; optional `double` statt `int`.
+- Export nach Python (umgekehrte Richtung) oder Java.
+- Mehr Python-Testprogramme in `tests/python/` (jede neue Fähigkeit mit einem Vergleich gegen echtes Python absichern).
+- Tests für die Oberfläche (bisher nur manuell im Browser bzw. per Skript gegen `BBE.app.api`).
