@@ -685,6 +685,15 @@ body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-sele
 .tok-cmt { color: var(--code-cmt); font-style: italic; }
 .tok-pp { color: var(--code-pp); }
 .code-note { font-size: 11.5px; color: var(--fg-3); }
+.code-head { padding: 8px 12px; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+/* Sprachwahl C | Java | Python – Segmente im Stil der Reiter */
+.lang-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+.lang-seg button {
+  height: 28px; padding: 0 12px; border: 1px solid transparent; border-radius: 7px; background: transparent;
+  color: var(--fg-2); font: 500 13px var(--font-ui); transition: background-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.lang-seg button:hover { color: var(--fg); }
+.lang-seg button.on { background: var(--surface); color: var(--fg); border-color: var(--line); box-shadow: 0 1px 2px rgba(28, 35, 49, 0.08); }
 
 /* Probleme */
 .prob-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }

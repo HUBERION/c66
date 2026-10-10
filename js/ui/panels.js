@@ -157,19 +157,36 @@
     get waiting() { return !!this.pending; }
   }
 
-  // ---------------------------------------------------------------- C-Code
+  // ---------------------------------------------------------------- Quelltext (C, Java, Python)
 
-  const C_KW = new Set('if else while for do switch case default break continue return sizeof'.split(' '));
-  const C_TYPES = new Set('int char void const static unsigned long short double float'.split(' '));
+  const words = (s) => new Set(s.split(' '));
+  const LANGS = {
+    c: {
+      kw: words('if else while for do switch case default break continue return sizeof'),
+      types: words('int char void const static unsigned long short double float'),
+      line: '//', block: true, pp: true, quotes: '"'
+    },
+    java: {
+      kw: words('if else while for do switch case default break continue return new static public private class import try catch throw true false null final'),
+      types: words('int char void double float long boolean String Scanner Integer Arrays System'),
+      line: '//', block: true, pp: false, quotes: '"'
+    },
+    python: {
+      kw: words('def return if elif else while for in break continue pass match case import from and or not True False None is lambda try except'),
+      types: words('int str float list print input range len isinstance'),
+      line: '#', block: false, pp: false, quotes: '"\''
+    }
+  };
 
-  function highlightC(pre, code) {
+  function highlight(pre, code, lang) {
+    const L = LANGS[lang] || LANGS.c;
     pre.textContent = '';
     let inBlock = false;
     for (const line of code.replace(/\n$/, '').split('\n')) {
       const el = h('span.cl');
       let i = 0;
       const push = (cls, text) => { if (!text) return; el.appendChild(cls ? h('span.' + cls, null, text) : document.createTextNode(text)); };
-      if (!inBlock && /^\s*#/.test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
+      if (L.pp && !inBlock && /^\s*#/.test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
       let buf = '';
       const flush = () => { push(null, buf); buf = ''; };
       while (i < line.length) {
@@ -182,20 +199,23 @@
           continue;
         }
         const rest = line.slice(i);
-        if (rest.startsWith('/*')) { flush(); inBlock = true; continue; }
-        if (rest.startsWith('//')) { flush(); push('tok-cmt', rest); i = line.length; break; }
-        if (rest[0] === '"') {
+        if (L.block && rest.startsWith('/*')) { flush(); inBlock = true; continue; }
+        if (rest.startsWith(L.line)) { flush(); push('tok-cmt', rest); i = line.length; break; }
+        // Python: f"…" und """…"""
+        const pre1 = lang === 'python' && /^[fFrR]["']/.test(rest) ? 1 : 0;
+        if (L.quotes.includes(rest[pre1])) {
           flush();
-          let j = 1;
-          while (j < rest.length && rest[j] !== '"') j += rest[j] === '\\' ? 2 : 1;
+          const q = rest[pre1];
+          let j = pre1 + 1;
+          while (j < rest.length && rest[j] !== q) j += rest[j] === '\\' ? 2 : 1;
           push('tok-str', rest.slice(0, j + 1));
           i += j + 1;
           continue;
         }
         const m = /^[A-Za-z_]\w*/.exec(rest);
         if (m) {
-          if (C_KW.has(m[0])) { flush(); push('tok-kw', m[0]); }
-          else if (C_TYPES.has(m[0])) { flush(); push('tok-type', m[0]); }
+          if (L.kw.has(m[0])) { flush(); push('tok-kw', m[0]); }
+          else if (L.types.has(m[0])) { flush(); push('tok-type', m[0]); }
           else buf += m[0];
           i += m[0].length;
           continue;
@@ -243,5 +263,5 @@
     return map[field] ? t(map[field]).replace(/"/g, '') : field;
   }
 
-  BBE.panels = { renderStack, Console, highlightC, renderProblems };
+  BBE.panels = { renderStack, Console, highlight, highlightC: (pre, code) => highlight(pre, code, 'c'), renderProblems };
 })(window);

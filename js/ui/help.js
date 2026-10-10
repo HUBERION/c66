@@ -11,7 +11,7 @@
   <a href="#h-sub">Unterprogramme</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Ausführen</a>
-  <a href="#h-c">C-Code</a>
+  <a href="#h-c">Code (C, Java, Python)</a>
   <a href="#h-files">Dateien</a>
   <a href="#h-python">Python übernehmen</a>
   <a href="#h-keys">Tastenkürzel</a>
@@ -91,7 +91,10 @@
   </ul>
 </section>
 <section id="h-c">
-  <h3>C-Code</h3>
+  <h3>Code: C, Java, Python</h3>
+  <p>Der Reiter <b>Code</b> zeigt das Programm wahlweise in <b>C</b>, <b>Java</b> oder <b>Python</b>; <i>Exportieren</i> speichert die Datei.
+  In Java heißt die Klasse wie die Datei, InOut-Zahlen stehen dort in einem Array mit einem Element. In Python geben Unterprogramme
+  InOut-Werte zurück (<code>x, y = tausche(x, y)</code>).</p>
   <p>Der Reiter <b>C-Code</b> zeigt das Programm als C99-Quelltext, der sich mit <code>gcc</code> übersetzen lässt.
   Dabei wird <i>Zahl</i> zu <code>int</code> (Nachkommastellen fallen weg), <i>Text</i> zu <code>char[MAX_STRING_SIZE]</code>,
   InOut-Zahlen werden zu Zeigern und Arrays bekommen eine zusätzliche Größenvariable <code>nameSize</code>.</p>
@@ -145,7 +148,7 @@
   <a href="#h-sub">Subprograms</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Running</a>
-  <a href="#h-c">C code</a>
+  <a href="#h-c">Code (C, Java, Python)</a>
   <a href="#h-files">Files</a>
   <a href="#h-python">Importing Python</a>
   <a href="#h-keys">Shortcuts</a>
@@ -225,7 +228,10 @@
   </ul>
 </section>
 <section id="h-c">
-  <h3>C code</h3>
+  <h3>Code: C, Java, Python</h3>
+  <p>The <b>Code</b> tab shows the program in <b>C</b>, <b>Java</b> or <b>Python</b>; <i>Export</i> saves the file.
+  In Java the class is named after the file and InOut numbers live in a one-element array. In Python subprograms
+  return InOut values (<code>x, y = swap(x, y)</code>).</p>
   <p>The <b>C code</b> tab shows the program as C99 source that compiles with <code>gcc</code>.
   <i>Number</i> becomes <code>int</code> (decimals are dropped), <i>Text</i> becomes <code>char[MAX_STRING_SIZE]</code>,
   InOut numbers become pointers and arrays get an extra size variable <code>nameSize</code>.</p>

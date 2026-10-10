@@ -68,7 +68,7 @@
     'ctx.wrapIf': 'In WENN einpacken', 'ctx.wrapWhile': 'In SOLANGE einpacken', 'ctx.unwrap': 'Inhalt behalten, Rahmen entfernen',
 
     // Seitenleiste rechts
-    'side.run': 'Ablauf', 'side.code': 'C-Code', 'side.problems': 'Prüfung',
+    'side.run': 'Ablauf', 'side.code': 'Code', 'side.problems': 'Prüfung',
     'stack.title': 'Speicher (Stack)', 'stack.empty': 'Starte das Programm, um hier Variablen, Werte und Aufrufe zu sehen.',
     'stack.var': 'Variable', 'stack.value': 'Wert', 'stack.addr': 'Adresse', 'stack.ref': 'Referenz auf {0}',
     'stack.top': 'aktiv', 'stack.grows': 'neuester Aufruf oben',
@@ -77,8 +77,8 @@
     'console.needNumber': 'Bitte eine Zahl eingeben (z. B. 42 oder -3.5).',
     'console.cancelled': 'Eingabe abgebrochen – {0} behält den bisherigen Wert.',
     'console.finished': 'Programm beendet', 'console.stopped': 'Programm gestoppt', 'console.error': 'Laufzeitfehler',
-    'code.copy': 'Kopieren', 'code.download': '.c herunterladen', 'code.copied': 'C-Code kopiert',
-    'code.note': 'Wird live aus dem Diagramm erzeugt (C99).',
+    'code.copy': 'Kopieren', 'code.download': 'Herunterladen', 'code.copied': 'Code kopiert',
+    'code.note': 'Wird live aus dem Diagramm erzeugt.',
     'prob.none': 'Keine Probleme gefunden.', 'prob.error': 'Fehler', 'prob.warn': 'Hinweis',
     'prob.count': '{0} Fehler · {1} Hinweise',
 
@@ -192,6 +192,18 @@
     rArrayArg: 'Für „{0}“ muss ein Array übergeben werden',
     rInternal: 'Interner Fehler: {0}',
 
+    genArgPrompt: 'frage', genArgValue: 'wert',
+    pyHeader1: 'Erzeugt mit dem Blockbild-Editor (Python 3.10 oder neuer).',
+    pyHeader2: 'InOut-Parameter werden zurückgegeben: x, y = tausche(x, y)',
+    pyHelperText: 'als_text', pyHelperNum: 'zahl_eingeben',
+    pyHelperNumDoc: 'Fragt so lange, bis eine Zahl eingegeben wird.',
+    pyHelperTextDoc: 'Zahl wie im Blockbild anzeigen: 9.0 wird zu 9.',
+    javaHeader1: 'Erzeugt mit dem Blockbild-Editor.',
+    javaHeader2: 'Zahl -> int, Text -> String. Speichern als Datei mit dem Namen der Klasse (.java).',
+    javaHelperNum: 'zahlEinlesen', javaHelperNumDoc: 'Fragt so lange, bis eine ganze Zahl eingegeben wird.',
+    javaScanner: 'TASTATUR', javaNeedInt: 'Bitte eine ganze Zahl eingeben.',
+    javaBoxNote: 'InOut: Java kennt kein call by reference für int/String – der Wert steht in einem Array mit einem Element ([0]).',
+    'code.lang': 'Sprache', 'exp.java': 'Java-Programm herunterladen (.java)', 'exp.py': 'Python-Programm herunterladen (.py)',
     cHeader1: 'Erzeugt mit dem Blockbild-Editor.',
     cHeader2: 'Zahl -> int, Text -> char[MAX_STRING_SIZE], InOut-Zahl -> Zeiger.',
 
@@ -280,7 +292,7 @@
     'ctx.removeCase': 'Remove this CASE', 'ctx.breakpoint': 'Toggle breakpoint', 'ctx.runTo': 'Run to here',
     'ctx.wrapIf': 'Wrap in IF', 'ctx.wrapWhile': 'Wrap in WHILE', 'ctx.unwrap': 'Keep content, remove frame',
 
-    'side.run': 'Run', 'side.code': 'C code', 'side.problems': 'Check',
+    'side.run': 'Run', 'side.code': 'Code', 'side.problems': 'Check',
     'stack.title': 'Memory (stack)', 'stack.empty': 'Run the program to see variables, values and calls here.',
     'stack.var': 'Variable', 'stack.value': 'Value', 'stack.addr': 'Address', 'stack.ref': 'reference to {0}',
     'stack.top': 'active', 'stack.grows': 'newest call on top',
@@ -289,8 +301,8 @@
     'console.needNumber': 'Please enter a number (e.g. 42 or -3.5).',
     'console.cancelled': 'Input cancelled – {0} keeps its previous value.',
     'console.finished': 'Program finished', 'console.stopped': 'Program stopped', 'console.error': 'Runtime error',
-    'code.copy': 'Copy', 'code.download': 'Download .c', 'code.copied': 'C code copied',
-    'code.note': 'Generated live from the diagram (C99).',
+    'code.copy': 'Copy', 'code.download': 'Download', 'code.copied': 'Code copied',
+    'code.note': 'Generated live from the diagram.',
     'prob.none': 'No problems found.', 'prob.error': 'Error', 'prob.warn': 'Note',
     'prob.count': '{0} errors · {1} notes',
 
@@ -399,6 +411,18 @@
     rArrayArg: '“{0}” needs an array',
     rInternal: 'Internal error: {0}',
 
+    genArgPrompt: 'prompt', genArgValue: 'value',
+    pyHeader1: 'Generated with the block diagram editor (Python 3.10 or newer).',
+    pyHeader2: 'InOut parameters are returned: x, y = swap(x, y)',
+    pyHelperText: 'as_text', pyHelperNum: 'read_number',
+    pyHelperNumDoc: 'Asks until a number is entered.',
+    pyHelperTextDoc: 'Show a number like the block diagram does: 9.0 becomes 9.',
+    javaHeader1: 'Generated with the block diagram editor.',
+    javaHeader2: 'Number -> int, Text -> String. Save as a file named after the class (.java).',
+    javaHelperNum: 'readNumber', javaHelperNumDoc: 'Asks until a whole number is entered.',
+    javaScanner: 'KEYBOARD', javaNeedInt: 'Please enter a whole number.',
+    javaBoxNote: 'InOut: Java has no call by reference for int/String – the value is kept in a one-element array ([0]).',
+    'code.lang': 'Language', 'exp.java': 'Download Java program (.java)', 'exp.py': 'Download Python program (.py)',
     cHeader1: 'Generated with the block diagram editor.',
     cHeader2: 'Number -> int, Text -> char[MAX_STRING_SIZE], InOut number -> pointer.',
 

@@ -45,6 +45,12 @@ der alten Version wiederherstellen* das zuletzt automatisch gesicherte Diagramm 
   `strcmp` für Textvergleiche, `snprintf` für Verkettungen, `scanf(" %254[^\n]")` statt `gets`,
   Zeiger für InOut-Zahlen, Größenvariablen für Arrays, FALLS mit Text als `if`/`else if`
 
+**Export nach C, Java und Python**
+- Reiter *Code* mit Sprachwahl, Download über *Exportieren*
+- Java: eine Klasse mit statischen Methoden, `Scanner` für Eingaben, InOut-Zahlen über ein Array mit einem Element
+- Python 3.10+: f-Strings, `range`, `match/case`; InOut-Werte werden zurückgegeben (`x, y = tausche(x, y)`)
+- `node tests/export.cjs` übersetzt alle Beispiele, führt sie mit echtem Python bzw. javac/java aus und vergleicht mit der Simulation
+
 **Python → Blockbild**
 - *Öffnen* nimmt auch `.py`-Dateien: Zuweisungen, `input`/`print`, f-Strings, `if/elif/else`, `while`,
   `while True … break` (→ WIEDERHOLE … BIS), `for … in range`, `for x in liste`, `match/case`, `def`/`return`,

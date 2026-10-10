@@ -26,6 +26,7 @@
     { grp: 'grp.misc', items: ['call', 'comment'] }
   ];
   const STATEMENT_KINDS = ['decl', 'assign', 'input', 'output', 'if', 'switch', 'while', 'for', 'until', 'call', 'comment'];
+  const CODE_LANGS = [{ id: 'c', label: 'C' }, { id: 'java', label: 'Java' }, { id: 'python', label: 'Python' }];
 
   const defaults = {
     lang: I18N.detect(), theme: 'system', layout: 'bb', colors: true, addresses: false,
@@ -205,12 +206,19 @@
           el.consoleBody, el.ciForm)));
 
     el.code = h('pre.code');
-    const copyBtn = h('button.btn.sm', { type: 'button' }, icon('copy'), t('code.copy'));
-    copyBtn.addEventListener('click', async () => { const ok = await copyText(currentC()); toast(ok ? t('code.copied') : t('dlg.copy')); });
-    const dlBtn = h('button.btn.sm', { type: 'button' }, icon('download'), t('code.download'));
-    dlBtn.addEventListener('click', exportC);
+    const copyBtn = h('button.btn.sm', { type: 'button', title: t('code.copy') }, icon('copy'), h('span.lbl-hide', null, t('code.copy')));
+    copyBtn.addEventListener('click', async () => { const ok = await copyText(currentCode()); toast(ok ? t('code.copied') : t('dlg.copy')); });
+    const dlBtn = h('button.btn.sm', { type: 'button', title: t('code.download') }, icon('download'), h('span.lbl-hide', null, t('code.download')));
+    dlBtn.addEventListener('click', () => exportCode(codeLang()));
+    // Sprachwahl für den Export
+    el.langSeg = h('div.lang-seg', { role: 'radiogroup', 'aria-label': t('code.lang') },
+      CODE_LANGS.map((l) => {
+        const b = h('button', { type: 'button', role: 'radio', dataset: { lang: l.id } }, l.label);
+        b.addEventListener('click', () => { S.settings.codeLang = l.id; saveSettings(); renderCode(); });
+        return b;
+      }));
     const codePanel = h('div.side-panel', { dataset: { panel: 'code' }, hidden: true },
-      h('div.pane-head', null, h('span.code-note', null, t('code.note')), h('div.pane-actions', null, copyBtn, dlBtn)),
+      h('div.pane-head.code-head', null, el.langSeg, h('div.pane-actions', null, copyBtn, dlBtn)),
       h('div.code-wrap', null, el.code));
 
     el.problems = h('div.pane-body');
@@ -424,22 +432,33 @@
     });
   }
 
-  function currentC() {
-    if (S.codeStale || !S.codeCache) {
+  const codeLang = () => (CODE_LANGS.some((l) => l.id === S.settings.codeLang) ? S.settings.codeLang : 'c');
+  const javaClass = () => BBE.javagen.className(S.fileName);
+
+  /** Quelltext in der gewünschten Sprache (zwischengespeichert, bis sich das Diagramm ändert). */
+  function currentCode(lang = codeLang()) {
+    if (S.codeStale || !S.codeCache) { S.codeCache = {}; S.codeStale = false; }
+    if (!(lang in S.codeCache)) {
       try {
-        S.codeCache = BBE.cgen.generate(S.program, { t });
+        if (lang === 'java') S.codeCache[lang] = BBE.javagen.generate(S.program, { t, className: javaClass() });
+        else if (lang === 'python') S.codeCache[lang] = BBE.pygen.generate(S.program, { t });
+        else S.codeCache[lang] = BBE.cgen.generate(S.program, { t });
       } catch (e) {
-        S.codeCache = '/* ' + t('rInternal', e.message) + ' */\n';
+        console.error(e);
+        S.codeCache[lang] = (lang === 'python' ? '# ' : '// ') + t('rInternal', e.message) + '\n';
       }
-      S.codeStale = false;
     }
-    return S.codeCache;
+    return S.codeCache[lang];
   }
+  const currentC = () => currentCode('c');
 
   function renderCode() {
-    const code = currentC();
+    const lang = codeLang();
+    if (el.langSeg) el.langSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.lang === lang; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+    const code = currentCode(lang);
+    if (el.code.dataset.lang !== lang) { el.code.dataset.lang = lang; el.code.dataset.src = ''; }
     if (el.code.dataset.src !== code) {
-      BBE.panels.highlightC(el.code, code);
+      BBE.panels.highlight(el.code, code, lang);
       el.code.dataset.src = code;
     }
   }
@@ -1149,6 +1168,8 @@
       { label: t('exp.copyBB'), icon: 'clipboard', action: async () => { const ok = await copyText(bbText()); toast(ok ? t('toast.copied') : t('dlg.copy')); } },
       '-',
       { label: t('exp.c'), icon: 'code', action: exportC },
+      { label: t('exp.java'), icon: 'code', action: () => exportCode('java') },
+      { label: t('exp.py'), icon: 'code', action: () => exportCode('python') },
       { label: t('exp.png'), icon: 'image', action: exportPng }
     ];
     if (store.getRaw(KEY_OLD)) items.push('-', { label: t('exp.recoverOld'), icon: 'history', action: recoverOld });
@@ -1557,7 +1578,8 @@
     if (!G.claude || typeof G.claude.use !== 'function') return 'none';
     if (dlNs === undefined) { try { dlNs = await G.claude.use('downloads'); } catch (e) { dlNs = null; } }
     if (!dlNs) return 'none';
-    const safe = name.replace(/.bb$/, '.bb.json').replace(/.c$/, '.c.txt');
+    // nur bestimmte Endungen sind im Viewer erlaubt
+    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|java|py)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
   }
 
@@ -1721,16 +1743,20 @@
     }
   }
 
-  async function exportC() {
-    const code = currentC();
-    const name = slug(S.fileName) + '.c';
+  /** Quelltext als Datei: .c, .java (Dateiname = Klassenname) oder .py */
+  async function exportCode(lang) {
+    const code = currentCode(lang);
+    const ext = lang === 'java' ? '.java' : lang === 'python' ? '.py' : '.c';
+    const name = (lang === 'java' ? javaClass() : slug(S.fileName)) + ext;
     if (inSandboxViewer()) {
       const r = await viewerSave(name, code);
-      if (r === 'none') showTextDialog(t('side.code'), t('dlg.saveText').replace('.bb', '.c'), code);
+      if (r === 'none') showTextDialog(t('side.code'), t('dlg.saveText').replace('.bb', ext), code);
       return;
     }
-    download(name, code, 'text/x-c;charset=utf-8');
+    const mime = { c: 'text/x-c', java: 'text/x-java', python: 'text/x-python' }[lang] || 'text/plain';
+    download(name, code, mime + ';charset=utf-8');
   }
+  const exportC = () => exportCode('c');
 
   function showTextDialog(title, text, content) {
     const ta = h('textarea', { readonly: true, spellcheck: 'false' });
