@@ -157,5 +157,46 @@
     setTimeout(() => el.remove(), opts.ms || 2600);
   }
 
-  BBE.dom = { h, append, autosize, autosizeAll, debounce, store, download, copyText, placePopup, toast, inSandboxViewer };
+  /**
+   * Leisten mit verstecktem Scrollbalken auch mit der Maus seitlich scrollbar machen:
+   * Mausrad → waagrecht, Ziehen auf der Leiste → verschieben (Bausteine ausgenommen, die werden gezogen).
+   * Touch scrollt ohnehin nativ.
+   */
+  function hScroll(el) {
+    const scrollsX = () => el.scrollWidth > el.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(el).overflowX);
+    el.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || !scrollsX()) return;
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      const before = el.scrollLeft;
+      el.scrollLeft += d * (e.deltaMode === 1 ? 16 : 1);
+      if (el.scrollLeft !== before) e.preventDefault();
+    }, { passive: false });
+
+    let drag = null, moved = false;
+    el.addEventListener('pointerdown', (e) => {
+      drag = null;
+      if (e.pointerType !== 'mouse' || e.button !== 0 || !scrollsX()) return;
+      if (e.target.closest('.pal-item, input, select, textarea')) return;
+      drag = { x: e.clientX, left: el.scrollLeft, id: e.pointerId };
+      moved = false;
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (!moved) {
+        if (Math.abs(dx) < 6) return;
+        moved = true;
+        el.setPointerCapture(drag.id);
+        el.classList.add('h-dragging');
+      }
+      el.scrollLeft = drag.left - dx;
+    });
+    const end = () => { drag = null; el.classList.remove('h-dragging'); };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+    // nach dem Verschieben keinen Klick auf den Reiter/Knopf auslösen
+    el.addEventListener('click', (e) => { if (moved) { moved = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  }
+
+  BBE.dom = { h, append, autosize, autosizeAll, debounce, store, download, copyText, placePopup, toast, inSandboxViewer, hScroll };
 })(window);

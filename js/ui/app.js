@@ -2,7 +2,7 @@
 (function (G) {
   'use strict';
   const BBE = G.BBE;
-  const { h, autosize, autosizeAll, debounce, store, download, copyText, toast, inSandboxViewer } = BBE.dom;
+  const { h, autosize, autosizeAll, debounce, store, download, copyText, toast, inSandboxViewer, hScroll } = BBE.dom;
   const { icon, kindIcon, brandMark } = BBE.icons;
   const M = BBE.model;
   const A = BBE.analyze;
@@ -172,7 +172,7 @@
     // ---- Seitenleiste
     el.sideTabs = {};
     const sideTab = (id, iconName, label) => {
-      const b = h('button.side-tab', { type: 'button', dataset: { panel: id } }, icon(iconName), h('span', null, label));
+      const b = h('button.side-tab', { type: 'button', dataset: { panel: id } }, h('span.tab-ic', null, icon(iconName)), h('span.side-label', null, label));
       b.addEventListener('click', () => setSide(id));
       el.sideTabs[id] = b;
       return b;
@@ -218,9 +218,9 @@
 
     el.sideToggle = h('button.side-toggle', { type: 'button' }, icon('chevron'));
     el.sideToggle.addEventListener('click', () => setSideCollapsed(!S.settings.sideCollapsed));
-    el.side = h('aside.side', null,
-      h('div.side-tabs', { role: 'tablist' }, sideTab('run', 'play', t('side.run')), sideTab('code', 'code', t('side.code')), tabProblems, el.sideToggle),
-      runPanel, codePanel, probPanel);
+    const sideTabs = h('div.side-tabs', { role: 'tablist' }, sideTab('run', 'play', t('side.run')), sideTab('code', 'code', t('side.code')), tabProblems, el.sideToggle);
+    el.side = h('aside.side', null, sideTabs, runPanel, codePanel, probPanel);
+    for (const bar of [topbar, el.palette, el.tabs, sideTabs]) hScroll(bar);
 
     // ---- Statusleiste
     el.stProblems = h('button.st-item', { type: 'button' });
