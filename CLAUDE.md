@@ -30,7 +30,7 @@ exportieren sie als C-Code. Zielgruppe: Unterricht in Österreich, daher **Deuts
    - Typen intern `integer|string|integer[]|string[]`; beim Laden werden auch alte Anzeigenamen
      (`Number`, `Zahl`, `Text[]` …) akzeptiert (`model.normType`).
    - Die Ergebnisvariable heißt immer `result` (im alten DE-Modus hieß sie `resultat`, war dort aber kaputt).
-3. **Simulation = C = Java = Python.** Gleiche Eingaben müssen gleiche Ausgaben liefern.
+3. **Simulation = C = C++ = C# = Java = Python.** Gleiche Eingaben müssen gleiche Ausgaben liefern.
    Das ist durch Tests abgesichert (siehe unten) – nach Änderungen an `interp.js`, `cgen.js` oder
    `pyimport.js` immer die Tests laufen lassen und den C-Code mit gcc übersetzen.
 4. **Bedienbar auf Desktop, Tablet und Handy** (Touch: Antippen fügt ein, langes Drücken zieht).
@@ -50,6 +50,8 @@ js/core/            ohne DOM, auch in Node lauffähig (Tests!)
   cgen.js           Übersetzung nach C99
   pygen.js          Übersetzung nach Python 3.10+ (InOut → Rückgabe als Tupel)
   javagen.js        Übersetzung nach Java 8+ (eine Klasse, InOut → Array mit einem Element)
+  csgen.js          Übersetzung nach C# (InOut → ref, Arrays mit .Length, Klasse = Dateiname)
+  cppgen.js         Übersetzung nach C++11 (string, vector, InOut → Referenz &, cin/cout)
   examples.js       eingebaute Beispiele (im .bb-Format, Texte je Sprache über L(de, en))
   pyimport.js       Python → Blockbild (eigener Tokenizer/Parser für die Schul-Teilmenge)
 js/ui/              Oberfläche
@@ -103,9 +105,14 @@ FALLS mit Text → `if/else if`, verschachtelte Deklarationen werden an den Funk
 Bekannte harmlose gcc-Hinweise mit `-Wall -Wextra`: `-Wformat-truncation` bei `snprintf`, ungenutzter
 `…Size`-Parameter, wenn ein Unterprogramm die Array-Länge nicht braucht.
 
-### Export nach Java und Python (javagen.js, pygen.js)
+### Export nach C++, C#, Java und Python (cppgen.js, csgen.js, javagen.js, pygen.js)
 
-Reiter *Code* hat eine Sprachwahl (C | Java | Python, `settings.codeLang`), *Exportieren* bietet alle drei Downloads.
+Reiter *Code* hat eine Sprachwahl (C | C++ | C# | Java | Python, `settings.codeLang`, Liste `CODE_LANGS` in app.js),
+*Exportieren* bietet alle Downloads.
+- **C++:** Text + Zahl braucht `to_string`; Ausgaben werden als `cout << a << b` zerlegt. `using namespace std` –
+  Namen, die mit std kollidieren (swap, max, count …), bekommen ein `_` angehängt. FALLS mit Text → if/else if.
+- **C#:** InOut → `ref` (auch `ref werte[i]`), Textvergleich mit `==` bzw. `string.CompareOrdinal`, Hochziehen der
+  Deklarationen wie bei Java (C# verbietet Überdecken lokaler Variablen).
 - **Python:** Zahl bleibt int/float wie in der Simulation (`/` liefert float); wo eine Kommazahl entstehen kann,
   formatiert `als_text()` sie wie die Simulation (9.0 → 9). `zahl_eingeben()` fragt so lange, bis eine Zahl kommt.
   InOut-Zahlen/Texte werden am Ende zurückgegeben (`return result, a, b`), der Aufruf weist sie zu.
@@ -134,7 +141,7 @@ node tools/serve.cjs                 # Entwicklung: http://localhost:8765/  (ind
 node tests/unit.cjs                  # 24 Grenzfälle: Parser, Interpreter, Prüfung, .bb-Format
 node tests/examples.cjs [ordner]     # alle eingebauten Beispiele DE+EN; mit Ordner: .c + .in schreiben
 node tests/python.cjs                # Python-Beispiele: Ausgabe von echtem Python vs. übersetztem Blockbild
-node tests/export.cjs [alte-.bb]     # Java-/Python-Export: javac/java bzw. python gegen die Simulation (44 Programme)
+node tests/export.cjs [alte-.bb]     # Export: python, javac/java, dotnet (ein Projekt), g++ (auch über WSL) gegen die Simulation
 node tests/smoke-original.cjs <ordner-mit-alten-.bb>   # Original-Beispiele des 2.x-Editors
 sh tests/compile-c.sh <ordner>       # (Linux/WSL) gcc -std=c99 -Wall -Wextra + Ausführen mit .in-Dateien
 node tools/build.mjs                 # vor jedem Commit: dist/blockbild-editor.html neu bauen

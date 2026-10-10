@@ -699,7 +699,7 @@ body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-sele
 /* Sprachwahl C | Java | Python – Segmente im Stil der Reiter */
 .lang-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
 .lang-seg button {
-  height: 28px; padding: 0 12px; border: 1px solid transparent; border-radius: 7px; background: transparent;
+  height: 28px; padding: 0 10px; border: 1px solid transparent; border-radius: 7px; background: transparent;
   color: var(--fg-2); font: 500 13px var(--font-ui); transition: background-color .16s ease, color .16s ease, box-shadow .16s ease;
 }
 .lang-seg button:hover { color: var(--fg); }
@@ -1226,6 +1226,10 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     javaScanner: 'TASTATUR', javaNeedInt: 'Bitte eine ganze Zahl eingeben.',
     javaBoxNote: 'InOut: Java kennt kein call by reference für int/String – der Wert steht in einem Array mit einem Element ([0]).',
     'code.lang': 'Sprache', 'exp.java': 'Java-Programm herunterladen (.java)', 'exp.py': 'Python-Programm herunterladen (.py)',
+    csHeader1: 'Erzeugt mit dem Blockbild-Editor.', csHeader2: 'Zahl -> int, Text -> string, InOut -> ref.',
+    csHelperNum: 'ZahlEinlesen',
+    cppHeader1: 'Erzeugt mit dem Blockbild-Editor (C++11 oder neuer).', cppHeader2: 'Zahl -> int, Text -> string, Array -> vector, InOut -> Referenz (&).',
+    'exp.cs': 'C#-Programm herunterladen (.cs)', 'exp.cpp': 'C++-Programm herunterladen (.cpp)',
     cHeader1: 'Erzeugt mit dem Blockbild-Editor.',
     cHeader2: 'Zahl -> int, Text -> char[MAX_STRING_SIZE], InOut-Zahl -> Zeiger.',
 
@@ -1445,6 +1449,10 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     javaScanner: 'KEYBOARD', javaNeedInt: 'Please enter a whole number.',
     javaBoxNote: 'InOut: Java has no call by reference for int/String – the value is kept in a one-element array ([0]).',
     'code.lang': 'Language', 'exp.java': 'Download Java program (.java)', 'exp.py': 'Download Python program (.py)',
+    csHeader1: 'Generated with the block diagram editor.', csHeader2: 'Number -> int, Text -> string, InOut -> ref.',
+    csHelperNum: 'ReadNumber',
+    cppHeader1: 'Generated with the block diagram editor (C++11 or newer).', cppHeader2: 'Number -> int, Text -> string, array -> vector, InOut -> reference (&).',
+    'exp.cs': 'Download C# program (.cs)', 'exp.cpp': 'Download C++ program (.cpp)',
     cHeader1: 'Generated with the block diagram editor.',
     cHeader2: 'Number -> int, Text -> char[MAX_STRING_SIZE], InOut number -> pointer.',
 
@@ -4087,6 +4095,640 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   }
 
   BBE.javagen = { generate, className };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* js/core/csgen.js */
+/* Blockbild-Editor – Übersetzung nach C# (ab .NET 6 / C# 10, läuft aber auch mit älteren Versionen)
+ *
+ *   Zahl → int, Text → string, Zahl[]/Text[] → int[]/string[] (Länge über .Length)
+ *   InOut-Parameter → ref (Aufruf mit ref x) – C# kennt echtes call by reference.
+ *   Eine Klasse Program mit statischen Methoden, Eingaben über Console.ReadLine.
+ */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+  const { parseCached, parseTarget, strip } = BBE.expr;
+  const A = BBE.analyze;
+  const M = BBE.model;
+
+  const IND = '    ';
+  const RESERVED = new Set(('abstract as base bool break byte case catch char checked class const continue decimal default delegate do double ' +
+    'else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long ' +
+    'namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof ' +
+    'stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile ' +
+    'while var dynamic value Main Console Array Program String Math').split(' '));
+  const CT = { integer: 'int', string: 'string', 'integer[]': 'int[]', 'string[]': 'string[]' };
+
+  const tryParse = (src) => { try { return parseCached(String(src || '').trim()); } catch (e) { return null; } };
+  const tryTarget = (src) => { try { return parseTarget(String(src || '').trim()); } catch (e) { return null; } };
+  const csStr = (s) => JSON.stringify(String(s));
+
+  function generate(program, opts = {}) {
+    const tr = opts.t || ((k) => k);
+    const cls = opts.className || 'Program';
+    const H = { num: tr('csHelperNum') };
+    const used = { num: false };
+    const fnName = new Map(program.fns.map((f) => [f.name, RESERVED.has(f.name) ? f.name + '_' : f.name]));
+    const body = [];
+
+    const defaultFor = (t) => (t === 'string' ? '""' : t === 'integer[]' ? 'new int[0]' : t === 'string[]' ? 'new string[0]' : '0');
+    const withComment = (code, n) => (n && n.comment ? code + '  // ' + n.comment.replace(/\s+/g, ' ') : code);
+    const typeOf = (ctx, ast) => (ast ? A.typeOf(ast, ctx.scope) : '?');
+    const name = (ctx, n) => ctx.rename.get(n) || (RESERVED.has(n) ? n + '_' : n);
+    const target = (ctx, src) => { const t = tryTarget(src); return t ? ex(ctx, t) : String(src || '').trim() || 'x'; };
+    const targetType = (ctx, src) => { const t = tryTarget(src); return t ? typeOf(ctx, t) : '?'; };
+    const PREC = { '||': 1, '&&': 2, '==': 3, '!=': 3, '<': 4, '<=': 4, '>': 4, '>=': 4, '+': 5, '-': 5, '*': 6, '/': 6, '%': 6 };
+
+    function line(ctx, s) { ctx.lines.push(IND.repeat(ctx.ind) + s); }
+    function genSeq(ctx, seq) { for (const n of seq) genStmt(ctx, n); }
+    function block(ctx, seq) { ctx.ind++; genSeq(ctx, seq); ctx.ind--; }
+
+    // ------------------------------------------------------------ Methoden
+
+    function genFunction(fn) {
+      const scope = A.scopeOf(fn);
+      const rename = new Map();
+      for (const n of scope.keys()) rename.set(n, RESERVED.has(n) ? n + '_' : n);
+      const ctx = { fn, scope, rename, ind: 2, lines: body, declared: new Set(fn.params.map((p) => p.name)), hoisted: new Set() };
+      // C# verbietet, lokale Variablen in inneren Blöcken neu zu deklarieren → verschachtelte/doppelte an den Anfang
+      const top = new Set();
+      for (const n of fn.body) if (n.kind === 'decl' && n.name && !top.has(n.name)) top.add(n.name);
+      M.walkSeq(fn.body, (n, seq, i, depth) => { if (n.kind === 'decl' && n.name && (depth > 0 || !top.has(n.name))) ctx.hoisted.add(n.name); });
+
+      let sig;
+      if (fn.isMain) sig = 'static void Main()';
+      else {
+        const ret = fn.returnType === 'void' ? 'void' : CT[fn.returnType];
+        const ps = fn.params.map((p) => (p.byRef && !A.isArrayType(p.type) ? 'ref ' : '') + CT[p.type] + ' ' + name(ctx, p.name || 'p'));
+        sig = 'static ' + ret + ' ' + fnName.get(fn.name) + '(' + ps.join(', ') + ')';
+      }
+      body.push(IND + sig);
+      body.push(IND + '{');
+      if (!fn.isMain && fn.returnType !== 'void') {
+        line(ctx, CT[fn.returnType] + ' result = ' + valueFor(ctx, fn.resultInit, fn.returnType) + ';');
+        ctx.declared.add('result');
+      }
+      for (const n of ctx.hoisted) {
+        const v = scope.get(n);
+        if (!v || ctx.declared.has(n)) continue;
+        line(ctx, CT[v.type] + ' ' + name(ctx, n) + ' = ' + defaultFor(v.type) + ';');
+        ctx.declared.add(n);
+      }
+      genSeq(ctx, fn.body);
+      if (!fn.isMain && fn.returnType !== 'void') line(ctx, 'return result;');
+      body.push(IND + '}');
+    }
+
+    // ------------------------------------------------------------ Ausdrücke
+
+    function ex(ctx, a, minPrec = 0) {
+      const wrap = (s, p) => (p < minPrec ? '(' + s + ')' : s);
+      switch (a.k) {
+        case 'num': return a.raw;
+        case 'str': return csStr(a.v);
+        case 'paren': return '(' + ex(ctx, a.e) + ')';
+        case 'id': return name(ctx, a.name);
+        case 'idx': return ex(ctx, a.obj, 9) + '[' + ex(ctx, a.index) + ']';
+        case 'len': return ex(ctx, a.obj, 9) + '.Length';
+        case 'un':
+          if (a.op === '!') return wrap('!' + boolCode(ctx, a.a, 7), 7);
+          return wrap(a.op + (a.op === '-' && strip(a.a).k === 'un' ? ' ' : '') + ex(ctx, a.a, 7), 7);
+        case 'bin': {
+          const p = PREC[a.op];
+          if (a.op === '&&' || a.op === '||') return wrap(boolCode(ctx, a.a, p) + ' ' + a.op + ' ' + boolCode(ctx, a.b, p + 1), p);
+          const cmp = ['<', '<=', '>', '>='].includes(a.op);
+          if (cmp && (typeOf(ctx, a.a) === 'string' || typeOf(ctx, a.b) === 'string')) {
+            return wrap('string.CompareOrdinal(' + ex(ctx, a.a) + ', ' + ex(ctx, a.b) + ') ' + a.op + ' 0', p);
+          }
+          // == und != vergleichen in C# auch Texte inhaltlich; Text + Zahl rechnet wie das Blockbild
+          return wrap(ex(ctx, a.a, p) + ' ' + a.op + ' ' + ex(ctx, a.b, p + 1), p);
+        }
+        default: return '0';
+      }
+    }
+
+    /** Wert als bool (Zahlen ≠ 0 und nicht leere Texte gelten als wahr). */
+    function boolCode(ctx, ast, minPrec = 0) {
+      const t = typeOf(ctx, ast);
+      if (t === 'integer') return '(' + ex(ctx, ast) + ' != 0)';
+      if (t === 'string') return '(' + ex(ctx, ast) + '.Length > 0)';
+      return ex(ctx, ast, minPrec);
+    }
+
+    function hasFloat(ast) {
+      let hit = false;
+      BBE.expr.walk(ast, (a) => { if (a.k === 'num' && !Number.isInteger(a.v)) hit = true; });
+      return hit;
+    }
+
+    function valueFor(ctx, src, type) {
+      const ast = tryParse(src);
+      if (!ast) return String(src || '').trim() || defaultFor(type);
+      const t = typeOf(ctx, ast);
+      if (type === 'string' && t !== 'string') return '"" + ' + ex(ctx, ast, 6);
+      if (type === 'integer' && t === 'string') return 'int.Parse(' + ex(ctx, ast) + ')';
+      if (type === 'integer' && hasFloat(ast)) return '(int) (' + ex(ctx, ast) + ')';
+      return ex(ctx, ast);
+    }
+
+    function cond(ctx, src) {
+      const ast = tryParse(src);
+      return ast ? boolCode(ctx, strip(ast)) : (String(src || '').trim() || 'true');
+    }
+
+    // ------------------------------------------------------------ Anweisungen
+
+    function genStmt(ctx, n) {
+      switch (n.kind) {
+        case 'comment':
+          line(ctx, '// ' + String(n.text || '').replace(/\n/g, ' '));
+          return;
+        case 'decl': {
+          const nm = name(ctx, n.name || 'variable');
+          let value;
+          if (n.vtype.endsWith('[]')) value = 'new ' + (n.vtype === 'string[]' ? 'string' : 'int') + '[' + ex(ctx, tryParse(n.length) || { k: 'num', v: 0, raw: '0' }) + ']';
+          else value = valueFor(ctx, n.init, n.vtype);
+          line(ctx, withComment((ctx.declared.has(n.name) ? '' : CT[n.vtype] + ' ') + nm + ' = ' + value + ';', n));
+          ctx.declared.add(n.name);
+          if (n.vtype === 'string[]') line(ctx, 'Array.Fill(' + nm + ', "");');
+          return;
+        }
+        case 'assign':
+          line(ctx, withComment(target(ctx, n.target) + ' = ' + valueFor(ctx, n.expr, targetType(ctx, n.target)) + ';', n));
+          return;
+        case 'input': {
+          const tt = targetType(ctx, n.target);
+          const p = tryParse(n.prompt);
+          const prompt = p ? (typeOf(ctx, p) === 'string' ? ex(ctx, strip(p)) : '"" + ' + ex(ctx, p, 6)) : '""';
+          if (tt === 'integer') { used.num = true; line(ctx, withComment(target(ctx, n.target) + ' = ' + H.num + '(' + prompt + ');', n)); }
+          else {
+            if (prompt !== '""') line(ctx, withComment('Console.Write(' + prompt + ');', n));
+            line(ctx, target(ctx, n.target) + ' = Console.ReadLine() ?? "";');
+          }
+          return;
+        }
+        case 'output': {
+          const ast = tryParse(n.expr);
+          line(ctx, withComment('Console.WriteLine(' + (ast ? ex(ctx, strip(ast)) : '""') + ');', n));
+          return;
+        }
+        case 'if':
+          line(ctx, withComment('if (' + cond(ctx, n.cond) + ')', n));
+          line(ctx, '{');
+          block(ctx, n.then);
+          line(ctx, '}');
+          if (n.else && n.else.length) {
+            if (n.else.length === 1 && n.else[0].kind === 'if' && !n.else[0].comment) {
+              // SONST WENN → else if
+              const save = ctx.lines.length;
+              genStmt(ctx, n.else[0]);
+              ctx.lines[save] = IND.repeat(ctx.ind) + 'else ' + ctx.lines[save].trim();
+              return;
+            }
+            line(ctx, 'else');
+            line(ctx, '{');
+            block(ctx, n.else);
+            line(ctx, '}');
+          }
+          return;
+        case 'while':
+          line(ctx, withComment('while (' + cond(ctx, n.cond) + ')', n));
+          line(ctx, '{');
+          block(ctx, n.body);
+          line(ctx, '}');
+          return;
+        case 'until':
+          line(ctx, withComment('do', n));
+          line(ctx, '{');
+          block(ctx, n.body);
+          line(ctx, '} while (!(' + cond(ctx, n.cond) + '));');
+          return;
+        case 'for': {
+          const k = target(ctx, n.counter);
+          const from = ex(ctx, tryParse(n.from) || { k: 'num', v: 0, raw: '0' });
+          const to = ex(ctx, tryParse(n.to) || { k: 'num', v: 0, raw: '0' });
+          const stepAst = tryParse(n.step);
+          const lit = stepAst ? A.literalValue(stepAst) : 1;
+          let c, inc;
+          if (typeof lit === 'number') {
+            c = k + (lit >= 0 ? ' <= ' : ' >= ') + to;
+            inc = lit === 1 ? k + '++' : lit === -1 ? k + '--' : lit > 0 ? k + ' += ' + lit : k + ' -= ' + (-lit);
+          } else {
+            const s = ex(ctx, stepAst);
+            c = '(' + s + ' > 0 ? ' + k + ' <= ' + to + ' : ' + k + ' >= ' + to + ')';
+            inc = k + ' += ' + s;
+          }
+          line(ctx, withComment('for (' + k + ' = ' + from + '; ' + c + '; ' + inc + ')', n));
+          line(ctx, '{');
+          block(ctx, n.body);
+          line(ctx, '}');
+          return;
+        }
+        case 'switch': {
+          const sel = tryParse(n.expr);
+          line(ctx, withComment('switch (' + (sel ? ex(ctx, strip(sel)) : '0') + ')', n));
+          line(ctx, '{');
+          ctx.ind++;
+          for (const c of n.cases) {
+            const v = tryParse(c.value);
+            line(ctx, 'case ' + (v ? ex(ctx, strip(v)) : '0') + ':');
+            ctx.ind++; genSeq(ctx, c.body); line(ctx, 'break;'); ctx.ind--;
+          }
+          if (n.else) { line(ctx, 'default:'); ctx.ind++; genSeq(ctx, n.else); line(ctx, 'break;'); ctx.ind--; }
+          ctx.ind--;
+          line(ctx, '}');
+          return;
+        }
+        case 'call': {
+          const callee = program.fns.find((f) => !f.isMain && f.name === n.fn);
+          if (!callee) { line(ctx, withComment('// ' + (n.fn || '?') + '(…)', n)); return; }
+          const args = callee.params.map((p, i) => {
+            const src = n.args[i] || '';
+            if (A.isArrayType(p.type)) return target(ctx, src);
+            if (p.byRef) return 'ref ' + target(ctx, src);
+            return valueFor(ctx, src, p.type);
+          });
+          const call = fnName.get(callee.name) + '(' + args.join(', ') + ')';
+          if (callee.returnType !== 'void' && n.target && n.target.trim()) {
+            const tt = targetType(ctx, n.target);
+            line(ctx, withComment(target(ctx, n.target) + ' = ' + (tt === 'string' && callee.returnType !== 'string' ? '"" + ' : '') + call + ';', n));
+          } else line(ctx, withComment(call + ';', n));
+          return;
+        }
+        default: return;
+      }
+    }
+
+    // ------------------------------------------------------------ Zusammenbau
+
+    genFunction(program.fns.find((f) => f.isMain));
+    for (const fn of program.fns.filter((f) => !f.isMain)) { body.push(''); genFunction(fn); }
+
+    const out = ['// ' + tr('csHeader1'), '// ' + tr('csHeader2'), 'using System;', '', 'class ' + cls, '{'];
+    out.push(...body);
+    if (used.num) {
+      const q = tr('genArgPrompt');
+      out.push('');
+      out.push(IND + '/// <summary>' + tr('javaHelperNumDoc') + '</summary>');
+      out.push(IND + 'static int ' + H.num + '(string ' + q + ')');
+      out.push(IND + '{');
+      out.push(IND + IND + 'while (true)');
+      out.push(IND + IND + '{');
+      out.push(IND + IND + IND + 'Console.Write(' + q + ');');
+      out.push(IND + IND + IND + 'string zeile = Console.ReadLine() ?? "";');
+      out.push(IND + IND + IND + 'if (int.TryParse(zeile.Trim(), out int wert)) return wert;');
+      out.push(IND + IND + IND + 'Console.WriteLine(' + csStr(tr('javaNeedInt')) + ');');
+      out.push(IND + IND + '}');
+      out.push(IND + '}');
+    }
+    out.push('}');
+    return out.join('\n') + '\n';
+  }
+
+  BBE.csgen = { generate };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* js/core/cppgen.js */
+/* Blockbild-Editor – Übersetzung nach C++ (C++11 oder neuer)
+ *
+ *   Zahl → int, Text → string, Zahl[]/Text[] → vector<int>/vector<string> (Länge über .size())
+ *   InOut-Parameter → Referenz (int& a) – C++ kennt echtes call by reference.
+ *   Eingabe mit getline/cin, Ausgabe mit cout. Text + Zahl braucht to_string.
+ */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+  const { parseCached, parseTarget, strip } = BBE.expr;
+  const A = BBE.analyze;
+  const M = BBE.model;
+
+  const IND = '    ';
+  // C++-Schlüsselwörter und Namen aus std, die wegen "using namespace std" kollidieren könnten
+  const RESERVED = new Set(('alignas alignof and and_eq asm auto bitand bitor bool break case catch char class compl const constexpr ' +
+    'const_cast continue decltype default delete do double dynamic_cast else enum explicit export extern false float for friend goto ' +
+    'if inline int long mutable namespace new noexcept not not_eq nullptr operator or or_eq private protected public register ' +
+    'reinterpret_cast return short signed sizeof static static_assert static_cast struct switch template this thread_local throw ' +
+    'true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor xor_eq main std string vector ' +
+    'cout cin endl getline swap max min sort count find abs size begin end data move copy fill remove replace reverse search ' +
+    'distance left right list map set array function exp log pow sqrt round stoi to_string').split(' '));
+  const CT = { integer: 'int', string: 'string', 'integer[]': 'vector<int>', 'string[]': 'vector<string>' };
+
+  const tryParse = (src) => { try { return parseCached(String(src || '').trim()); } catch (e) { return null; } };
+  const tryTarget = (src) => { try { return parseTarget(String(src || '').trim()); } catch (e) { return null; } };
+  const cStr = (s) => BBE.cgen.cString(s);
+
+  function generate(program, opts = {}) {
+    const tr = opts.t || ((k) => k);
+    const H = { num: tr('javaHelperNum') };
+    const used = { num: false };
+    const fnName = new Map(program.fns.map((f) => [f.name, RESERVED.has(f.name) ? f.name + '_' : f.name]));
+    const body = [];
+    const protos = [];
+
+    const defaultFor = (t) => (t === 'string' ? '""' : t === 'integer' ? '0' : '');
+    const withComment = (code, n) => (n && n.comment ? code + '  // ' + n.comment.replace(/\s+/g, ' ') : code);
+    const typeOf = (ctx, ast) => (ast ? A.typeOf(ast, ctx.scope) : '?');
+    const name = (ctx, n) => ctx.rename.get(n) || (RESERVED.has(n) ? n + '_' : n);
+    const target = (ctx, src) => { const t = tryTarget(src); return t ? ex(ctx, t) : String(src || '').trim() || 'x'; };
+    const targetType = (ctx, src) => { const t = tryTarget(src); return t ? typeOf(ctx, t) : '?'; };
+    const PREC = { '||': 1, '&&': 2, '==': 3, '!=': 3, '<': 4, '<=': 4, '>': 4, '>=': 4, '+': 5, '-': 5, '*': 6, '/': 6, '%': 6 };
+
+    function line(ctx, s) { ctx.lines.push(IND.repeat(ctx.ind) + s); }
+    function genSeq(ctx, seq) { for (const n of seq) genStmt(ctx, n); }
+    function block(ctx, seq) { ctx.ind++; genSeq(ctx, seq); ctx.ind--; }
+
+    function signature(fn, ctx) {
+      if (fn.isMain) return 'int main()';
+      const ret = fn.returnType === 'void' ? 'void' : CT[fn.returnType];
+      const ps = fn.params.map((p) => {
+        const n = name(ctx, p.name || 'p');
+        if (A.isArrayType(p.type)) return CT[p.type] + '& ' + n;
+        return CT[p.type] + (p.byRef ? '& ' : ' ') + n;
+      });
+      return ret + ' ' + fnName.get(fn.name) + '(' + ps.join(', ') + ')';
+    }
+
+    // ------------------------------------------------------------ Funktionen
+
+    function genFunction(fn) {
+      const scope = A.scopeOf(fn);
+      const rename = new Map();
+      for (const n of scope.keys()) rename.set(n, RESERVED.has(n) ? n + '_' : n);
+      const ctx = { fn, scope, rename, ind: 1, lines: body, declared: new Set(fn.params.map((p) => p.name)), hoisted: new Set() };
+      // Variablen gelten im Blockbild im ganzen Unterprogramm → verschachtelte/doppelte Deklarationen an den Anfang
+      const top = new Set();
+      for (const n of fn.body) if (n.kind === 'decl' && n.name && !top.has(n.name)) top.add(n.name);
+      M.walkSeq(fn.body, (n, seq, i, depth) => { if (n.kind === 'decl' && n.name && (depth > 0 || !top.has(n.name))) ctx.hoisted.add(n.name); });
+
+      const sig = signature(fn, ctx);
+      if (!fn.isMain) protos.push(sig + ';');
+      body.push(sig + ' {');
+      if (!fn.isMain && fn.returnType !== 'void') {
+        line(ctx, CT[fn.returnType] + ' result = ' + valueFor(ctx, fn.resultInit, fn.returnType) + ';');
+        ctx.declared.add('result');
+      }
+      for (const n of ctx.hoisted) {
+        const v = scope.get(n);
+        if (!v || ctx.declared.has(n)) continue;
+        const d = defaultFor(v.type);
+        line(ctx, CT[v.type] + ' ' + name(ctx, n) + (d ? ' = ' + d : '') + ';');
+        ctx.declared.add(n);
+      }
+      genSeq(ctx, fn.body);
+      if (fn.isMain) line(ctx, 'return 0;');
+      else if (fn.returnType !== 'void') line(ctx, 'return result;');
+      body.push('}');
+    }
+
+    // ------------------------------------------------------------ Ausdrücke
+
+    function ex(ctx, a, minPrec = 0) {
+      const wrap = (s, p) => (p < minPrec ? '(' + s + ')' : s);
+      switch (a.k) {
+        case 'num': return a.raw;
+        case 'str': return cStr(a.v);
+        case 'paren': return '(' + ex(ctx, a.e) + ')';
+        case 'id': return name(ctx, a.name);
+        case 'idx': return ex(ctx, a.obj, 9) + '[' + ex(ctx, a.index) + ']';
+        case 'len': {
+          const t = typeOf(ctx, a.obj);
+          return '(int) ' + ex(ctx, a.obj, 9) + (A.isArrayType(t) ? '.size()' : '.length()');
+        }
+        case 'un':
+          if (a.op === '!') return wrap('!' + ex(ctx, a.a, 7), 7);
+          return wrap(a.op + (a.op === '-' && strip(a.a).k === 'un' ? ' ' : '') + ex(ctx, a.a, 7), 7);
+        case 'bin': {
+          const p = PREC[a.op];
+          if (a.op === '+' && typeOf(ctx, a) === 'string') return wrap(textConcat(ctx, a), 5);
+          const cmp = ['==', '!=', '<', '<=', '>', '>='].includes(a.op);
+          if (cmp && (typeOf(ctx, a.a) === 'string' || typeOf(ctx, a.b) === 'string')) {
+            // zwei Textliterale lassen sich nicht direkt vergleichen
+            const l = strip(a.a).k === 'str' && strip(a.b).k === 'str' ? 'string(' + ex(ctx, a.a) + ')' : ex(ctx, a.a, p);
+            return wrap(l + ' ' + a.op + ' ' + ex(ctx, a.b, p + 1), p);
+          }
+          return wrap(ex(ctx, a.a, p) + ' ' + a.op + ' ' + ex(ctx, a.b, p + 1), p);
+        }
+        default: return '0';
+      }
+    }
+
+    /** Teile einer Text-Verkettung von links nach rechts. */
+    function parts(ctx, ast) {
+      const s = strip(ast);
+      if (s.k === 'bin' && s.op === '+' && typeOf(ctx, s) === 'string') return parts(ctx, s.a).concat(parts(ctx, s.b));
+      return [ast];
+    }
+
+    /** Text-Verkettung: Zahlen über to_string, erstes Literal als string. */
+    function textConcat(ctx, ast) {
+      const list = parts(ctx, ast).map((p, i) => {
+        const s = strip(p);
+        if (s.k === 'str') return i === 0 ? 'string(' + cStr(s.v) + ')' : cStr(s.v);
+        if (typeOf(ctx, p) === 'string') return ex(ctx, p, 6);
+        return 'to_string(' + ex(ctx, p) + ')';
+      });
+      // zwei Literale hintereinander: zusammenfassen wäre schöner, so bleibt es aber korrekt
+      return list.join(' + ');
+    }
+
+    function hasFloat(ast) {
+      let hit = false;
+      BBE.expr.walk(ast, (a) => { if (a.k === 'num' && !Number.isInteger(a.v)) hit = true; });
+      return hit;
+    }
+
+    function valueFor(ctx, src, type) {
+      const ast = tryParse(src);
+      if (!ast) return String(src || '').trim() || defaultFor(type) || '{}';
+      const t = typeOf(ctx, ast);
+      if (type === 'string' && t !== 'string') return 'to_string(' + ex(ctx, ast) + ')';
+      if (type === 'integer' && t === 'string') return 'stoi(' + ex(ctx, ast) + ')';
+      if (type === 'integer' && hasFloat(ast)) return '(int) (' + ex(ctx, ast) + ')';
+      return ex(ctx, ast);
+    }
+
+    function cond(ctx, src) {
+      const ast = tryParse(src);
+      if (!ast) return String(src || '').trim() || 'true';
+      const s = strip(ast);
+      if (typeOf(ctx, s) === 'string') return '!' + ex(ctx, s, 9) + '.empty()';
+      return ex(ctx, s);
+    }
+
+    // ------------------------------------------------------------ Anweisungen
+
+    function genStmt(ctx, n) {
+      switch (n.kind) {
+        case 'comment':
+          line(ctx, '// ' + String(n.text || '').replace(/\n/g, ' '));
+          return;
+        case 'decl': {
+          const nm = name(ctx, n.name || 'variable');
+          const declared = ctx.declared.has(n.name);
+          if (n.vtype.endsWith('[]')) {
+            const len = ex(ctx, tryParse(n.length) || { k: 'num', v: 0, raw: '0' });
+            if (declared) line(ctx, withComment(nm + ' = ' + CT[n.vtype] + '(' + len + ');', n));
+            else line(ctx, withComment(CT[n.vtype] + ' ' + nm + '(' + len + ');', n));
+          } else {
+            line(ctx, withComment((declared ? '' : CT[n.vtype] + ' ') + nm + ' = ' + valueFor(ctx, n.init, n.vtype) + ';', n));
+          }
+          ctx.declared.add(n.name);
+          return;
+        }
+        case 'assign':
+          line(ctx, withComment(target(ctx, n.target) + ' = ' + valueFor(ctx, n.expr, targetType(ctx, n.target)) + ';', n));
+          return;
+        case 'input': {
+          const tt = targetType(ctx, n.target);
+          const p = tryParse(n.prompt);
+          const prompt = p ? (typeOf(ctx, p) === 'string' ? ex(ctx, strip(p)) : 'to_string(' + ex(ctx, p) + ')') : '""';
+          if (tt === 'integer') { used.num = true; line(ctx, withComment(target(ctx, n.target) + ' = ' + H.num + '(' + prompt + ');', n)); }
+          else {
+            if (prompt !== '""') line(ctx, withComment('cout << ' + coutParts(ctx, p).join(' << ') + ';', n));
+            line(ctx, 'getline(cin, ' + target(ctx, n.target) + ');');
+          }
+          return;
+        }
+        case 'output': {
+          const ast = tryParse(n.expr);
+          line(ctx, withComment('cout << ' + (ast ? coutParts(ctx, ast).join(' << ') + ' << ' : '') + 'endl;', n));
+          return;
+        }
+        case 'if':
+          line(ctx, withComment('if (' + cond(ctx, n.cond) + ') {', n));
+          block(ctx, n.then);
+          if (n.else && n.else.length) {
+            if (n.else.length === 1 && n.else[0].kind === 'if' && !n.else[0].comment) {
+              const save = ctx.lines.length;
+              ctx.lines.push('');
+              genStmt(ctx, n.else[0]);
+              const first = ctx.lines[save + 1];
+              ctx.lines.splice(save, 2, IND.repeat(ctx.ind) + '} else ' + first.trim());
+              return;
+            }
+            line(ctx, '} else {');
+            block(ctx, n.else);
+          }
+          line(ctx, '}');
+          return;
+        case 'while':
+          line(ctx, withComment('while (' + cond(ctx, n.cond) + ') {', n));
+          block(ctx, n.body);
+          line(ctx, '}');
+          return;
+        case 'until':
+          line(ctx, withComment('do {', n));
+          block(ctx, n.body);
+          line(ctx, '} while (!(' + cond(ctx, n.cond) + '));');
+          return;
+        case 'for': {
+          const k = target(ctx, n.counter);
+          const from = ex(ctx, tryParse(n.from) || { k: 'num', v: 0, raw: '0' });
+          const to = ex(ctx, tryParse(n.to) || { k: 'num', v: 0, raw: '0' });
+          const stepAst = tryParse(n.step);
+          const lit = stepAst ? A.literalValue(stepAst) : 1;
+          let c, inc;
+          if (typeof lit === 'number') {
+            c = k + (lit >= 0 ? ' <= ' : ' >= ') + to;
+            inc = lit === 1 ? k + '++' : lit === -1 ? k + '--' : lit > 0 ? k + ' += ' + lit : k + ' -= ' + (-lit);
+          } else {
+            const s = ex(ctx, stepAst);
+            c = '(' + s + ' > 0 ? ' + k + ' <= ' + to + ' : ' + k + ' >= ' + to + ')';
+            inc = k + ' += ' + s;
+          }
+          line(ctx, withComment('for (' + k + ' = ' + from + '; ' + c + '; ' + inc + ') {', n));
+          block(ctx, n.body);
+          line(ctx, '}');
+          return;
+        }
+        case 'switch': {
+          const sel = tryParse(n.expr);
+          if (sel && typeOf(ctx, sel) === 'string') {
+            // switch geht in C++ nur mit Zahlen → if / else if
+            const s = ex(ctx, strip(sel), 3);
+            n.cases.forEach((c, i) => {
+              const v = tryParse(c.value);
+              const test = s + ' == ' + (v ? ex(ctx, strip(v), 4) : '""');
+              line(ctx, i === 0 ? withComment('if (' + test + ') {', n) : '} else if (' + test + ') {');
+              block(ctx, c.body);
+            });
+            if (n.else && n.else.length) {
+              if (!n.cases.length) { line(ctx, withComment('{', n)); block(ctx, n.else); line(ctx, '}'); return; }
+              line(ctx, '} else {');
+              block(ctx, n.else);
+            }
+            if (n.cases.length) line(ctx, '}');
+            return;
+          }
+          line(ctx, withComment('switch (' + (sel ? ex(ctx, strip(sel)) : '0') + ') {', n));
+          ctx.ind++;
+          for (const c of n.cases) {
+            const v = tryParse(c.value);
+            line(ctx, 'case ' + (v ? ex(ctx, strip(v)) : '0') + ':');
+            ctx.ind++; genSeq(ctx, c.body); line(ctx, 'break;'); ctx.ind--;
+          }
+          if (n.else) { line(ctx, 'default:'); ctx.ind++; genSeq(ctx, n.else); line(ctx, 'break;'); ctx.ind--; }
+          ctx.ind--;
+          line(ctx, '}');
+          return;
+        }
+        case 'call': {
+          const callee = program.fns.find((f) => !f.isMain && f.name === n.fn);
+          if (!callee) { line(ctx, withComment('// ' + (n.fn || '?') + '(…)', n)); return; }
+          const args = callee.params.map((p, i) => {
+            const src = n.args[i] || '';
+            if (A.isArrayType(p.type) || p.byRef) return target(ctx, src);
+            return valueFor(ctx, src, p.type);
+          });
+          const call = fnName.get(callee.name) + '(' + args.join(', ') + ')';
+          if (callee.returnType !== 'void' && n.target && n.target.trim()) {
+            const tt = targetType(ctx, n.target);
+            line(ctx, withComment(target(ctx, n.target) + ' = ' + (tt === 'string' && callee.returnType !== 'string' ? 'to_string(' + call + ')' : call) + ';', n));
+          } else line(ctx, withComment(call + ';', n));
+          return;
+        }
+        default: return;
+      }
+    }
+
+    /** Für cout: Verkettung in einzelne <<-Teile zerlegen (Zahlen brauchen dort kein to_string). */
+    function coutParts(ctx, ast) {
+      if (typeOf(ctx, ast) !== 'string') return [ex(ctx, ast, 6)];
+      return parts(ctx, ast).map((p) => (strip(p).k === 'str' ? cStr(strip(p).v) : ex(ctx, p, 6)));
+    }
+
+    // ------------------------------------------------------------ Zusammenbau
+
+    const mainFn = program.fns.find((f) => f.isMain);
+    const subs = program.fns.filter((f) => !f.isMain);
+    genFunction(mainFn);
+    for (const fn of subs) { body.push(''); genFunction(fn); }
+
+    const out = ['// ' + tr('cppHeader1'), '// ' + tr('cppHeader2'), '#include <iostream>', '#include <string>', '#include <vector>', '', 'using namespace std;', ''];
+    if (protos.length) out.push(...protos, '');
+    if (used.num) {
+      const q = tr('genArgPrompt');
+      out.push('// ' + tr('javaHelperNumDoc'));
+      out.push('int ' + H.num + '(const string& ' + q + ') {');
+      out.push(IND + 'while (true) {');
+      out.push(IND + IND + 'cout << ' + q + ';');
+      out.push(IND + IND + 'string zeile;');
+      out.push(IND + IND + 'if (!getline(cin, zeile)) return 0;');
+      out.push(IND + IND + 'try {');
+      out.push(IND + IND + IND + 'return stoi(zeile);');
+      out.push(IND + IND + '} catch (...) {');
+      out.push(IND + IND + IND + 'cout << ' + cStr(tr('javaNeedInt')) + ' << endl;');
+      out.push(IND + IND + '}');
+      out.push(IND + '}');
+      out.push('}', '');
+    }
+    out.push(...body);
+    return out.join('\n') + '\n';
+  }
+
+  BBE.cppgen = { generate };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 ;
@@ -7083,6 +7725,16 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       types: words('int char void double float long boolean String Scanner Integer Arrays System'),
       line: '//', block: true, pp: false, quotes: '"'
     },
+    cpp: {
+      kw: words('if else while for do switch case default break continue return new using namespace try catch true false const auto'),
+      types: words('int char void double float long bool string vector cout cin endl getline to_string stoi std'),
+      line: '//', block: true, pp: true, quotes: '"'
+    },
+    cs: {
+      kw: words('if else while for do switch case default break continue return new static using class ref out try catch true false null var'),
+      types: words('int char void double float long bool string Console Array'),
+      line: '//', block: true, pp: false, quotes: '"'
+    },
     python: {
       kw: words('def return if elif else while for in break continue pass match case import from and or not True False None is lambda try except'),
       types: words('int str float list print input range len isinstance'),
@@ -7411,7 +8063,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   <a href="#h-sub">Unterprogramme</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Ausführen</a>
-  <a href="#h-c">Code (C, Java, Python)</a>
+  <a href="#h-c">Code (C, C++, C#, Java, Python)</a>
   <a href="#h-files">Dateien</a>
   <a href="#h-python">Python übernehmen</a>
   <a href="#h-keys">Tastenkürzel</a>
@@ -7491,8 +8143,9 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code: C, Java, Python</h3>
-  <p>Der Reiter <b>Code</b> zeigt das Programm wahlweise in <b>C</b>, <b>Java</b> oder <b>Python</b>; <i>Exportieren</i> speichert die Datei.
+  <h3>Code: C, C++, C#, Java, Python</h3>
+  <p>Der Reiter <b>Code</b> zeigt das Programm wahlweise in <b>C</b>, <b>C++</b>, <b>C#</b>, <b>Java</b> oder <b>Python</b>; <i>Exportieren</i> speichert die Datei.
+  In C++ werden InOut-Parameter zu Referenzen (<code>int&amp; a</code>), in C# zu <code>ref</code>.
   In Java heißt die Klasse wie die Datei, InOut-Zahlen stehen dort in einem Array mit einem Element. In Python geben Unterprogramme
   InOut-Werte zurück (<code>x, y = tausche(x, y)</code>).</p>
   <p>Der Reiter <b>C-Code</b> zeigt das Programm als C99-Quelltext, der sich mit <code>gcc</code> übersetzen lässt.
@@ -7548,7 +8201,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   <a href="#h-sub">Subprograms</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Running</a>
-  <a href="#h-c">Code (C, Java, Python)</a>
+  <a href="#h-c">Code (C, C++, C#, Java, Python)</a>
   <a href="#h-files">Files</a>
   <a href="#h-python">Importing Python</a>
   <a href="#h-keys">Shortcuts</a>
@@ -7628,8 +8281,9 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code: C, Java, Python</h3>
-  <p>The <b>Code</b> tab shows the program in <b>C</b>, <b>Java</b> or <b>Python</b>; <i>Export</i> saves the file.
+  <h3>Code: C, C++, C#, Java, Python</h3>
+  <p>The <b>Code</b> tab shows the program in <b>C</b>, <b>C++</b>, <b>C#</b>, <b>Java</b> or <b>Python</b>; <i>Export</i> saves the file.
+  In C++ InOut parameters become references (<code>int&amp; a</code>), in C# <code>ref</code>.
   In Java the class is named after the file and InOut numbers live in a one-element array. In Python subprograms
   return InOut values (<code>x, y = swap(x, y)</code>).</p>
   <p>The <b>C code</b> tab shows the program as C99 source that compiles with <code>gcc</code>.
@@ -7710,7 +8364,13 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     { grp: 'grp.misc', items: ['call', 'comment'] }
   ];
   const STATEMENT_KINDS = ['decl', 'assign', 'input', 'output', 'if', 'switch', 'while', 'for', 'until', 'call', 'comment'];
-  const CODE_LANGS = [{ id: 'c', label: 'C' }, { id: 'java', label: 'Java' }, { id: 'python', label: 'Python' }];
+  const CODE_LANGS = [
+    { id: 'c', label: 'C', ext: '.c', mime: 'text/x-c' },
+    { id: 'cpp', label: 'C++', ext: '.cpp', mime: 'text/x-c++src' },
+    { id: 'cs', label: 'C#', ext: '.cs', mime: 'text/x-csharp' },
+    { id: 'java', label: 'Java', ext: '.java', mime: 'text/x-java' },
+    { id: 'python', label: 'Python', ext: '.py', mime: 'text/x-python' }
+  ];
 
   const defaults = {
     lang: I18N.detect(), theme: 'system', layout: 'bb', colors: true, addresses: false,
@@ -8125,6 +8785,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     if (!(lang in S.codeCache)) {
       try {
         if (lang === 'java') S.codeCache[lang] = BBE.javagen.generate(S.program, { t, className: javaClass() });
+        else if (lang === 'cs') S.codeCache[lang] = BBE.csgen.generate(S.program, { t, className: javaClass() });
+        else if (lang === 'cpp') S.codeCache[lang] = BBE.cppgen.generate(S.program, { t });
         else if (lang === 'python') S.codeCache[lang] = BBE.pygen.generate(S.program, { t });
         else S.codeCache[lang] = BBE.cgen.generate(S.program, { t });
       } catch (e) {
@@ -8852,6 +9514,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       { label: t('exp.copyBB'), icon: 'clipboard', action: async () => { const ok = await copyText(bbText()); toast(ok ? t('toast.copied') : t('dlg.copy')); } },
       '-',
       { label: t('exp.c'), icon: 'code', action: exportC },
+      { label: t('exp.cpp'), icon: 'code', action: () => exportCode('cpp') },
+      { label: t('exp.cs'), icon: 'code', action: () => exportCode('cs') },
       { label: t('exp.java'), icon: 'code', action: () => exportCode('java') },
       { label: t('exp.py'), icon: 'code', action: () => exportCode('python') },
       { label: t('exp.png'), icon: 'image', action: exportPng }
@@ -9263,7 +9927,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     if (dlNs === undefined) { try { dlNs = await G.claude.use('downloads'); } catch (e) { dlNs = null; } }
     if (!dlNs) return 'none';
     // nur bestimmte Endungen sind im Viewer erlaubt
-    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|java|py)$/, '.$1.txt');
+    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
   }
 
@@ -9430,15 +10094,15 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   /** Quelltext als Datei: .c, .java (Dateiname = Klassenname) oder .py */
   async function exportCode(lang) {
     const code = currentCode(lang);
-    const ext = lang === 'java' ? '.java' : lang === 'python' ? '.py' : '.c';
-    const name = (lang === 'java' ? javaClass() : slug(S.fileName)) + ext;
+    const L = CODE_LANGS.find((x) => x.id === lang) || CODE_LANGS[0];
+    const ext = L.ext;
+    const name = (lang === 'java' || lang === 'cs' ? javaClass() : slug(S.fileName)) + ext;
     if (inSandboxViewer()) {
       const r = await viewerSave(name, code);
       if (r === 'none') showTextDialog(t('side.code'), t('dlg.saveText').replace('.bb', ext), code);
       return;
     }
-    const mime = { c: 'text/x-c', java: 'text/x-java', python: 'text/x-python' }[lang] || 'text/plain';
-    download(name, code, mime + ';charset=utf-8');
+    download(name, code, L.mime + ';charset=utf-8');
   }
   const exportC = () => exportCode('c');
 

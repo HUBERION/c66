@@ -204,6 +204,10 @@
     javaScanner: 'TASTATUR', javaNeedInt: 'Bitte eine ganze Zahl eingeben.',
     javaBoxNote: 'InOut: Java kennt kein call by reference für int/String – der Wert steht in einem Array mit einem Element ([0]).',
     'code.lang': 'Sprache', 'exp.java': 'Java-Programm herunterladen (.java)', 'exp.py': 'Python-Programm herunterladen (.py)',
+    csHeader1: 'Erzeugt mit dem Blockbild-Editor.', csHeader2: 'Zahl -> int, Text -> string, InOut -> ref.',
+    csHelperNum: 'ZahlEinlesen',
+    cppHeader1: 'Erzeugt mit dem Blockbild-Editor (C++11 oder neuer).', cppHeader2: 'Zahl -> int, Text -> string, Array -> vector, InOut -> Referenz (&).',
+    'exp.cs': 'C#-Programm herunterladen (.cs)', 'exp.cpp': 'C++-Programm herunterladen (.cpp)',
     cHeader1: 'Erzeugt mit dem Blockbild-Editor.',
     cHeader2: 'Zahl -> int, Text -> char[MAX_STRING_SIZE], InOut-Zahl -> Zeiger.',
 
@@ -423,6 +427,10 @@
     javaScanner: 'KEYBOARD', javaNeedInt: 'Please enter a whole number.',
     javaBoxNote: 'InOut: Java has no call by reference for int/String – the value is kept in a one-element array ([0]).',
     'code.lang': 'Language', 'exp.java': 'Download Java program (.java)', 'exp.py': 'Download Python program (.py)',
+    csHeader1: 'Generated with the block diagram editor.', csHeader2: 'Number -> int, Text -> string, InOut -> ref.',
+    csHelperNum: 'ReadNumber',
+    cppHeader1: 'Generated with the block diagram editor (C++11 or newer).', cppHeader2: 'Number -> int, Text -> string, array -> vector, InOut -> reference (&).',
+    'exp.cs': 'Download C# program (.cs)', 'exp.cpp': 'Download C++ program (.cpp)',
     cHeader1: 'Generated with the block diagram editor.',
     cHeader2: 'Number -> int, Text -> char[MAX_STRING_SIZE], InOut number -> pointer.',
 

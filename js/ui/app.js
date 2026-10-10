@@ -26,7 +26,13 @@
     { grp: 'grp.misc', items: ['call', 'comment'] }
   ];
   const STATEMENT_KINDS = ['decl', 'assign', 'input', 'output', 'if', 'switch', 'while', 'for', 'until', 'call', 'comment'];
-  const CODE_LANGS = [{ id: 'c', label: 'C' }, { id: 'java', label: 'Java' }, { id: 'python', label: 'Python' }];
+  const CODE_LANGS = [
+    { id: 'c', label: 'C', ext: '.c', mime: 'text/x-c' },
+    { id: 'cpp', label: 'C++', ext: '.cpp', mime: 'text/x-c++src' },
+    { id: 'cs', label: 'C#', ext: '.cs', mime: 'text/x-csharp' },
+    { id: 'java', label: 'Java', ext: '.java', mime: 'text/x-java' },
+    { id: 'python', label: 'Python', ext: '.py', mime: 'text/x-python' }
+  ];
 
   const defaults = {
     lang: I18N.detect(), theme: 'system', layout: 'bb', colors: true, addresses: false,
@@ -441,6 +447,8 @@
     if (!(lang in S.codeCache)) {
       try {
         if (lang === 'java') S.codeCache[lang] = BBE.javagen.generate(S.program, { t, className: javaClass() });
+        else if (lang === 'cs') S.codeCache[lang] = BBE.csgen.generate(S.program, { t, className: javaClass() });
+        else if (lang === 'cpp') S.codeCache[lang] = BBE.cppgen.generate(S.program, { t });
         else if (lang === 'python') S.codeCache[lang] = BBE.pygen.generate(S.program, { t });
         else S.codeCache[lang] = BBE.cgen.generate(S.program, { t });
       } catch (e) {
@@ -1168,6 +1176,8 @@
       { label: t('exp.copyBB'), icon: 'clipboard', action: async () => { const ok = await copyText(bbText()); toast(ok ? t('toast.copied') : t('dlg.copy')); } },
       '-',
       { label: t('exp.c'), icon: 'code', action: exportC },
+      { label: t('exp.cpp'), icon: 'code', action: () => exportCode('cpp') },
+      { label: t('exp.cs'), icon: 'code', action: () => exportCode('cs') },
       { label: t('exp.java'), icon: 'code', action: () => exportCode('java') },
       { label: t('exp.py'), icon: 'code', action: () => exportCode('python') },
       { label: t('exp.png'), icon: 'image', action: exportPng }
@@ -1579,7 +1589,7 @@
     if (dlNs === undefined) { try { dlNs = await G.claude.use('downloads'); } catch (e) { dlNs = null; } }
     if (!dlNs) return 'none';
     // nur bestimmte Endungen sind im Viewer erlaubt
-    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|java|py)$/, '.$1.txt');
+    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
   }
 
@@ -1746,15 +1756,15 @@
   /** Quelltext als Datei: .c, .java (Dateiname = Klassenname) oder .py */
   async function exportCode(lang) {
     const code = currentCode(lang);
-    const ext = lang === 'java' ? '.java' : lang === 'python' ? '.py' : '.c';
-    const name = (lang === 'java' ? javaClass() : slug(S.fileName)) + ext;
+    const L = CODE_LANGS.find((x) => x.id === lang) || CODE_LANGS[0];
+    const ext = L.ext;
+    const name = (lang === 'java' || lang === 'cs' ? javaClass() : slug(S.fileName)) + ext;
     if (inSandboxViewer()) {
       const r = await viewerSave(name, code);
       if (r === 'none') showTextDialog(t('side.code'), t('dlg.saveText').replace('.bb', ext), code);
       return;
     }
-    const mime = { c: 'text/x-c', java: 'text/x-java', python: 'text/x-python' }[lang] || 'text/plain';
-    download(name, code, mime + ';charset=utf-8');
+    download(name, code, L.mime + ';charset=utf-8');
   }
   const exportC = () => exportCode('c');
 

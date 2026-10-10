@@ -11,7 +11,7 @@
   <a href="#h-sub">Unterprogramme</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Ausführen</a>
-  <a href="#h-c">Code (C, Java, Python)</a>
+  <a href="#h-c">Code (C, C++, C#, Java, Python)</a>
   <a href="#h-files">Dateien</a>
   <a href="#h-python">Python übernehmen</a>
   <a href="#h-keys">Tastenkürzel</a>
@@ -91,8 +91,9 @@
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code: C, Java, Python</h3>
-  <p>Der Reiter <b>Code</b> zeigt das Programm wahlweise in <b>C</b>, <b>Java</b> oder <b>Python</b>; <i>Exportieren</i> speichert die Datei.
+  <h3>Code: C, C++, C#, Java, Python</h3>
+  <p>Der Reiter <b>Code</b> zeigt das Programm wahlweise in <b>C</b>, <b>C++</b>, <b>C#</b>, <b>Java</b> oder <b>Python</b>; <i>Exportieren</i> speichert die Datei.
+  In C++ werden InOut-Parameter zu Referenzen (<code>int&amp; a</code>), in C# zu <code>ref</code>.
   In Java heißt die Klasse wie die Datei, InOut-Zahlen stehen dort in einem Array mit einem Element. In Python geben Unterprogramme
   InOut-Werte zurück (<code>x, y = tausche(x, y)</code>).</p>
   <p>Der Reiter <b>C-Code</b> zeigt das Programm als C99-Quelltext, der sich mit <code>gcc</code> übersetzen lässt.
@@ -148,7 +149,7 @@
   <a href="#h-sub">Subprograms</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Running</a>
-  <a href="#h-c">Code (C, Java, Python)</a>
+  <a href="#h-c">Code (C, C++, C#, Java, Python)</a>
   <a href="#h-files">Files</a>
   <a href="#h-python">Importing Python</a>
   <a href="#h-keys">Shortcuts</a>
@@ -228,8 +229,9 @@
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code: C, Java, Python</h3>
-  <p>The <b>Code</b> tab shows the program in <b>C</b>, <b>Java</b> or <b>Python</b>; <i>Export</i> saves the file.
+  <h3>Code: C, C++, C#, Java, Python</h3>
+  <p>The <b>Code</b> tab shows the program in <b>C</b>, <b>C++</b>, <b>C#</b>, <b>Java</b> or <b>Python</b>; <i>Export</i> saves the file.
+  In C++ InOut parameters become references (<code>int&amp; a</code>), in C# <code>ref</code>.
   In Java the class is named after the file and InOut numbers live in a one-element array. In Python subprograms
   return InOut values (<code>x, y = swap(x, y)</code>).</p>
   <p>The <b>C code</b> tab shows the program as C99 source that compiles with <code>gcc</code>.

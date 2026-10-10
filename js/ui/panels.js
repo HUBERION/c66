@@ -171,6 +171,16 @@
       types: words('int char void double float long boolean String Scanner Integer Arrays System'),
       line: '//', block: true, pp: false, quotes: '"'
     },
+    cpp: {
+      kw: words('if else while for do switch case default break continue return new using namespace try catch true false const auto'),
+      types: words('int char void double float long bool string vector cout cin endl getline to_string stoi std'),
+      line: '//', block: true, pp: true, quotes: '"'
+    },
+    cs: {
+      kw: words('if else while for do switch case default break continue return new static using class ref out try catch true false null var'),
+      types: words('int char void double float long bool string Console Array'),
+      line: '//', block: true, pp: false, quotes: '"'
+    },
     python: {
       kw: words('def return if elif else while for in break continue pass match case import from and or not True False None is lambda try except'),
       types: words('int str float list print input range len isinstance'),

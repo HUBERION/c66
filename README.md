@@ -45,11 +45,13 @@ der alten Version wiederherstellen* das zuletzt automatisch gesicherte Diagramm 
   `strcmp` für Textvergleiche, `snprintf` für Verkettungen, `scanf(" %254[^\n]")` statt `gets`,
   Zeiger für InOut-Zahlen, Größenvariablen für Arrays, FALLS mit Text als `if`/`else if`
 
-**Export nach C, Java und Python**
+**Export nach C, C++, C#, Java und Python**
+- C++: `string`, `vector`, `cin`/`cout`, InOut als Referenz (`int& a`)
+- C#: eine Klasse `Program`, InOut als `ref`, Arrays mit `.Length`
 - Reiter *Code* mit Sprachwahl, Download über *Exportieren*
 - Java: eine Klasse mit statischen Methoden, `Scanner` für Eingaben, InOut-Zahlen über ein Array mit einem Element
 - Python 3.10+: f-Strings, `range`, `match/case`; InOut-Werte werden zurückgegeben (`x, y = tausche(x, y)`)
-- `node tests/export.cjs` übersetzt alle Beispiele, führt sie mit echtem Python bzw. javac/java aus und vergleicht mit der Simulation
+- `node tests/export.cjs` übersetzt 44 Programme, führt sie mit echtem Python, javac/java, dotnet und g++ aus und vergleicht mit der Simulation
 
 **Python → Blockbild**
 - *Öffnen* nimmt auch `.py`-Dateien: Zuweisungen, `input`/`print`, f-Strings, `if/elif/else`, `while`,

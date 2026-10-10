@@ -689,7 +689,7 @@ body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-sele
 /* Sprachwahl C | Java | Python – Segmente im Stil der Reiter */
 .lang-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
 .lang-seg button {
-  height: 28px; padding: 0 12px; border: 1px solid transparent; border-radius: 7px; background: transparent;
+  height: 28px; padding: 0 10px; border: 1px solid transparent; border-radius: 7px; background: transparent;
   color: var(--fg-2); font: 500 13px var(--font-ui); transition: background-color .16s ease, color .16s ease, box-shadow .16s ease;
 }
 .lang-seg button:hover { color: var(--fg); }
