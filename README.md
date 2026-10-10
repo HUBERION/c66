@@ -45,13 +45,18 @@ der alten Version wiederherstellen* das zuletzt automatisch gesicherte Diagramm 
   `strcmp` für Textvergleiche, `snprintf` für Verkettungen, `scanf(" %254[^\n]")` statt `gets`,
   Zeiger für InOut-Zahlen, Größenvariablen für Arrays, FALLS mit Text als `if`/`else if`
 
-**Export nach C, C++, C#, Java und Python**
+**Export nach C, C++, C#, Java, Python, JavaScript, Fortran und COBOL**
+- JavaScript: läuft mit `node datei.js` (oder im Browser über `prompt`), InOut-Werte werden zurückgegeben (`[x, y] = tausche(x, y)`)
+- Fortran 2008: ein Programm mit `contains`, Texte als `character(len=:), allocatable`, Arrays ab Index 0, InOut als `intent(inout)`
+- COBOL (GnuCOBOL 3, freies Format): jedes Unterprogramm ein eigenes `RECURSIVE`-Programm, `CALL … USING BY CONTENT/BY REFERENCE`,
+  Texte mit Längenfeld `NAME-LEN`, Arrays mit höchstens 1000 Elementen (`A(I + 1)`)
 - C++: `string`, `vector`, `cin`/`cout`, InOut als Referenz (`int& a`)
 - C#: eine Klasse `Program`, InOut als `ref`, Arrays mit `.Length`
 - Reiter *Code* mit Sprachwahl, Download über *Exportieren*
 - Java: eine Klasse mit statischen Methoden, `Scanner` für Eingaben, InOut-Zahlen über ein Array mit einem Element
 - Python 3.10+: f-Strings, `range`, `match/case`; InOut-Werte werden zurückgegeben (`x, y = tausche(x, y)`)
-- `node tests/export.cjs` übersetzt 44 Programme, führt sie mit echtem Python, javac/java, dotnet und g++ aus und vergleicht mit der Simulation
+- `node tests/export.cjs` übersetzt 44 Programme, führt sie mit echtem Python, javac/java, dotnet, node, g++, gfortran und cobc aus
+  und vergleicht mit der Simulation
 
 **Python → Blockbild**
 - *Öffnen* nimmt auch `.py`-Dateien: Zuweisungen, `input`/`print`, f-Strings, `if/elif/else`, `while`,

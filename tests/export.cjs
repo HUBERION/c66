@@ -1,8 +1,9 @@
-// Prüft den Export nach Python, Java, C# und C++: echte Compiler/Interpreter gegen die Simulation.
+// Prüft den Export nach Python, Java, C#, C++, JavaScript, Fortran und COBOL: echte Compiler/Interpreter gegen die Simulation.
 // Programme: alle eingebauten Beispiele (DE + EN), die übersetzten tests/python/*.py
 // und optional ein Ordner mit alten .bb-Dateien.
 //   node tests/export.cjs [ordner-mit-.bb-dateien]
-// Benötigt (fehlende Werkzeuge werden übersprungen): python/py, javac+java, dotnet (SDK 6+), g++ (direkt oder über WSL).
+// Benötigt (fehlende Werkzeuge werden übersprungen): python/py, javac+java, dotnet (SDK 6+), node,
+// g++, gfortran, cobc (GnuCOBOL) – direkt oder unter Windows über WSL.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -16,8 +17,14 @@ const tools = {
   python: ok(py, ['--version']),
   java: ok('javac', ['-version']),
   cs: ok('dotnet', ['--list-sdks']),
-  cpp: ok('g++', ['--version']) ? 'native' : (win && ok('wsl', ['-e', 'g++', '--version']) ? 'wsl' : null)
+  js: true
 };
+const unix = (cmd) => (ok(cmd, ['--version']) ? 'native' : (win && ok('wsl', ['-e', cmd, '--version']) ? 'wsl' : null));
+tools.cpp = unix('g++');
+tools.fortran = unix('gfortran');
+tools.cobol = unix('cobc');
+// nur bestimmte Sprachen prüfen:  BBE_ONLY=cobol,fortran node tests/export.cjs
+if (process.env.BBE_ONLY) for (const k of Object.keys(tools)) if (!process.env.BBE_ONLY.split(',').includes(k)) tools[k] = null;
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'bbe-export-'));
 
 // ------------------------------------------------------------------ Programme sammeln
@@ -61,9 +68,9 @@ function stripPrompts(stdout, prompts) {
 
 // ------------------------------------------------------------------ Simulation + Quelltexte erzeugen
 const csDir = path.join(work, 'cs');
-const cppDir = path.join(work, 'cpp');
+const dirs = { cpp: path.join(work, 'cpp'), fortran: path.join(work, 'f90'), cobol: path.join(work, 'cob') };
 fs.mkdirSync(csDir);
-fs.mkdirSync(cppDir);
+for (const d of Object.values(dirs)) fs.mkdirSync(d);
 for (const c of cases) {
   BBE.i18n.lang = c.lang;
   const program = BBE.model.programFromBB(JSON.parse(JSON.stringify(c.bb)));
@@ -84,8 +91,11 @@ for (const c of cases) {
   fs.mkdirSync(path.join(work, c.name), { recursive: true });
   fs.writeFileSync(path.join(work, c.name, c.cls + '.java'), BBE.javagen.generate(program, { t: BBE.i18n.t, className: c.cls }));
   fs.writeFileSync(path.join(csDir, c.cls + '.cs'), BBE.csgen.generate(program, { t: BBE.i18n.t, className: c.cls }));
-  fs.writeFileSync(path.join(cppDir, c.name + '.cpp'), BBE.cppgen.generate(program, { t: BBE.i18n.t }));
-  fs.writeFileSync(path.join(cppDir, c.name + '.in'), c.stdin);
+  fs.writeFileSync(path.join(work, c.name + '.js'), BBE.jsgen.generate(program, { t: BBE.i18n.t }));
+  fs.writeFileSync(path.join(dirs.cpp, c.name + '.cpp'), BBE.cppgen.generate(program, { t: BBE.i18n.t }));
+  fs.writeFileSync(path.join(dirs.fortran, c.name + '.f90'), BBE.fortgen.generate(program, { t: BBE.i18n.t }));
+  if (BBE.cobolgen) fs.writeFileSync(path.join(dirs.cobol, c.name + '.cob'), BBE.cobolgen.generate(program, { t: BBE.i18n.t }));
+  for (const d of Object.values(dirs)) fs.writeFileSync(path.join(d, c.name + '.in'), c.stdin);
 }
 
 const compare = (c, label, stdout) => {
@@ -98,6 +108,10 @@ for (const c of cases) {
   if (tools.python) {
     const pr = spawnSync(py, ['-X', 'utf8', path.join(work, c.name + '.py')], { input: c.stdin, encoding: 'utf8' });
     if (pr.status !== 0) c.results.push('PY-ERROR ' + pr.stderr.trim().split('\n').slice(-1)[0]); else compare(c, 'py', pr.stdout);
+  }
+  if (tools.js) {
+    const jr = spawnSync(process.execPath, [path.join(work, c.name + '.js')], { input: c.stdin, encoding: 'utf8' });
+    if (jr.status !== 0) c.results.push('JS-ERROR ' + jr.stderr.trim().split('\n').slice(0, 5).join(' | ')); else compare(c, 'js', jr.stdout);
   }
   if (tools.java) {
     const dir = path.join(work, c.name);
@@ -143,27 +157,33 @@ class Runner { static void Main(string[] a) {
   }
 }
 
-// ------------------------------------------------------------------ C++: g++ (über WSL unter Windows)
-if (tools.cpp) {
-  const script = `cd "$1"; for f in *.cpp; do n=\${f%.cpp}; if g++ -std=c++11 -Wall -Wextra -o "/tmp/bbe_$n" "$f" 2> "$n.err"; then "/tmp/bbe_$n" < "$n.in" > "$n.out" 2>> "$n.err"; echo $? > "$n.code"; else echo compile > "$n.code"; fi; done`;
-  fs.writeFileSync(path.join(cppDir, 'run.sh'), script);
-  if (tools.cpp === 'wsl') {
-    const wp = spawnSync('wsl', ['wslpath', '-a', cppDir.replace(/\\/g, '/')], { encoding: 'utf8' }).stdout.trim();
+// ------------------------------------------------------------------ C++, Fortran, COBOL (unter Windows über WSL)
+function runUnix(lang, ext, compile) {
+  const dir = dirs[lang];
+  const script = 'ulimit -f 20000; cd "$1"; for f in *' + ext + '; do n=${f%' + ext + '}; if ' + compile + ' 2> "$n.err"; then timeout 10 "/tmp/bbe_$n" < "$n.in" > "$n.out" 2>> "$n.err"; ' +
+    'echo $? > "$n.code"; else echo compile > "$n.code"; fi; done';
+  fs.writeFileSync(path.join(dir, 'run.sh'), script);
+  if (tools[lang] === 'wsl') {
+    const wp = spawnSync('wsl', ['wslpath', '-a', dir.replace(/\\/g, '/')], { encoding: 'utf8' }).stdout.trim();
     spawnSync('wsl', ['sh', wp + '/run.sh', wp], { encoding: 'utf8', env: Object.assign({}, process.env, { MSYS_NO_PATHCONV: '1' }) });
   } else {
-    spawnSync('sh', [path.join(cppDir, 'run.sh'), cppDir], { encoding: 'utf8' });
+    spawnSync('sh', [path.join(dir, 'run.sh'), dir], { encoding: 'utf8' });
   }
+  const tag = { cpp: 'cpp', fortran: 'f90', cobol: 'cob' }[lang];
   for (const c of cases) {
-    const read = (ext) => { const p = path.join(cppDir, c.name + ext); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''; };
+    const read = (e) => { const p = path.join(dir, c.name + e); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''; };
     const code = read('.code').trim();
-    const err = read('.err').trim();
-    if (code === 'compile') c.results.push('CPP-COMPILE ' + err.split('\n').filter((l) => /error/.test(l)).slice(0, 2).join(' | '));
-    else if (code !== '0') c.results.push('CPP-ERROR exit ' + code + ' ' + err.split('\n')[0]);
-    else compare(c, 'cpp', read('.out'));
-    const w = err.split('\n').filter((l) => /warning/.test(l));
-    if (code !== 'compile' && w.length) c.results.push('cpp-warn: ' + w[0].replace(/^.*?warning: /, '').slice(0, 120));
+    const err = read('.err').split('\n').filter((l) => !/_FORTIFY_SOURCE|command-line>/.test(l)).join('\n').trim();
+    if (code === 'compile') c.results.push(tag.toUpperCase() + '-COMPILE ' + (err.split('\n').filter((l) => /rror/.test(l)).slice(0, 2).join(' | ') || err).slice(0, 300));
+    else if (code !== '0') c.results.push(tag.toUpperCase() + '-ERROR exit ' + code + ' ' + err.split('\n').slice(0, 3).join(' | '));
+    else compare(c, tag, read('.out'));
+    const w = err.split('\n').filter((l) => /[Ww]arning/.test(l));
+    if (code !== 'compile' && w.length) c.results.push(tag + '-warn: ' + w[0].replace(/^.*?[Ww]arning: /, '').slice(0, 120));
   }
 }
+if (tools.cpp) runUnix('cpp', '.cpp', 'g++ -std=c++11 -Wall -Wextra -o "/tmp/bbe_$n" "$f"');
+if (tools.fortran) runUnix('fortran', '.f90', 'gfortran -std=f2008 -Wall -Wextra -o "/tmp/bbe_$n" "$f"');
+if (tools.cobol && BBE.cobolgen) runUnix('cobol', '.cob', 'cp "$f" /tmp/bbe_prog.cob && cobc -x -Wall -o "/tmp/bbe_$n" /tmp/bbe_prog.cob');
 
 // ------------------------------------------------------------------ Ergebnis
 let fail = 0;

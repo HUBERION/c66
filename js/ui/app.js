@@ -31,8 +31,13 @@
     { id: 'cpp', label: 'C++', ext: '.cpp', mime: 'text/x-c++src' },
     { id: 'cs', label: 'C#', ext: '.cs', mime: 'text/x-csharp' },
     { id: 'java', label: 'Java', ext: '.java', mime: 'text/x-java' },
-    { id: 'python', label: 'Python', ext: '.py', mime: 'text/x-python' }
+    { id: 'python', label: 'Python', ext: '.py', mime: 'text/x-python' },
+    { id: 'js', label: 'JS', ext: '.js', mime: 'text/javascript' },
+    { id: 'fortran', label: 'Fortran', ext: '.f90', mime: 'text/x-fortran' },
+    { id: 'cobol', label: 'COBOL', ext: '.cob', mime: 'text/x-cobol' }
   ];
+  const CODE_GEN = { cpp: 'cppgen', python: 'pygen', js: 'jsgen', fortran: 'fortgen', cobol: 'cobolgen', c: 'cgen' };
+  const LINE_COMMENT = { python: '# ', fortran: '! ', cobol: '*> ' };
 
   const defaults = {
     lang: I18N.detect(), theme: 'system', layout: 'bb', colors: true, addresses: false,
@@ -448,12 +453,10 @@
       try {
         if (lang === 'java') S.codeCache[lang] = BBE.javagen.generate(S.program, { t, className: javaClass() });
         else if (lang === 'cs') S.codeCache[lang] = BBE.csgen.generate(S.program, { t, className: javaClass() });
-        else if (lang === 'cpp') S.codeCache[lang] = BBE.cppgen.generate(S.program, { t });
-        else if (lang === 'python') S.codeCache[lang] = BBE.pygen.generate(S.program, { t });
-        else S.codeCache[lang] = BBE.cgen.generate(S.program, { t });
+        else S.codeCache[lang] = BBE[CODE_GEN[lang] || 'cgen'].generate(S.program, { t });
       } catch (e) {
         console.error(e);
-        S.codeCache[lang] = (lang === 'python' ? '# ' : '// ') + t('rInternal', e.message) + '\n';
+        S.codeCache[lang] = (LINE_COMMENT[lang] || '// ') + t('rInternal', e.message) + '\n';
       }
     }
     return S.codeCache[lang];
@@ -1180,6 +1183,9 @@
       { label: t('exp.cs'), icon: 'code', action: () => exportCode('cs') },
       { label: t('exp.java'), icon: 'code', action: () => exportCode('java') },
       { label: t('exp.py'), icon: 'code', action: () => exportCode('python') },
+      { label: t('exp.js'), icon: 'code', action: () => exportCode('js') },
+      { label: t('exp.f90'), icon: 'code', action: () => exportCode('fortran') },
+      { label: t('exp.cob'), icon: 'code', action: () => exportCode('cobol') },
       { label: t('exp.png'), icon: 'image', action: exportPng }
     ];
     if (store.getRaw(KEY_OLD)) items.push('-', { label: t('exp.recoverOld'), icon: 'history', action: recoverOld });
@@ -1589,7 +1595,7 @@
     if (dlNs === undefined) { try { dlNs = await G.claude.use('downloads'); } catch (e) { dlNs = null; } }
     if (!dlNs) return 'none';
     // nur bestimmte Endungen sind im Viewer erlaubt
-    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py)$/, '.$1.txt');
+    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
   }
 

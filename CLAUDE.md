@@ -30,7 +30,7 @@ exportieren sie als C-Code. Zielgruppe: Unterricht in Österreich, daher **Deuts
    - Typen intern `integer|string|integer[]|string[]`; beim Laden werden auch alte Anzeigenamen
      (`Number`, `Zahl`, `Text[]` …) akzeptiert (`model.normType`).
    - Die Ergebnisvariable heißt immer `result` (im alten DE-Modus hieß sie `resultat`, war dort aber kaputt).
-3. **Simulation = C = C++ = C# = Java = Python.** Gleiche Eingaben müssen gleiche Ausgaben liefern.
+3. **Simulation = C = C++ = C# = Java = Python = JavaScript = Fortran = COBOL.** Gleiche Eingaben müssen gleiche Ausgaben liefern.
    Das ist durch Tests abgesichert (siehe unten) – nach Änderungen an `interp.js`, `cgen.js` oder
    `pyimport.js` immer die Tests laufen lassen und den C-Code mit gcc übersetzen.
 4. **Bedienbar auf Desktop, Tablet und Handy** (Touch: Antippen fügt ein, langes Drücken zieht).
@@ -52,6 +52,9 @@ js/core/            ohne DOM, auch in Node lauffähig (Tests!)
   javagen.js        Übersetzung nach Java 8+ (eine Klasse, InOut → Array mit einem Element)
   csgen.js          Übersetzung nach C# (InOut → ref, Arrays mit .Length, Klasse = Dateiname)
   cppgen.js         Übersetzung nach C++11 (string, vector, InOut → Referenz &, cin/cout)
+  jsgen.js          Übersetzung nach JavaScript (Node.js/Browser, InOut wie Python als Rückgabe)
+  fortgen.js        Übersetzung nach Fortran 2008 (contains, allocatable, intent(inout))
+  cobolgen.js       Übersetzung nach COBOL (GnuCOBOL, freies Format, ein Programm je Unterprogramm)
   examples.js       eingebaute Beispiele (im .bb-Format, Texte je Sprache über L(de, en))
   pyimport.js       Python → Blockbild (eigener Tokenizer/Parser für die Schul-Teilmenge)
 js/ui/              Oberfläche
@@ -105,9 +108,9 @@ FALLS mit Text → `if/else if`, verschachtelte Deklarationen werden an den Funk
 Bekannte harmlose gcc-Hinweise mit `-Wall -Wextra`: `-Wformat-truncation` bei `snprintf`, ungenutzter
 `…Size`-Parameter, wenn ein Unterprogramm die Array-Länge nicht braucht.
 
-### Export nach C++, C#, Java und Python (cppgen.js, csgen.js, javagen.js, pygen.js)
+### Export nach C++, C#, Java, Python, JavaScript, Fortran, COBOL (cppgen, csgen, javagen, pygen, jsgen, fortgen, cobolgen)
 
-Reiter *Code* hat eine Sprachwahl (C | C++ | C# | Java | Python, `settings.codeLang`, Liste `CODE_LANGS` in app.js),
+Reiter *Code* hat eine Sprachwahl (`settings.codeLang`, Liste `CODE_LANGS` + `CODE_GEN` in app.js, Farben in `panels.js` LANGS),
 *Exportieren* bietet alle Downloads.
 - **C++:** Text + Zahl braucht `to_string`; Ausgaben werden als `cout << a << b` zerlegt. `using namespace std` –
   Namen, die mit std kollidieren (swap, max, count …), bekommen ein `_` angehängt. FALLS mit Text → if/else if.
@@ -121,7 +124,22 @@ Reiter *Code* hat eine Sprachwahl (C | C++ | C# | Java | Python, `settings.codeL
   InOut-Zahlen/Texte: Parameter ist `int[]`/`String[]` mit einem Element; der Aufruf packt den Wert in `boxN`
   und schreibt ihn danach zurück. Deklarationen in Blöcken werden an den Methodenanfang gehoben (Java verbietet
   Überdecken lokaler Variablen). Klassenname = Dateiname (`javagen.className`).
-- Beide Generatoren: erst alle Hilfsfunktionen definieren, `run()` am Ende aufrufen (const-Funktionen sind vorher
+- **JavaScript:** rechnet wie die Simulation (die selbst JS ist). Eingabe über `zeileLesen()` (Node: `fs.readSync` auf stdin,
+  Browser: `prompt`). InOut wie Python: `[x, y] = tausche(x, y)`. `let` gilt nur im Block → Hochziehen wie bei Java.
+- **Fortran:** Zahl → `integer`, Text → `character(len=:), allocatable`, Arrays `allocate(a(0:n - 1))` (Untergrenze 0,
+  Parameter `a(0:)`), Text-Arrays über `type(text)` mit Komponente `%v`. Alle Unterprogramme `recursive`, Funktionen mit
+  `result(result)`. In-Parameter, die verändert werden, bekommen `value` (Zahl) bzw. eine Kopie `name_in` (Text).
+  Groß-/Kleinschreibung zählt nicht → Namen werden bei Kollisionen mit `_` verlängert, Umlaute ersetzt. Zeilen > 120 Zeichen
+  werden mit `&` umbrochen. Echtes `do k = a, b` nur, wenn Zähler und Grenze im Rumpf nicht geschrieben werden.
+- **COBOL:** GnuCOBOL 3 (`>>SOURCE FORMAT FREE`). Ein Programm je Unterprogramm (`RECURSIVE`, `LOCAL-STORAGE`), In → `BY CONTENT`,
+  InOut/Arrays → `BY REFERENCE`, Rückgabewert = letzter Parameter `RESULT`. Text = `PIC X(256)` + Länge `NAME-LEN` (`PIC 9(3)`),
+  Wert immer als `NAME(1:NAME-LEN)` – sonst gehen Leerzeichen am Ende verloren. Arrays: `NAME-TAB` mit 1000 Plätzen + `NAME-LEN`,
+  Index + 1 (`A(I + 1)`, `a[j+1]` → `A(J + 2)`). Zahlen in Texten über Druckfelder `BB-Zn` (`PIC -(18)9`, `FUNCTION TRIM`),
+  `/` → `FUNCTION INTEGER-PART`, `%` → `FUNCTION REM` (Vorzeichen wie C). Hilfsfelder `BB-…` werden je Anweisung neu gezählt.
+  Namen: reservierte Wörter (Liste aus `cobc --list-reserved`) bekommen `-V`. cobc-Eigenheit: `COMPUTE … NUMVAL` im
+  Hilfsprogramm nach einem Programm mit `FUNCTION REM` erzeugte C-Code mit unbekanntem `cob_decimal` → dort `MOVE` statt `COMPUTE`.
+  cobc warnt bei `CALL … BY REFERENCE A(J + 1) A(J + 2)` (»duplicate USING item«) – harmlos.
+- Alle Generatoren: erst alle Hilfsfunktionen definieren, `run()` am Ende aufrufen (const-Funktionen sind vorher
   nicht initialisiert).
 
 ### Python-Import (pyimport.js)
@@ -141,7 +159,8 @@ node tools/serve.cjs                 # Entwicklung: http://localhost:8765/  (ind
 node tests/unit.cjs                  # 24 Grenzfälle: Parser, Interpreter, Prüfung, .bb-Format
 node tests/examples.cjs [ordner]     # alle eingebauten Beispiele DE+EN; mit Ordner: .c + .in schreiben
 node tests/python.cjs                # Python-Beispiele: Ausgabe von echtem Python vs. übersetztem Blockbild
-node tests/export.cjs [alte-.bb]     # Export: python, javac/java, dotnet (ein Projekt), g++ (auch über WSL) gegen die Simulation
+node tests/export.cjs [alte-.bb]     # Export: python, javac/java, dotnet (ein Projekt), node, g++/gfortran/cobc (auch über WSL)
+                                     # gegen die Simulation; nur einzelne Sprachen: BBE_ONLY=cobol,fortran node tests/export.cjs
 node tests/smoke-original.cjs <ordner-mit-alten-.bb>   # Original-Beispiele des 2.x-Editors
 sh tests/compile-c.sh <ordner>       # (Linux/WSL) gcc -std=c99 -Wall -Wextra + Ausführen mit .in-Dateien
 node tools/build.mjs                 # vor jedem Commit: dist/blockbild-editor.html neu bauen

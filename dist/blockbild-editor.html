@@ -696,10 +696,10 @@ body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-sele
 .tok-pp { color: var(--code-pp); }
 .code-note { font-size: 11.5px; color: var(--fg-3); }
 .code-head { padding: 8px 12px; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
-/* Sprachwahl C | Java | Python – Segmente im Stil der Reiter */
-.lang-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+/* Sprachwahl C | C++ | … | COBOL – Segmente im Stil der Reiter, bricht bei schmaler Leiste um */
+.lang-seg { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
 .lang-seg button {
-  height: 28px; padding: 0 10px; border: 1px solid transparent; border-radius: 7px; background: transparent;
+  height: 28px; padding: 0 9px; border: 1px solid transparent; border-radius: 7px; background: transparent;
   color: var(--fg-2); font: 500 13px var(--font-ui); transition: background-color .16s ease, color .16s ease, box-shadow .16s ease;
 }
 .lang-seg button:hover { color: var(--fg); }
@@ -1230,6 +1230,14 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     csHelperNum: 'ZahlEinlesen',
     cppHeader1: 'Erzeugt mit dem Blockbild-Editor (C++11 oder neuer).', cppHeader2: 'Zahl -> int, Text -> string, Array -> vector, InOut -> Referenz (&).',
     'exp.cs': 'C#-Programm herunterladen (.cs)', 'exp.cpp': 'C++-Programm herunterladen (.cpp)',
+    jsHeader1: 'Erzeugt mit dem Blockbild-Editor (JavaScript, läuft mit Node.js: node datei.js).', jsHeader2: 'InOut-Parameter werden zurückgegeben: [x, y] = tausche(x, y)',
+    jsHelperNum: 'zahlEinlesen', jsHelperText: 'textEinlesen', jsReadLine: 'zeileLesen', jsHelperReadDoc: 'Liest eine Zeile von der Tastatur (Node.js) bzw. per prompt() im Browser.',
+    fortHeader1: 'Erzeugt mit dem Blockbild-Editor (Fortran 2008, z. B. gfortran datei.f90).', fortHeader2: 'Zahl -> integer, Text -> character(len=:), allocatable, InOut -> intent(inout).',
+    fortProgram: 'hauptprogramm', fortStr: 'als_text', fortReadLine: 'zeile_lesen', fortHelperNum: 'zahl_einlesen', fortToNum: 'als_zahl',
+    fortDiscard: 'verworfen', fortTextType: 'Text-Arrays: jedes Element ist ein eigener Text beliebiger Länge (%v).',
+    cobolHeader1: 'Erzeugt mit dem Blockbild-Editor (GnuCOBOL: cobc -x datei.cob).', cobolHeader2: 'Zahl -> PIC S9(18), Text -> PIC X(256) mit Länge NAME-LEN, Arrays mit höchstens 1000 Elementen (Index + 1).',
+    cobolMain: 'HAUPTPROGRAMM', cobolHelperNum: 'ZAHL-EINLESEN',
+    'exp.js': 'JavaScript-Programm herunterladen (.js)', 'exp.f90': 'Fortran-Programm herunterladen (.f90)', 'exp.cob': 'COBOL-Programm herunterladen (.cob)',
     cHeader1: 'Erzeugt mit dem Blockbild-Editor.',
     cHeader2: 'Zahl -> int, Text -> char[MAX_STRING_SIZE], InOut-Zahl -> Zeiger.',
 
@@ -1453,6 +1461,14 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     csHelperNum: 'ReadNumber',
     cppHeader1: 'Generated with the block diagram editor (C++11 or newer).', cppHeader2: 'Number -> int, Text -> string, array -> vector, InOut -> reference (&).',
     'exp.cs': 'Download C# program (.cs)', 'exp.cpp': 'Download C++ program (.cpp)',
+    jsHeader1: 'Generated with the block diagram editor (JavaScript, runs with Node.js: node file.js).', jsHeader2: 'InOut parameters are returned: [x, y] = swap(x, y)',
+    jsHelperNum: 'readNumber', jsHelperText: 'readText', jsReadLine: 'readLine', jsHelperReadDoc: 'Reads a line from the keyboard (Node.js) or via prompt() in the browser.',
+    fortHeader1: 'Generated with the block diagram editor (Fortran 2008, e.g. gfortran file.f90).', fortHeader2: 'Number -> integer, Text -> character(len=:), allocatable, InOut -> intent(inout).',
+    fortProgram: 'main_program', fortStr: 'as_text', fortReadLine: 'read_line', fortHelperNum: 'read_number', fortToNum: 'as_number',
+    fortDiscard: 'discarded', fortTextType: 'Text arrays: every element is its own text of any length (%v).',
+    cobolHeader1: 'Generated with the block diagram editor (GnuCOBOL: cobc -x file.cob).', cobolHeader2: 'Number -> PIC S9(18), Text -> PIC X(256) with length NAME-LEN, arrays with at most 1000 elements (index + 1).',
+    cobolMain: 'MAIN-PROGRAM', cobolHelperNum: 'READ-NUMBER',
+    'exp.js': 'Download JavaScript program (.js)', 'exp.f90': 'Download Fortran program (.f90)', 'exp.cob': 'Download COBOL program (.cob)',
     cHeader1: 'Generated with the block diagram editor.',
     cHeader2: 'Number -> int, Text -> char[MAX_STRING_SIZE], InOut number -> pointer.',
 
@@ -4732,6 +4748,1334 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 })(typeof window !== 'undefined' ? window : globalThis);
 
 ;
+/* js/core/jsgen.js */
+/* Blockbild-Editor – Übersetzung nach JavaScript (Node.js; im Browser über prompt/console)
+ *
+ *   Rechnet exakt wie die Simulation (die selbst in JavaScript läuft): Zahlen sind Kommazahlen,
+ *   Text + Zahl verkettet, == vergleicht wie im Blockbild.
+ *   InOut-Zahlen/Texte: Rückgabe als Array und Zuweisung beim Aufruf:  [x, y] = tausche(x, y)
+ *   Arrays werden ohnehin geteilt.
+ */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+  const { parseCached, parseTarget, strip } = BBE.expr;
+  const A = BBE.analyze;
+  const M = BBE.model;
+
+  const IND = '  ';
+  const RESERVED = new Set(('break case catch class const continue debugger default delete do else enum export extends false finally for ' +
+    'function if import in instanceof new null return super switch this throw true try typeof var void while with yield let static ' +
+    'implements interface package private protected public await arguments eval undefined NaN Infinity console process require ' +
+    'main prompt Number String Array Math').split(' '));
+
+  const tryParse = (src) => { try { return parseCached(String(src || '').trim()); } catch (e) { return null; } };
+  const tryTarget = (src) => { try { return parseTarget(String(src || '').trim()); } catch (e) { return null; } };
+  const jsStr = (s) => JSON.stringify(String(s));
+
+  function generate(program, opts = {}) {
+    const tr = opts.t || ((k) => k);
+    const H = { num: tr('jsHelperNum'), text: tr('jsHelperText') };
+    const R = tr('jsReadLine');
+    // "prompt" würde im Browser die eingebaute Funktion prompt() verdecken
+    const jsArg = tr('genArgPrompt') === 'prompt' ? 'question' : tr('genArgPrompt');
+    const used = { num: false, text: false };
+    const fnName = new Map(program.fns.map((f) => [f.name, RESERVED.has(f.name) ? f.name + '_' : f.name]));
+    const body = [];
+
+    const typeOf = (ctx, ast) => (ast ? A.typeOf(ast, ctx.scope) : '?');
+    const name = (ctx, n) => ctx.rename.get(n) || (RESERVED.has(n) ? n + '_' : n);
+    const withComment = (code, n) => (n && n.comment ? code + '  // ' + n.comment.replace(/\s+/g, ' ') : code);
+    const target = (ctx, src) => { const t = tryTarget(src); return t ? ex(ctx, t) : String(src || '').trim() || 'x'; };
+    const targetType = (ctx, src) => { const t = tryTarget(src); return t ? typeOf(ctx, t) : '?'; };
+    const PREC = { '||': 1, '&&': 2, '==': 3, '!=': 3, '<': 4, '<=': 4, '>': 4, '>=': 4, '+': 5, '-': 5, '*': 6, '/': 6, '%': 6 };
+    const defaultFor = (t) => (t === 'string' ? '""' : t === 'integer' ? '0' : '[]');
+
+    function line(ctx, s) { ctx.lines.push(IND.repeat(ctx.ind) + s); }
+    function genSeq(ctx, seq) { for (const n of seq) genStmt(ctx, n); }
+    function block(ctx, seq) { ctx.ind++; genSeq(ctx, seq); ctx.ind--; }
+
+    function genFunction(fn) {
+      const scope = A.scopeOf(fn);
+      const rename = new Map();
+      for (const n of scope.keys()) rename.set(n, RESERVED.has(n) ? n + '_' : n);
+      const outs = fn.params.filter((p) => p.byRef && !A.isArrayType(p.type));
+      const ctx = { fn, scope, rename, ind: 1, lines: body, declared: new Set(fn.params.map((p) => p.name)), hoisted: new Set() };
+      // let gilt nur im Block → verschachtelte/doppelte Deklarationen an den Anfang
+      const top = new Set();
+      for (const n of fn.body) if (n.kind === 'decl' && n.name && !top.has(n.name)) top.add(n.name);
+      M.walkSeq(fn.body, (n, seq, i, depth) => { if (n.kind === 'decl' && n.name && (depth > 0 || !top.has(n.name))) ctx.hoisted.add(n.name); });
+
+      const params = fn.params.map((p) => name(ctx, p.name || 'p'));
+      body.push('function ' + (fn.isMain ? 'main' : fnName.get(fn.name)) + '(' + params.join(', ') + ') {');
+      if (!fn.isMain && fn.returnType !== 'void') { line(ctx, 'let result = ' + valueFor(ctx, fn.resultInit, fn.returnType) + ';'); ctx.declared.add('result'); }
+      const hoist = [];
+      for (const n of ctx.hoisted) {
+        const v = scope.get(n);
+        if (!v || ctx.declared.has(n)) continue;
+        hoist.push(name(ctx, n) + ' = ' + defaultFor(v.type));
+        ctx.declared.add(n);
+      }
+      if (hoist.length) line(ctx, 'let ' + hoist.join(', ') + ';');
+      genSeq(ctx, fn.body);
+      if (!fn.isMain) {
+        const ret = [];
+        if (fn.returnType !== 'void') ret.push('result');
+        outs.forEach((p) => ret.push(name(ctx, p.name)));
+        if (ret.length === 1) line(ctx, 'return ' + ret[0] + ';');
+        else if (ret.length > 1) line(ctx, 'return [' + ret.join(', ') + '];');
+      }
+      body.push('}');
+    }
+
+    function ex(ctx, a, minPrec = 0) {
+      const wrap = (s, p) => (p < minPrec ? '(' + s + ')' : s);
+      switch (a.k) {
+        case 'num': return a.raw;
+        case 'str': return jsStr(a.v);
+        case 'paren': return '(' + ex(ctx, a.e) + ')';
+        case 'id': return name(ctx, a.name);
+        case 'idx': return ex(ctx, a.obj, 9) + '[' + ex(ctx, a.index) + ']';
+        case 'len': return ex(ctx, a.obj, 9) + '.length';
+        case 'un': return wrap(a.op + (a.op === '-' && strip(a.a).k === 'un' ? ' ' : '') + ex(ctx, a.a, 7), 7);
+        case 'bin': {
+          const p = PREC[a.op];
+          return wrap(ex(ctx, a.a, p) + ' ' + a.op + ' ' + ex(ctx, a.b, p + 1), p);
+        }
+        default: return '0';
+      }
+    }
+
+    function valueFor(ctx, src, type) {
+      const ast = tryParse(src);
+      if (!ast) return String(src || '').trim() || defaultFor(type);
+      const t = typeOf(ctx, ast);
+      if (type === 'string' && t !== 'string') return 'String(' + ex(ctx, ast) + ')';
+      if (type === 'integer' && t === 'string') return 'Number(' + ex(ctx, ast) + ')';
+      return ex(ctx, ast);
+    }
+
+    const cond = (ctx, src) => { const ast = tryParse(src); return ast ? ex(ctx, strip(ast)) : 'true'; };
+
+    function genStmt(ctx, n) {
+      switch (n.kind) {
+        case 'comment': line(ctx, '// ' + String(n.text || '').replace(/\n/g, ' ')); return;
+        case 'decl': {
+          const nm = name(ctx, n.name || 'variable');
+          const value = n.vtype.endsWith('[]')
+            ? 'new Array(' + ex(ctx, tryParse(n.length) || { k: 'num', raw: '0' }) + ').fill(' + (n.vtype === 'string[]' ? '""' : '0') + ')'
+            : valueFor(ctx, n.init, n.vtype);
+          line(ctx, withComment((ctx.declared.has(n.name) ? '' : 'let ') + nm + ' = ' + value + ';', n));
+          ctx.declared.add(n.name);
+          return;
+        }
+        case 'assign':
+          line(ctx, withComment(target(ctx, n.target) + ' = ' + valueFor(ctx, n.expr, targetType(ctx, n.target)) + ';', n));
+          return;
+        case 'input': {
+          const tt = targetType(ctx, n.target);
+          const p = tryParse(n.prompt);
+          const prompt = p ? ex(ctx, strip(p)) : '""';
+          if (tt === 'integer') { used.num = true; line(ctx, withComment(target(ctx, n.target) + ' = ' + H.num + '(' + prompt + ');', n)); }
+          else { used.text = true; line(ctx, withComment(target(ctx, n.target) + ' = ' + H.text + '(' + prompt + ');', n)); }
+          return;
+        }
+        case 'output': {
+          const ast = tryParse(n.expr);
+          line(ctx, withComment('console.log(' + (ast ? ex(ctx, strip(ast)) : '""') + ');', n));
+          return;
+        }
+        case 'if':
+          line(ctx, withComment('if (' + cond(ctx, n.cond) + ') {', n));
+          block(ctx, n.then);
+          if (n.else && n.else.length) {
+            if (n.else.length === 1 && n.else[0].kind === 'if' && !n.else[0].comment) {
+              const save = ctx.lines.length;
+              ctx.lines.push('');
+              genStmt(ctx, n.else[0]);
+              const first = ctx.lines[save + 1];
+              ctx.lines.splice(save, 2, IND.repeat(ctx.ind) + '} else ' + first.trim());
+              return;
+            }
+            line(ctx, '} else {');
+            block(ctx, n.else);
+          }
+          line(ctx, '}');
+          return;
+        case 'while':
+          line(ctx, withComment('while (' + cond(ctx, n.cond) + ') {', n));
+          block(ctx, n.body);
+          line(ctx, '}');
+          return;
+        case 'until':
+          line(ctx, withComment('do {', n));
+          block(ctx, n.body);
+          line(ctx, '} while (!(' + cond(ctx, n.cond) + '));');
+          return;
+        case 'for': {
+          const k = target(ctx, n.counter);
+          const from = ex(ctx, tryParse(n.from) || { k: 'num', raw: '0' });
+          const to = ex(ctx, tryParse(n.to) || { k: 'num', raw: '0' });
+          const stepAst = tryParse(n.step);
+          const lit = stepAst ? A.literalValue(stepAst) : 1;
+          let c, inc;
+          if (typeof lit === 'number') {
+            c = k + (lit >= 0 ? ' <= ' : ' >= ') + to;
+            inc = lit === 1 ? k + '++' : lit === -1 ? k + '--' : lit > 0 ? k + ' += ' + lit : k + ' -= ' + (-lit);
+          } else {
+            const s = ex(ctx, stepAst);
+            c = '(' + s + ' > 0 ? ' + k + ' <= ' + to + ' : ' + k + ' >= ' + to + ')';
+            inc = k + ' += ' + s;
+          }
+          line(ctx, withComment('for (' + k + ' = ' + from + '; ' + c + '; ' + inc + ') {', n));
+          block(ctx, n.body);
+          line(ctx, '}');
+          return;
+        }
+        case 'switch': {
+          const sel = tryParse(n.expr);
+          line(ctx, withComment('switch (' + (sel ? ex(ctx, strip(sel)) : '0') + ') {', n));
+          ctx.ind++;
+          for (const c of n.cases) {
+            const v = tryParse(c.value);
+            line(ctx, 'case ' + (v ? ex(ctx, strip(v)) : '0') + ':');
+            ctx.ind++; genSeq(ctx, c.body); line(ctx, 'break;'); ctx.ind--;
+          }
+          if (n.else) { line(ctx, 'default:'); ctx.ind++; genSeq(ctx, n.else); line(ctx, 'break;'); ctx.ind--; }
+          ctx.ind--;
+          line(ctx, '}');
+          return;
+        }
+        case 'call': {
+          const callee = program.fns.find((f) => !f.isMain && f.name === n.fn);
+          if (!callee) { line(ctx, withComment('// ' + (n.fn || '?') + '(…)', n)); return; }
+          const args = callee.params.map((p, i) => {
+            const src = n.args[i] || '';
+            if (p.byRef || A.isArrayType(p.type)) return target(ctx, src);
+            return valueFor(ctx, src, p.type);
+          });
+          const call = fnName.get(callee.name) + '(' + args.join(', ') + ')';
+          const lhs = [];
+          const hasRes = callee.returnType !== 'void';
+          if (hasRes) lhs.push(n.target && n.target.trim() ? target(ctx, n.target) : '');
+          callee.params.forEach((p, i) => { if (p.byRef && !A.isArrayType(p.type)) lhs.push(target(ctx, n.args[i] || '')); });
+          if (!lhs.length || (lhs.length === 1 && !lhs[0])) line(ctx, withComment(call + ';', n));
+          else if (lhs.length === 1) line(ctx, withComment(lhs[0] + ' = ' + call + ';', n));
+          else line(ctx, withComment('[' + lhs.join(', ') + '] = ' + call + ';', n));
+          return;
+        }
+        default: return;
+      }
+    }
+
+    // ------------------------------------------------------------ Zusammenbau
+    for (const fn of program.fns.filter((f) => !f.isMain)) { genFunction(fn); body.push(''); }
+    genFunction(program.fns.find((f) => f.isMain));
+
+    const out = ['// ' + tr('jsHeader1'), '// ' + tr('jsHeader2'), "'use strict';", ''];
+    if (used.num || used.text) {
+      const q = jsArg;
+      out.push('// ' + tr('jsHelperReadDoc'));
+      out.push('function ' + R + '(' + q + ') {');
+      out.push(IND + "if (typeof process === 'undefined') return prompt(" + q + ") ?? '';");
+      out.push(IND + 'process.stdout.write(' + q + ');');
+      out.push(IND + "const fs = require('fs');");
+      out.push(IND + 'const buf = Buffer.alloc(1);');
+      out.push(IND + 'let bytes = [];');
+      out.push(IND + 'for (;;) {');
+      out.push(IND + IND + 'let n = 0;');
+      out.push(IND + IND + "try { n = fs.readSync(0, buf, 0, 1, null); } catch (e) { if (e.code === 'EAGAIN') continue; throw e; }");
+      out.push(IND + IND + 'if (n === 0 || buf[0] === 10) break;');
+      out.push(IND + IND + 'if (buf[0] !== 13) bytes.push(buf[0]);');
+      out.push(IND + '}');
+      out.push(IND + "return Buffer.from(bytes).toString('utf8');");
+      out.push('}', '');
+    }
+    if (used.text) {
+      const q = jsArg;
+      out.push('function ' + H.text + '(' + q + ') {', IND + 'return ' + R + '(' + q + ');', '}', '');
+    }
+    if (used.num) {
+      const q = jsArg;
+      out.push('// ' + tr('javaHelperNumDoc'));
+      out.push('function ' + H.num + '(' + q + ') {');
+      out.push(IND + 'for (;;) {');
+      out.push(IND + IND + 'const s = ' + R + '(' + q + ").trim().replace(',', '.');");
+      out.push(IND + IND + "if (s !== '' && !Number.isNaN(Number(s))) return Number(s);");
+      out.push(IND + IND + 'console.log(' + jsStr(tr('console.needNumber')) + ');');
+      out.push(IND + '}');
+      out.push('}', '');
+    }
+    out.push(...body, '', 'main();');
+    return out.join('\n') + '\n';
+  }
+
+  BBE.jsgen = { generate };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* js/core/fortgen.js */
+/* Blockbild-Editor – Übersetzung nach Fortran (Fortran 2008, z. B. gfortran)
+ *
+ *   Ein Programm mit "contains": Unterprogramme werden zu recursive subroutine/function.
+ *   Zahl → integer, Text → character(len=:), allocatable (wächst automatisch),
+ *   Arrays → allocatable mit Untergrenze 0 (a(0:n-1)), Text-Arrays über den Typ "text" (Element%v).
+ *   InOut → intent(inout); In-Parameter, die verändert werden, bekommen eine lokale Kopie.
+ *   Fortran unterscheidet nicht zwischen Groß- und Kleinschreibung – Namen werden bei Bedarf umbenannt.
+ */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+  const { parseCached, parseTarget, strip } = BBE.expr;
+  const A = BBE.analyze;
+  const M = BBE.model;
+
+  const IND = '  ';
+  const MAXLINE = 120;
+  // Schlüsselwörter und Intrinsics, die als Namen verwirren oder mit dem erzeugten Code kollidieren
+  const RESERVED = new Set(('program end contains implicit none integer character logical real type function subroutine ' +
+    'result recursive call if then else do while select case default exit cycle return stop print write read allocate ' +
+    'deallocate allocated intent in out inout value len size mod trim merge int achar adjustl text module use ' +
+    'true false and or not eq ne lt le gt ge kind').split(' '));
+  const FOLD = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue', 'ß': 'ss' };
+
+  const tryParse = (src) => { try { return parseCached(String(src || '').trim()); } catch (e) { return null; } };
+  const tryTarget = (src) => { try { return parseTarget(String(src || '').trim()); } catch (e) { return null; } };
+
+  /** Fortran-Text: '…' mit verdoppeltem ', Steuerzeichen über achar(). */
+  function fStr(s) {
+    const out = [];
+    let cur = '';
+    for (const ch of String(s)) {
+      const c = ch.charCodeAt(0);
+      if (c < 32 || c === 127) { if (cur) out.push("'" + cur + "'"); cur = ''; out.push('achar(' + c + ')'); }
+      else cur += ch === "'" ? "''" : ch;
+    }
+    if (cur || !out.length) out.push("'" + cur + "'");
+    return out.join(' // ');
+  }
+
+  function asciiName(n) {
+    let s = String(n || '').replace(/[äöüÄÖÜß]/g, (c) => FOLD[c]).normalize('NFD').replace(/[̀-ͯ]/g, '');
+    s = s.replace(/[^A-Za-z0-9_]/g, '_');
+    if (!/^[A-Za-z]/.test(s)) s = 'v' + (s.startsWith('_') ? '' : '_') + s;
+    return s.slice(0, 60);
+  }
+
+  /** Lange Zeilen mit & umbrechen (Fortran erlaubt höchstens 132 Zeichen). */
+  function wrap(lineText) {
+    const out = [];
+    let rest = lineText;
+    const indent = (lineText.match(/^ */) || [''])[0] + IND + IND;
+    while (rest.length > MAXLINE) {
+      let inStr = false, best = -1, bestStr = -1;
+      for (let i = 0; i < MAXLINE - 2 && i < rest.length; i++) {
+        const ch = rest[i];
+        if (ch === "'") inStr = !inStr;
+        else if (!inStr && i > 20 && (rest.startsWith(', ', i) || rest.startsWith(' // ', i))) best = i;
+        else if (inStr && i > 20) bestStr = i;
+      }
+      if (best > 0) {
+        const cut = rest.startsWith(', ', best) ? best + 1 : best;
+        out.push(rest.slice(0, cut).replace(/\s+$/, '') + ' &');
+        rest = indent + rest.slice(cut).replace(/^\s+/, '');
+      } else if (bestStr > 0) {
+        out.push(rest.slice(0, bestStr) + '&');
+        rest = indent + '&' + rest.slice(bestStr);
+      } else break;
+    }
+    out.push(rest);
+    return out;
+  }
+
+  function generate(program, opts = {}) {
+    const tr = opts.t || ((k) => k);
+    const H = { str: tr('fortStr'), line: tr('fortReadLine'), num: tr('fortHelperNum'), toNum: tr('fortToNum') };
+    const used = { str: false, line: false, num: false, toNum: false, text: false };
+    const progName = tr('fortProgram');
+    const taken = new Set([progName, H.str, H.line, H.num, H.toNum, 'text'].map((s) => s.toLowerCase()));
+    const fnName = new Map();
+    for (const f of program.fns.filter((x) => !x.isMain)) {
+      let n = asciiName(f.name);
+      if (RESERVED.has(n.toLowerCase())) n += '_';
+      while (taken.has(n.toLowerCase())) n += '_';
+      taken.add(n.toLowerCase());
+      fnName.set(f.name, n);
+    }
+    const globalTaken = new Set(taken);
+    const mainLines = [];
+    const procs = [];
+
+    const typeOf = (ctx, ast) => (ast ? A.typeOf(ast, ctx.scope) : '?');
+    const name = (ctx, n) => ctx.rename.get(n) || asciiName(n);
+    const target = (ctx, src) => { const t = tryTarget(src); return t ? ex(ctx, t) : String(src || '').trim() || 'x'; };
+    const targetType = (ctx, src) => { const t = tryTarget(src); return t ? typeOf(ctx, t) : '?'; };
+    const PREC = { '||': 1, '&&': 2, '==': 4, '!=': 4, '<': 4, '<=': 4, '>': 4, '>=': 4, '+': 5, '-': 5, '*': 6, '/': 6 };
+    const OPS = { '||': '.or.', '&&': '.and.', '!=': '/=' };
+
+    function line(ctx, s) { for (const l of wrap(IND.repeat(ctx.ind) + s)) ctx.lines.push(l); }
+    function comment(ctx, n) { if (n && n.comment) line(ctx, '! ' + n.comment.replace(/\s+/g, ' ')); }
+    function genSeq(ctx, seq) { for (const n of seq) genStmt(ctx, n); }
+    function block(ctx, seq) { ctx.ind++; genSeq(ctx, seq); ctx.ind--; }
+
+    function declType(t) {
+      if (t === 'integer') return 'integer';
+      if (t === 'string') return 'character(len=:), allocatable';
+      if (t === 'integer[]') return 'integer, allocatable';
+      used.text = true;
+      return 'type(text), allocatable';
+    }
+
+    // ------------------------------------------------------------ Unterprogramme
+
+    function genFunction(fn) {
+      const scope = A.scopeOf(fn);
+      const rename = new Map();
+      const local = new Set(fn.isMain ? [] : globalTaken);
+      if (fn.isMain) for (const n of globalTaken) local.add(n);
+      for (const n of scope.keys()) {
+        let r = n === 'result' && !fn.isMain ? 'result' : asciiName(n);
+        if (r !== 'result' || fn.isMain) {
+          if (RESERVED.has(r.toLowerCase())) r += '_';
+          while (local.has(r.toLowerCase())) r += '_';
+        }
+        local.add(r.toLowerCase());
+        rename.set(n, r);
+      }
+      const lines = fn.isMain ? mainLines : [];
+      const written = A.writtenNames(program, fn);
+      const ctx = { fn, scope, rename, ind: fn.isMain ? 1 : 2, lines, local, extra: [], firstDecl: new Set() };
+      const seen = new Set();
+      for (const n of fn.body) if (n.kind === 'decl' && n.name && !seen.has(n.name)) { seen.add(n.name); ctx.firstDecl.add(n); }
+
+      const decls = [];
+      const copies = [];
+      const dummies = [];
+      for (const p of fn.params) {
+        const nm = name(ctx, p.name || 'p');
+        if (A.isArrayType(p.type)) {
+          dummies.push(nm);
+          if (p.type === 'string[]') used.text = true;
+          decls.push((p.type === 'integer[]' ? 'integer' : 'type(text)') + ', intent(inout) :: ' + nm + '(0:)');
+        } else if (p.byRef) {
+          dummies.push(nm);
+          decls.push(declType(p.type) + ', intent(inout) :: ' + nm);
+        } else if (p.type === 'integer') {
+          dummies.push(nm);
+          decls.push('integer, ' + (written.has(p.name) ? 'value' : 'intent(in)') + ' :: ' + nm);
+        } else if (written.has(p.name)) {
+          let d = nm + '_in';
+          while (local.has(d.toLowerCase())) d += '_';
+          local.add(d.toLowerCase());
+          dummies.push(d);
+          decls.push('character(len=*), intent(in) :: ' + d);
+          decls.push('character(len=:), allocatable :: ' + nm);
+          copies.push(nm + ' = ' + d);
+        } else {
+          dummies.push(nm);
+          decls.push('character(len=*), intent(in) :: ' + nm);
+        }
+      }
+      if (!fn.isMain && fn.returnType !== 'void') decls.push(declType(fn.returnType) + ' :: result');
+      for (const [n, v] of scope) {
+        if (v.kind !== 'decl') continue;
+        decls.push(declType(v.type) + ' :: ' + name(ctx, n) + (A.isArrayType(v.type) ? '(:)' : ''));
+      }
+
+      // Rumpf zuerst (dabei können Hilfsvariablen dazukommen)
+      if (!fn.isMain && fn.returnType !== 'void') line(ctx, 'result = ' + valueFor(ctx, fn.resultInit, fn.returnType));
+      for (const c of copies) line(ctx, c);
+      genSeq(ctx, fn.body);
+      const bodyLines = lines.splice(0);
+      const head = [];
+      const ind = IND.repeat(fn.isMain ? 1 : 2);
+      for (const d of decls.concat(ctx.extra)) head.push(...wrap(ind + d));
+
+      if (fn.isMain) { mainLines.push(...head, ...(head.length ? [''] : []), ...bodyLines); return; }
+      const kind = fn.returnType === 'void' ? 'subroutine' : 'function';
+      const sig = IND + 'recursive ' + kind + ' ' + fnName.get(fn.name) + '(' + dummies.join(', ') + ')' + (kind === 'function' ? ' result(result)' : '');
+      procs.push(...wrap(sig), ...head, ...(head.length && bodyLines.length ? [''] : []), ...bodyLines, IND + 'end ' + kind + ' ' + fnName.get(fn.name), '');
+    }
+
+    /** Hilfsvariable für verworfene Rückgabewerte. */
+    function discard(ctx, type) {
+      const n = tr('fortDiscard') + (type === 'string' ? '_text' : '_zahl');
+      if (!ctx.local.has(n.toLowerCase())) { ctx.local.add(n.toLowerCase()); ctx.extra.push(declType(type) + ' :: ' + n); }
+      return n;
+    }
+
+    // ------------------------------------------------------------ Ausdrücke
+
+    function ex(ctx, a, minPrec = 0) {
+      const wrapP = (s, p) => (p < minPrec ? '(' + s + ')' : s);
+      switch (a.k) {
+        case 'num': return a.raw;
+        case 'str': { const s = fStr(a.v); return s.includes(' // ') && minPrec > 0 ? '(' + s + ')' : s; }
+        case 'paren': return typeOf(ctx, a) === 'string' ? ex(ctx, a.e, minPrec) : '(' + ex(ctx, a.e) + ')';
+        case 'id': return name(ctx, a.name);
+        case 'idx': {
+          const t = typeOf(ctx, a.obj);
+          return ex(ctx, a.obj, 9) + '(' + ex(ctx, a.index) + ')' + (t === 'string[]' ? '%v' : '');
+        }
+        case 'len': {
+          const t = typeOf(ctx, a.obj);
+          return (A.isArrayType(t) ? 'size(' : 'len(') + ex(ctx, a.obj) + ')';
+        }
+        case 'un':
+          if (a.op === '!') return '(.not. ' + ex(ctx, a.a, 3) + ')';
+          if (a.op === '+') return ex(ctx, a.a, minPrec);
+          return (minPrec > 0 ? '(' : '') + '-' + ex(ctx, a.a, 6) + (minPrec > 0 ? ')' : '');
+        case 'bin': {
+          if (a.op === '+' && typeOf(ctx, a) === 'string') return wrapP(textExpr(ctx, a), 5);
+          if (a.op === '%') return 'mod(' + ex(ctx, a.a) + ', ' + ex(ctx, a.b) + ')';
+          const p = PREC[a.op];
+          return wrapP(ex(ctx, a.a, p) + ' ' + (OPS[a.op] || a.op) + ' ' + ex(ctx, a.b, p + 1), p);
+        }
+        default: return '0';
+      }
+    }
+
+    function parts(ctx, ast) {
+      const s = strip(ast);
+      if (s.k === 'bin' && s.op === '+' && typeOf(ctx, s) === 'string') return parts(ctx, s.a).concat(parts(ctx, s.b));
+      return [ast];
+    }
+
+    /** Text-Ausdruck: Teile mit // verbinden, Zahlen über als_text(). */
+    function textExpr(ctx, ast) {
+      return parts(ctx, ast).map((p) => asText(ctx, p, 6)).join(' // ');
+    }
+
+    function asText(ctx, ast, minPrec = 0) {
+      const t = typeOf(ctx, ast);
+      if (t === 'string') return ex(ctx, ast, minPrec);
+      if (t === 'bool') return "trim(merge('true ', 'false', " + ex(ctx, ast) + '))';
+      used.str = true;
+      return H.str + '(' + ex(ctx, ast) + ')';
+    }
+
+    function hasFloat(ast) {
+      let hit = false;
+      BBE.expr.walk(ast, (a) => { if (a.k === 'num' && !Number.isInteger(a.v)) hit = true; });
+      return hit;
+    }
+
+    function valueFor(ctx, src, type) {
+      const ast = tryParse(src);
+      if (!ast) return String(src || '').trim() || (type === 'string' ? "''" : '0');
+      const t = typeOf(ctx, ast);
+      if (type === 'string') return t === 'string' ? ex(ctx, strip(ast)) : asText(ctx, ast);
+      if (type === 'integer' && t === 'string') { used.toNum = true; return H.toNum + '(' + ex(ctx, ast) + ')'; }
+      if (type === 'integer' && hasFloat(ast)) return 'int(' + ex(ctx, ast) + ')';
+      return ex(ctx, strip(ast));
+    }
+
+    function cond(ctx, src) {
+      const ast = tryParse(src);
+      if (!ast) return '.true.';
+      const s = strip(ast);
+      const t = typeOf(ctx, s);
+      if (t === 'string') return 'len(' + ex(ctx, s) + ') > 0';
+      if (t === 'integer') return ex(ctx, s, 5) + ' /= 0';
+      return ex(ctx, s);
+    }
+
+    // ------------------------------------------------------------ Anweisungen
+
+    function genStmt(ctx, n) {
+      switch (n.kind) {
+        case 'comment':
+          for (const l of String(n.text || '').split('\n')) line(ctx, '! ' + l);
+          return;
+        case 'decl': {
+          comment(ctx, n);
+          const nm = name(ctx, n.name || 'variable');
+          if (n.vtype.endsWith('[]')) {
+            const len = tryParse(n.length);
+            if (!ctx.firstDecl.has(n)) line(ctx, 'if (allocated(' + nm + ')) deallocate(' + nm + ')');
+            line(ctx, 'allocate(' + nm + '(0:' + (len ? ex(ctx, len, 5) : '0') + ' - 1))');
+            line(ctx, nm + ' = ' + (n.vtype === 'string[]' ? "text('')" : '0'));
+          } else {
+            line(ctx, nm + ' = ' + valueFor(ctx, n.init, n.vtype));
+          }
+          return;
+        }
+        case 'assign':
+          comment(ctx, n);
+          line(ctx, target(ctx, n.target) + ' = ' + valueFor(ctx, n.expr, targetType(ctx, n.target)));
+          return;
+        case 'input': {
+          comment(ctx, n);
+          const tt = targetType(ctx, n.target);
+          const p = tryParse(n.prompt);
+          const prompt = p ? asText(ctx, strip(p)) : "''";
+          used.line = true;
+          if (tt === 'integer') { used.num = true; line(ctx, target(ctx, n.target) + ' = ' + H.num + '(' + prompt + ')'); }
+          else line(ctx, target(ctx, n.target) + ' = ' + H.line + '(' + prompt + ')');
+          return;
+        }
+        case 'output': {
+          comment(ctx, n);
+          const ast = tryParse(n.expr);
+          if (!ast) { line(ctx, "print '(a)', ''"); return; }
+          if (typeOf(ctx, ast) === 'integer') line(ctx, "print '(i0)', " + ex(ctx, strip(ast)));
+          else line(ctx, "print '(a)', " + asText(ctx, strip(ast)));
+          return;
+        }
+        case 'if':
+          comment(ctx, n);
+          line(ctx, 'if (' + cond(ctx, n.cond) + ') then');
+          block(ctx, n.then);
+          if (n.else && n.else.length) {
+            if (n.else.length === 1 && n.else[0].kind === 'if' && !n.else[0].comment) {
+              const save = ctx.lines.length;
+              genStmt(ctx, n.else[0]);
+              ctx.lines[save] = ctx.lines[save].replace(/^(\s*)if /, '$1else if ');
+              ctx.lines.pop(); // "end if" des inneren WENN
+              line(ctx, 'end if');
+              return;
+            }
+            line(ctx, 'else');
+            block(ctx, n.else);
+          }
+          line(ctx, 'end if');
+          return;
+        case 'while':
+          comment(ctx, n);
+          line(ctx, 'do while (' + cond(ctx, n.cond) + ')');
+          block(ctx, n.body);
+          line(ctx, 'end do');
+          return;
+        case 'until':
+          comment(ctx, n);
+          line(ctx, 'do');
+          block(ctx, n.body);
+          ctx.ind++; line(ctx, 'if (' + cond(ctx, n.cond) + ') exit'); ctx.ind--;
+          line(ctx, 'end do');
+          return;
+        case 'for': {
+          comment(ctx, n);
+          const ct = tryTarget(n.counter);
+          const k = target(ctx, n.counter);
+          const from = ex(ctx, tryParse(n.from) || { k: 'num', v: 0, raw: '0' });
+          const toAst = tryParse(n.to) || { k: 'num', v: 0, raw: '0' };
+          const to = ex(ctx, toAst, 5);
+          const stepAst = tryParse(n.step);
+          const lit = stepAst ? A.literalValue(stepAst) : 1;
+          // echtes DO nur, wenn Zähler und Grenzen im Rumpf nicht verändert werden
+          const inner = A.writtenNames(program, { body: n.body });
+          const reads = new Set();
+          // Array-Längen ändern sich durch Zuweisungen an Elemente nicht
+          const collect = (x) => { if (!x) return; if (x.k === 'id') reads.add(x.name); if (x.k !== 'len') ['a', 'b', 'e', 'obj', 'index'].forEach((key) => collect(x[key])); };
+          collect(toAst);
+          const simple = typeof lit === 'number' && ct && ct.k === 'id' && !inner.has(ct.name) && ![...reads].some((r) => inner.has(r));
+          if (simple) {
+            line(ctx, 'do ' + k + ' = ' + from + ', ' + ex(ctx, toAst) + (lit === 1 ? '' : ', ' + lit));
+            block(ctx, n.body);
+            line(ctx, 'end do');
+            return;
+          }
+          const s = stepAst ? ex(ctx, stepAst, 5) : '1';
+          let c;
+          if (typeof lit === 'number') c = k + (lit >= 0 ? ' <= ' : ' >= ') + to;
+          else c = '(' + s + ' > 0 .and. ' + k + ' <= ' + to + ') .or. (' + s + ' < 0 .and. ' + k + ' >= ' + to + ')';
+          line(ctx, k + ' = ' + from);
+          line(ctx, 'do while (' + c + ')');
+          block(ctx, n.body);
+          ctx.ind++; line(ctx, k + ' = ' + k + (typeof lit === 'number' && lit < 0 ? ' - ' + (-lit) : ' + ' + s)); ctx.ind--;
+          line(ctx, 'end do');
+          return;
+        }
+        case 'switch': {
+          comment(ctx, n);
+          const sel = tryParse(n.expr);
+          const vals = n.cases.map((c) => tryParse(c.value));
+          const literal = vals.every((v) => v && (strip(v).k === 'num' || strip(v).k === 'str' || (strip(v).k === 'un' && strip(strip(v).a).k === 'num')));
+          if (literal && sel) {
+            line(ctx, 'select case (' + ex(ctx, strip(sel)) + ')');
+            n.cases.forEach((c, i) => { line(ctx, 'case (' + ex(ctx, strip(vals[i])) + ')'); block(ctx, c.body); });
+            if (n.else) { line(ctx, 'case default'); block(ctx, n.else); }
+            line(ctx, 'end select');
+            return;
+          }
+          const s = sel ? ex(ctx, strip(sel), 4) : '0';
+          n.cases.forEach((c, i) => {
+            line(ctx, (i ? 'else if (' : 'if (') + s + ' == ' + (vals[i] ? ex(ctx, strip(vals[i]), 5) : '0') + ') then');
+            block(ctx, c.body);
+          });
+          if (n.else && n.else.length) {
+            if (n.cases.length) { line(ctx, 'else'); block(ctx, n.else); } else genSeq(ctx, n.else);
+          }
+          if (n.cases.length) line(ctx, 'end if');
+          return;
+        }
+        case 'call': {
+          comment(ctx, n);
+          const callee = program.fns.find((f) => !f.isMain && f.name === n.fn);
+          if (!callee) { line(ctx, '! ' + (n.fn || '?') + '(…)'); return; }
+          const args = callee.params.map((p, i) => {
+            const src = n.args[i] || '';
+            if (p.byRef || A.isArrayType(p.type)) return target(ctx, src);
+            return valueFor(ctx, src, p.type);
+          });
+          const call = fnName.get(callee.name) + '(' + args.join(', ') + ')';
+          if (callee.returnType === 'void') { line(ctx, 'call ' + call); return; }
+          if (n.target && n.target.trim()) {
+            const tt = targetType(ctx, n.target);
+            let v = call;
+            if (tt === 'string' && callee.returnType !== 'string') { used.str = true; v = H.str + '(' + call + ')'; }
+            line(ctx, target(ctx, n.target) + ' = ' + v);
+          } else line(ctx, discard(ctx, callee.returnType) + ' = ' + call);
+          return;
+        }
+        default: return;
+      }
+    }
+
+    // ------------------------------------------------------------ Zusammenbau
+
+    for (const fn of program.fns.filter((f) => !f.isMain)) genFunction(fn);
+    genFunction(program.fns.find((f) => f.isMain));
+
+    const helpers = [];
+    const q = tr('genArgPrompt');
+    const P = (...s) => helpers.push(...s);
+    if (used.str) {
+      P(IND + 'function ' + H.str + '(n) result(s)');
+      P(IND + IND + 'integer, intent(in) :: n');
+      P(IND + IND + 'character(len=:), allocatable :: s');
+      P(IND + IND + 'character(len=24) :: puffer');
+      P(IND + IND + "write (puffer, '(i0)') n");
+      P(IND + IND + 's = trim(puffer)');
+      P(IND + 'end function ' + H.str, '');
+    }
+    if (used.toNum) {
+      P(IND + 'function ' + H.toNum + '(s) result(n)');
+      P(IND + IND + 'character(len=*), intent(in) :: s');
+      P(IND + IND + 'integer :: n, fehler');
+      P(IND + IND + 'read (s, *, iostat=fehler) n');
+      P(IND + IND + 'if (fehler /= 0) n = 0');
+      P(IND + 'end function ' + H.toNum, '');
+    }
+    if (used.line) {
+      P(IND + 'function ' + H.line + '(' + q + ', ende) result(zeile)');
+      P(IND + IND + 'character(len=*), intent(in) :: ' + q);
+      P(IND + IND + 'logical, intent(out), optional :: ende');
+      P(IND + IND + 'character(len=:), allocatable :: zeile');
+      P(IND + IND + 'character(len=100) :: puffer');
+      P(IND + IND + 'integer :: anzahl, fehler');
+      P(IND + IND + "write (*, '(a)', advance='no') " + q);
+      P(IND + IND + "zeile = ''");
+      P(IND + IND + 'do');
+      P(IND + IND + IND + "read (*, '(a)', advance='no', size=anzahl, iostat=fehler) puffer");
+      P(IND + IND + IND + 'zeile = zeile // puffer(1:anzahl)');
+      P(IND + IND + IND + 'if (fehler /= 0) exit');
+      P(IND + IND + 'end do');
+      P(IND + IND + 'if (present(ende)) ende = fehler /= 0 .and. .not. is_iostat_eor(fehler)');
+      P(IND + 'end function ' + H.line, '');
+    }
+    if (used.num) {
+      P(IND + '! ' + tr('javaHelperNumDoc'));
+      P(IND + 'function ' + H.num + '(' + q + ') result(n)');
+      P(IND + IND + 'character(len=*), intent(in) :: ' + q);
+      P(IND + IND + 'integer :: n, fehler');
+      P(IND + IND + 'logical :: ende');
+      P(IND + IND + 'character(len=:), allocatable :: zeile');
+      P(IND + IND + 'do');
+      P(IND + IND + IND + 'zeile = ' + H.line + '(' + q + ', ende)');
+      P(IND + IND + IND + 'read (zeile, *, iostat=fehler) n');
+      P(IND + IND + IND + 'if (fehler == 0 .and. len_trim(zeile) > 0) return');
+      P(IND + IND + IND + 'if (ende) then');
+      P(IND + IND + IND + IND + 'n = 0');
+      P(IND + IND + IND + IND + 'return');
+      P(IND + IND + IND + 'end if');
+      P(IND + IND + IND + "print '(a)', " + fStr(tr('javaNeedInt')));
+      P(IND + IND + 'end do');
+      P(IND + 'end function ' + H.num, '');
+    }
+
+    const out = ['! ' + tr('fortHeader1'), '! ' + tr('fortHeader2'), 'program ' + progName, IND + 'implicit none'];
+    if (used.text) out.push('', IND + '! ' + tr('fortTextType'), IND + 'type :: text', IND + IND + 'character(len=:), allocatable :: v', IND + 'end type text');
+    out.push(...mainLines);
+    if (procs.length || helpers.length) out.push('', 'contains', '', ...procs, ...helpers);
+    while (out[out.length - 1] === '') out.pop();
+    out.push('end program ' + progName);
+    return out.join('\n') + '\n';
+  }
+
+  BBE.fortgen = { generate };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* js/core/cobolgen.js */
+/* Blockbild-Editor – Übersetzung nach COBOL (GnuCOBOL 3, freies Format)
+ *
+ *   Jedes Unterprogramm wird ein eigenes Programm (RECURSIVE, LOCAL-STORAGE) in derselben Datei;
+ *   Aufruf mit CALL … USING: In → BY CONTENT (Kopie), InOut und Arrays → BY REFERENCE,
+ *   der Rückgabewert kommt als letzter Parameter (BY REFERENCE) zurück.
+ *   Zahl → PIC S9(18).
+ *   Text → PIC X(256) + Länge NAME-LEN (sonst gingen Leerzeichen am Ende verloren); Wert = NAME(1:NAME-LEN).
+ *   Array → Tabelle mit 1000 Plätzen + Anzahl NAME-LEN; Text-Arrays haben je Element eine Länge NAME-L.
+ *   COBOL zählt ab 1: aus a[i] wird A(I + 1). Zahlen werden für Texte über ein Druckfeld (PIC -(18)9) aufbereitet.
+ */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+  const { parseCached, parseTarget, strip } = BBE.expr;
+  const A = BBE.analyze;
+
+  const IND = '    ';
+  const NUM = 'PIC S9(18)';
+  const TXT = 'PIC X(256)';
+  const TLEN = 'PIC 9(3)';
+  const EDIT = 'PIC -(18)9';
+  const MAXARR = 1000;
+  // Reservierte Wörter von GnuCOBOL (cobc --list-reserved)
+  const RESERVED = new Set('3-D ABSENT ACCEPT ACCESS ACTION ACTIVE-CLASS ACTIVE-X ACTUAL ADD ADDRESS ADJUSTABLE-COLUMNS ADVANCING AFTER ALIGNED ALIGNMENT ALL ALLOCATE ALLOWING ALPHABET ALPHABETIC ALPHABETIC-LOWER ALPHABETIC-UPPER ALPHANUMERIC ALPHANUMERIC-EDITED ALSO ALTER ALTERNATE AND ANY ANYCASE APPLY ARE AREA AREAS ARGUMENT-NUMBER ARGUMENT-VALUE ARITHMETIC AS ASCENDING ASCII ASSIGN AT ATTRIBUTE ATTRIBUTES AUTHOR AUTO AUTO-DECIMAL AUTO-SKIP AUTO-SPIN AUTOMATIC AUTOTERMINATE AWAY-FROM-ZERO B-AND B-NOT B-OR B-XOR BACKGROUND-COLOR BACKGROUND-COLOUR BACKGROUND-HIGH BACKGROUND-LOW BACKGROUND-STANDARD BAR BASED BEEP BEFORE BELL BINARY BINARY-C-LONG BINARY-CHAR BINARY-DOUBLE BINARY-INT BINARY-LONG BINARY-LONG-LONG BINARY-SEQUENTIAL BINARY-SHORT BIT BITMAP BITMAP-END BITMAP-HANDLE BITMAP-NUMBER BITMAP-START BITMAP-TIMER BITMAP-TRAILING BITMAP-TRANSPARENT-COLOR BITMAP-WIDTH BLANK BLINK BLOCK BOOLEAN BOTTOM BOX BOXED BULK-ADDITION BUSY BUTTONS BY BYTE-LENGTH C CALENDAR-FONT CALL CANCEL CANCEL-BUTTON CAPACITY CARD-PUNCH CARD-READER CASSETTE CCOL CD CELL CELL-COLOR CELL-DATA CELL-FONT CELL-PROTECTION CELLS CENTER CENTERED CENTERED-HEADINGS CENTURY-DATE CF CH CHAIN CHAINING CHANGED CHARACTER CHARACTERS CHECK-BOX CLASS CLASS-ID CLASSIFICATION CLEAR-SELECTION CLINE CLINES CLOSE COB-CRT-STATUS COBOL CODE CODE-SET COL COLLATING COLOR COLORS COLOURS COLS COLUMN COLUMN-COLOR COLUMN-DIVIDERS COLUMN-FONT COLUMN-HEADINGS COLUMN-PROTECTION COLUMNS COMBO-BOX COMMA COMMAND-LINE COMMIT COMMON COMMUNICATION COMP COMP-0 COMP-1 COMP-2 COMP-3 COMP-4 COMP-5 COMP-6 COMP-N COMP-X COMPUTATIONAL COMPUTATIONAL-0 COMPUTATIONAL-1 COMPUTATIONAL-2 COMPUTATIONAL-3 COMPUTATIONAL-4 COMPUTATIONAL-5 COMPUTATIONAL-6 COMPUTATIONAL-N COMPUTATIONAL-X COMPUTE CONDITION CONFIGURATION CONSTANT CONTAINS CONTENT CONTINUE CONTROL CONTROLS CONVERSION CONVERTING COPY COPY-SELECTION CORE-INDEX CORR CORRESPONDING COUNT CRT CRT-UNDER CSIZE CURRENCY CURSOR CURSOR-COL CURSOR-COLOR CURSOR-FRAME-WIDTH CURSOR-ROW CURSOR-X CURSOR-Y CUSTOM-PRINT-TEMPLATE CYCLE CYL-INDEX CYL-OVERFLOW DASHED DATA DATA-COLUMNS DATA-POINTER DATA-TYPES DATE DATE-COMPILED DATE-ENTRY DATE-MODIFIED DATE-WRITTEN DAY DAY-OF-WEEK DE DEBUG-ITEM DEBUGGING DECIMAL-POINT DECLARATIVES DEFAULT DEFAULT-BUTTON DEFAULT-FONT DELETE DELIMITED DELIMITER DEPENDING DESCENDING DESTINATION DESTROY DETAIL DISABLE DISC DISK DISP DISPLAY DISPLAY-COLUMNS DISPLAY-FORMAT DIVIDE DIVIDER-COLOR DIVIDERS DIVISION DOTDASH DOTTED DOUBLE DOWN DRAG-COLOR DROP-DOWN DROP-LIST DUPLICATES DYNAMIC EBCDIC EC ECHO EGI ELEMENT ELSE EMI EMPTY-CHECK ENABLE ENCODING ENCRYPTION END END-ACCEPT END-ADD END-CALL END-CHAIN END-COLOR END-COMPUTE END-DELETE END-DISPLAY END-DIVIDE END-EVALUATE END-IF END-JSON END-MODIFY END-MULTIPLY END-OF-PAGE END-PERFORM END-READ END-RECEIVE END-RETURN END-REWRITE END-SEARCH END-START END-STRING END-SUBTRACT END-UNSTRING END-WRITE END-XML ENGRAVED ENSURE-VISIBLE ENTRY ENTRY-CONVENTION ENTRY-FIELD ENTRY-REASON ENVIRONMENT ENVIRONMENT-NAME ENVIRONMENT-VALUE EO EOL EOP EOS EQUAL EQUALS ERASE ERROR ESCAPE ESCAPE-BUTTON ESI EVALUATE EVENT EVENT-LIST EVERY EXCEPTION EXCEPTION-OBJECT EXCEPTION-VALUE EXCLUSIVE EXHIBIT EXIT EXPAND EXPANDS EXTEND EXTENDED-SEARCH EXTERN EXTERNAL EXTERNAL-FORM F FACTORY FALSE FD FH--FCD FH--KEYDEF FILE FILE-CONTROL FILE-ID FILE-LIMIT FILE-LIMITS FILE-NAME FILE-POS FILL-COLOR FILL-COLOR2 FILL-PERCENT FILLER FINAL FINISH-REASON FIRST FIXED FIXED-FONT FIXED-WIDTH FLAT FLAT-BUTTONS FLOAT FLOAT-BINARY-128 FLOAT-BINARY-32 FLOAT-BINARY-64 FLOAT-DECIMAL-16 FLOAT-DECIMAL-34 FLOAT-EXTENDED FLOAT-INFINITY FLOAT-LONG FLOAT-NOT-A-NUMBER FLOAT-SHORT FLOATING FONT FOOTING FOR FOREGROUND-COLOR FOREGROUND-COLOUR FOREVER FORMAT FRAME FRAMED FREE FROM FULL FULL-HEIGHT FUNCTION FUNCTION-ID FUNCTION-POINTER GENERATE GET GIVING GLOBAL GO GO-BACK GO-FORWARD GO-HOME GO-SEARCH GOBACK GRAPHICAL GREATER GRID GROUP GROUP-USAGE GROUP-VALUE HANDLE HAS-CHILDREN HEADING HEADING-COLOR HEADING-DIVIDER-COLOR HEADING-FONT HEAVY HEIGHT-IN-CELLS HIDDEN-DATA HIGH-COLOR HIGH-VALUE HIGH-VALUES HIGHLIGHT HOT-TRACK HSCROLL HSCROLL-POS I-O I-O-CONTROL ICON ID IDENTIFICATION IDENTIFIED IF IGNORE IGNORING IMPLEMENTS IN INDEPENDENT INDEX INDEXED INDICATE INHERITS INITIAL INITIALISE INITIALISED INITIALIZE INITIALIZED INITIATE INPUT INPUT-OUTPUT INQUIRE INSERT-ROWS INSERTION-INDEX INSPECT INSTALLATION INTERFACE INTERFACE-ID INTERMEDIATE INTO INTRINSIC INVALID INVOKE IS ITEM ITEM-TEXT ITEM-TO-ADD ITEM-TO-DELETE ITEM-TO-EMPTY ITEM-VALUE JSON JSON-CODE JUST JUSTIFIED KEPT KEY KEYBOARD LABEL LABEL-OFFSET LARGE-FONT LARGE-OFFSET LAST LAST-ROW LAYOUT-DATA LAYOUT-MANAGER LEADING LEADING-SHIFT LEAVE LEFT LEFT-JUSTIFY LEFT-TEXT LEFTLINE LENGTH LENGTH-CHECK LESS LIKE LIMIT LIMITS LINAGE LINAGE-COUNTER LINE LINE-COUNTER LINE-SEQUENTIAL LINES LINES-AT-ROOT LINKAGE LIST-BOX LM-RESIZE LOC LOCAL-STORAGE LOCALE LOCK LOCK-HOLDING LONG-DATE LOW-COLOR LOW-VALUE LOW-VALUES LOWER LOWERED LOWLIGHT MAGNETIC-TAPE MANUAL MASS-UPDATE MASTER-INDEX MAX-LINES MAX-PROGRESS MAX-TEXT MAX-VAL MEDIUM-FONT MEMORY MENU MERGE MESSAGE METHOD METHOD-ID MIN-VAL MINUS MODE MODIFY MODULES MOVE MULTILINE MULTIPLE MULTIPLY NAME NAMED NAMESPACE NAMESPACE-PREFIX NATIONAL NATIONAL-EDITED NATIVE NAVIGATE-URL NEAREST-AWAY-FROM-ZERO NEAREST-EVEN NEAREST-TOWARD-ZERO NEGATIVE NESTED NEW NEXT NEXT-ITEM NO NO-AUTO-DEFAULT NO-AUTOSEL NO-BOX NO-DIVIDERS NO-ECHO NO-F4 NO-FOCUS NO-GROUP-TAB NO-KEY-LETTER NO-SEARCH NO-UPDOWN NOMINAL NONE NONNUMERIC NORMAL NOT NOTAB NOTHING NOTIFY NOTIFY-CHANGE NOTIFY-DBLCLICK NOTIFY-SELCHANGE NULL NULLS NUM-COL-HEADINGS NUM-ROWS NUMBER NUMBER-OF-CALL-PARAMETERS NUMBERS NUMERIC NUMERIC-EDITED OBJECT OBJECT-COMPUTER OBJECT-REFERENCE OCCURS OF OFF OK-BUTTON OMITTED ON ONLY OPEN OPTIONAL OPTIONS OR ORDER ORGANISATION ORGANIZATION OTHER OTHERS OUTPUT OVERFLOW OVERLAP-LEFT OVERLAP-TOP OVERLINE OVERRIDE PACKED-DECIMAL PADDING PAGE PAGE-COUNTER PAGE-SETUP PAGED PARAGRAPH PARENT PARSE PASCAL PASSWORD PERFORM PERMANENT PF PH PHYSICAL PIC PICTURE PIXEL PIXELS PLACEMENT PLUS POINTER POP-UP POS POSITION POSITION-SHIFT POSITIVE PREFIXED PRESENT PREVIOUS PRINT PRINT-NO-PROMPT PRINT-PREVIEW PRINTER PRINTER-1 PRINTING PRIORITY PROCEDURE PROCEDURE-POINTER PROCEDURES PROCEED PROCESSING PROGRAM PROGRAM-ID PROGRAM-POINTER PROGRESS PROHIBITED PROMPT PROPERTIES PROPERTY PROTECTED PROTOTYPE PURGE PUSH-BUTTON QUERY-INDEX QUEUE QUOTE QUOTES RADIO-BUTTON RAISE RAISED RAISING RANDOM RD READ READ-ONLY READERS RECEIVE RECORD RECORD-DATA RECORD-OVERFLOW RECORD-TO-ADD RECORD-TO-DELETE RECORDING RECORDS RECURSIVE REDEFINES REEL REFERENCE REFERENCES REFRESH REGION-COLOR RELATION RELATIVE RELEASE REMAINDER REMARKS REMOVAL RENAMES REORG-CRITERIA REPLACE REPLACING REPORT REPORTING REPORTS REPOSITORY REQUIRED REREAD RERUN RESERVE RESET RESET-GRID RESET-LIST RESET-TABS RESUME RETRY RETURN RETURN-CODE RETURNING REVERSE REVERSE-VIDEO REVERSED REWIND REWRITE RF RH RIGHT RIGHT-ALIGN RIGHT-JUSTIFY RIMMED ROLLBACK ROUNDED ROUNDING ROW-COLOR ROW-COLOR-PATTERN ROW-DIVIDERS ROW-FONT ROW-HEADINGS ROW-PROTECTION RUN S SAME SAVE-AS SAVE-AS-NO-PROMPT SCREEN SCROLL SCROLL-BAR SD SEARCH SEARCH-OPTIONS SEARCH-TEXT SECONDS SECTION SECURE SECURITY SEGMENT SEGMENT-LIMIT SELECT SELECT-ALL SELECTION-INDEX SELECTION-TEXT SELF SELF-ACT SEND SENTENCE SEPARATE SEPARATION SEQUENCE SEQUENTIAL SET SHADING SHADOW SHARING SHORT-DATE SHOW-LINES SHOW-NONE SHOW-SEL-ALWAYS SIGN SIGNED SIGNED-INT SIGNED-LONG SIGNED-SHORT SIZE SMALL-FONT SORT SORT-MERGE SORT-ORDER SORT-RETURN SOURCE SOURCE-COMPUTER SOURCES SPACE SPACE-FILL SPACES SPECIAL-NAMES SPINNER SQUARE STANDARD STANDARD-1 STANDARD-2 STANDARD-BINARY STANDARD-DECIMAL START START-X START-Y STATEMENT STATIC STATIC-LIST STATUS STATUS-BAR STATUS-TEXT STDCALL STEP STOP STRING STRONG STYLE SUB-QUEUE-1 SUB-QUEUE-2 SUB-QUEUE-3 SUBTRACT SUBWINDOW SUM SUPER SUPPRESS SYMBOL SYMBOLIC SYNC SYNCHRONISED SYNCHRONIZED SYSTEM-DEFAULT SYSTEM-INFO SYSTEM-OFFSET TAB TAB-TO-ADD TAB-TO-DELETE TABLE TALLY TALLYING TAPE TEMPORARY TERMINAL-INFO TERMINATE TERMINATION-VALUE TEST TEXT THAN THEN THREAD THREADS THROUGH THRU THUMB-POSITION TILED-HEADINGS TIME TIME-OUT TIMEOUT TIMES TITLE TITLE-POSITION TO TOP TOWARD-GREATER TOWARD-LESSER TRACK TRACK-AREA TRACK-LIMIT TRACKS TRADITIONAL-FONT TRAILING TRAILING-SHIFT TRAILING-SIGN TRANSFORM TRANSPARENT TREE-VIEW TRUE TRUNCATION TYPE TYPEDEF U UCS-4 UNBOUNDED UNDERLINE UNFRAMED UNIT UNIVERSAL UNLOCK UNSIGNED UNSIGNED-INT UNSIGNED-LONG UNSIGNED-SHORT UNSORTED UNSTRING UNTIL UP UPDATE UPDATERS UPON UPPER USAGE USE USE-ALT USE-RETURN USE-TAB USER USER-DEFAULT USING UTF-16 UTF-8 V VAL-STATUS VALID VALIDATE VALIDATE-STATUS VALIDATING VALUE VALUE-FORMAT VALUES VARIABLE VARIANT VARYING VERTICAL VERY-HEAVY VIRTUAL-WIDTH VOLATILE VPADDING VSCROLL VSCROLL-BAR VSCROLL-POS VTOP WAIT WEB-BROWSER WHEN WHEN-COMPILED WIDTH WIDTH-IN-CELLS WINDOW WITH WORDS WORKING-STORAGE WRAP WRITE WRITE-ONLY WRITE-VERIFY WRITERS X XML XML-CODE XML-DECLARATION Y YYYYDDD YYYYMMDD ZERO ZERO-FILL ZEROES ZEROS'.split(' '));
+  const FOLD = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue', 'ß': 'ss' };
+
+  const tryParse = (src) => { try { return parseCached(String(src || '').trim()); } catch (e) { return null; } };
+  const tryTarget = (src) => { try { return parseTarget(String(src || '').trim()); } catch (e) { return null; } };
+  const bytes = (s) => (typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(s).length : unescape(encodeURIComponent(s)).length);
+
+  /** COBOL-Literal(e) mit Länge: "…" mit verdoppeltem ", Steuerzeichen als X"0A". */
+  function litParts(s) {
+    const out = [];
+    let cur = '';
+    const flush = () => { if (cur) out.push({ op: '"' + cur.replace(/"/g, '""') + '"', len: bytes(cur) }); cur = ''; };
+    for (const ch of String(s)) {
+      const c = ch.charCodeAt(0);
+      if (c < 32 || c === 127) { flush(); out.push({ op: 'X"' + c.toString(16).toUpperCase().padStart(2, '0') + '"', len: 1 }); }
+      else cur += ch;
+    }
+    flush();
+    return out;
+  }
+
+  function cobName(n) {
+    let s = String(n || '').replace(/[äöüÄÖÜß]/g, (c) => FOLD[c]).normalize('NFD').replace(/[̀-ͯ]/g, '');
+    s = s.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').toUpperCase();
+    if (!/^[A-Z]/.test(s) || s.startsWith('BB-')) s = 'V-' + s;
+    s = s.slice(0, 24).replace(/-+$/, '');
+    if (RESERVED.has(s)) s += '-V';
+    return s;
+  }
+
+  /** Summe von Längen (Zahlen werden zusammengefasst). */
+  function sumLens(lens) {
+    let c = 0;
+    const rest = [];
+    for (const l of lens) { if (typeof l === 'number') c += l; else rest.push(l); }
+    if (c || !rest.length) rest.push(String(c));
+    return rest.join(' + ');
+  }
+
+  function generate(program, opts = {}) {
+    const tr = opts.t || ((k) => k);
+    const used = { num: false };
+    const P = tr('genArgPrompt').toUpperCase();
+    const V = tr('genArgValue').toUpperCase();
+    const HN = { prog: tr('cobolHelperNum'), prompt: P + '-TEXT', plen: P + '-LEN', line: V + '-TEXT', value: V + '-NUM' };
+    const progNames = new Set([tr('cobolMain'), HN.prog]);
+    const fnName = new Map();
+    for (const f of program.fns.filter((x) => !x.isMain)) {
+      let n = cobName(f.name);
+      while (progNames.has(n)) n += '-P';
+      progNames.add(n);
+      fnName.set(f.name, n);
+    }
+    const programs = [];
+
+    const typeOf = (ctx, ast) => (ast ? A.typeOf(ast, ctx.scope) : '?');
+    const name = (ctx, n) => ctx.rename.get(n) || cobName(n);
+
+    function line(ctx, s) { ctx.lines.push(IND.repeat(ctx.ind) + s); }
+    function block(ctx, seq) {
+      ctx.ind++;
+      const before = ctx.lines.length;
+      for (const n of seq) genStmt(ctx, n);
+      if (ctx.lines.length === before) line(ctx, 'CONTINUE');
+      ctx.ind--;
+    }
+
+    /** Hilfsfeld; wird pro Anweisung neu gezählt. Z = Druckfeld, N = Zahl, T = Text (+ -LEN), B = true/false */
+    function temp(ctx, kind) {
+      ctx.cnt[kind] = (ctx.cnt[kind] || 0) + 1;
+      ctx.max[kind] = Math.max(ctx.max[kind] || 0, ctx.cnt[kind]);
+      return 'BB-' + kind + ctx.cnt[kind];
+    }
+
+    // ------------------------------------------------------------ Programme
+
+    function genFunction(fn) {
+      const scope = A.scopeOf(fn);
+      const rename = new Map();
+      const taken = new Set();
+      const suffixes = (t) => (t === 'string' ? ['-LEN'] : t === 'integer[]' ? ['-TAB', '-LEN'] : t === 'string[]' ? ['-TAB', '-LEN', '-EL', '-L'] : []);
+      const claim = (base, type) => {
+        let b = base;
+        let i = 2;
+        const free = (x) => !taken.has(x) && suffixes(type).every((s) => !taken.has(x + s));
+        while (!free(b)) b = base.slice(0, 20) + '-' + i++;
+        taken.add(b);
+        for (const s of suffixes(type)) taken.add(b + s);
+        return b;
+      };
+      for (const [n, v] of scope) rename.set(n, claim(n === 'result' && !fn.isMain ? 'RESULT' : cobName(n), v.type));
+      const ctx = { fn, scope, rename, ind: 1, lines: [], cnt: {}, max: {}, values: new Map(), valued: new Set() };
+      // erste Deklarationen auf oberster Ebene mit einfachem Startwert → VALUE
+      const seen = new Set();
+      for (const n of fn.body) {
+        if (n.kind !== 'decl' || !n.name || seen.has(n.name)) continue;
+        seen.add(n.name);
+        if (n.vtype.endsWith('[]')) continue;
+        const ast = tryParse(n.init);
+        const s = ast && strip(ast);
+        if (!String(n.init || '').trim()) ctx.values.set(n.name, null);
+        else if (n.vtype === 'integer' && s && (s.k === 'num' || (s.k === 'un' && s.op === '-' && strip(s.a).k === 'num'))) {
+          const v = A.literalValue(s);
+          if (!Number.isInteger(v)) continue;
+          ctx.values.set(n.name, String(v));
+        } else if (n.vtype === 'string' && s && s.k === 'str' && bytes(s.v) <= 256) {
+          const l = litParts(s.v);
+          if (l.length > 1) continue;
+          ctx.values.set(n.name, l.length ? l[0] : null);
+        } else continue;
+        ctx.valued.add(n);
+      }
+
+      if (!fn.isMain && fn.returnType !== 'void') {
+        const dst = fn.returnType === 'string' ? { field: 'RESULT', len: 'RESULT-LEN' } : 'RESULT';
+        assign(ctx, dst, fn.returnType, fn.resultInit);
+      }
+      for (const n of fn.body) genStmt(ctx, n);
+
+      const pid = fn.isMain ? tr('cobolMain') : fnName.get(fn.name);
+      const out = ['IDENTIFICATION DIVISION.', 'PROGRAM-ID. ' + pid + (fn.isMain ? '' : ' RECURSIVE') + '.', 'DATA DIVISION.'];
+      const local = [];
+      const link = [];
+      const usingList = [];
+      const field = (list, nm, type, value, init) => {
+        const v = (x) => (init ? ' VALUE ' + x : '');
+        if (type === 'integer') list.push('01 ' + nm + ' ' + NUM + v(value ? value : '0') + '.');
+        else if (type === 'string') {
+          list.push('01 ' + nm + ' ' + TXT + v(value ? value.op : 'SPACES') + '.');
+          list.push('01 ' + nm + '-LEN ' + TLEN + v(value ? value.len : 0) + '.');
+        } else {
+          list.push('01 ' + nm + '-TAB.');
+          if (type === 'integer[]') list.push('   05 ' + nm + ' ' + NUM + ' OCCURS ' + MAXARR + '.');
+          else list.push('   05 ' + nm + '-EL OCCURS ' + MAXARR + '.', '      10 ' + nm + ' ' + TXT + '.', '      10 ' + nm + '-L ' + TLEN + '.');
+          list.push('01 ' + nm + '-LEN ' + NUM + v(0) + '.');
+        }
+      };
+      const usingOf = (nm, type) => (type === 'integer' ? [nm] : type === 'string' ? [nm, nm + '-LEN'] : [nm + '-TAB', nm + '-LEN']);
+      for (const p of fn.params) {
+        const nm = name(ctx, p.name || 'p');
+        field(link, nm, p.type, null, false);
+        usingList.push(...usingOf(nm, p.type));
+      }
+      if (!fn.isMain && fn.returnType !== 'void') { field(link, 'RESULT', fn.returnType, null, false); usingList.push(...usingOf('RESULT', fn.returnType)); }
+      for (const [n, v] of scope) if (v.kind === 'decl') field(local, name(ctx, n), v.type, ctx.values.get(n), true);
+      for (const k of ['Z', 'N', 'T', 'B']) {
+        for (let i = 1; i <= (ctx.max[k] || 0); i++) {
+          if (k === 'T') local.push('01 BB-T' + i + ' ' + TXT + '.', '01 BB-T' + i + '-LEN ' + TLEN + '.');
+          else local.push('01 BB-' + k + i + ' ' + (k === 'Z' ? EDIT : k === 'N' ? NUM : 'PIC X(5)') + '.');
+        }
+      }
+      if (local.length) out.push((fn.isMain ? 'WORKING-STORAGE' : 'LOCAL-STORAGE') + ' SECTION.', ...local);
+      if (link.length) out.push('LINKAGE SECTION.', ...link);
+      out.push('PROCEDURE DIVISION' + (usingList.length ? ' USING ' + usingList.join(' ') : '') + '.');
+      out.push(...ctx.lines);
+      out.push(IND + (fn.isMain ? 'STOP RUN.' : 'GOBACK.'));
+      out.push('END PROGRAM ' + pid + '.');
+      programs.push(out.join('\n'));
+    }
+
+    // ------------------------------------------------------------ Ausdrücke
+
+    const simpleNum = (s) => s.k === 'num' || s.k === 'id' || (s.k === 'un' && s.op === '-' && strip(s.a).k === 'num');
+
+    function sub(ctx, idx) {
+      const s = strip(idx);
+      if (s.k === 'num' && Number.isInteger(s.v)) return String(s.v + 1);
+      // a[j + 1] → A(J + 2), a[j - 1] → A(J)
+      if (s.k === 'bin' && (s.op === '+' || s.op === '-') && strip(s.b).k === 'num' && Number.isInteger(strip(s.b).v)) {
+        const k = (s.op === '+' ? strip(s.b).v : -strip(s.b).v) + 1;
+        const base = num(ctx, s.a, 5);
+        return k === 0 ? base : base + (k > 0 ? ' + ' + k : ' - ' + (-k));
+      }
+      return num(ctx, idx, 5) + ' + 1';
+    }
+
+    /** Text-Variable oder -Element als { field, len }; field ist das ganze (mit Leerzeichen aufgefüllte) Feld. */
+    function textRef(ctx, s) {
+      if (s.k === 'id') { const nm = name(ctx, s.name); return { field: nm, len: nm + '-LEN' }; }
+      const nm = name(ctx, strip(s.obj).name);
+      const i = sub(ctx, s.index);
+      return { field: nm + '(' + i + ')', len: nm + '-L(' + i + ')' };
+    }
+    const isTextRef = (ctx, s) => (s.k === 'id' || s.k === 'idx') && typeOf(ctx, s) === 'string';
+
+    /** Rechenausdruck (Zahl). */
+    function num(ctx, a, minPrec = 0) {
+      const wrap = (s, p) => (p < minPrec ? '(' + s + ')' : s);
+      switch (a.k) {
+        case 'num': return a.raw;
+        case 'paren': return '(' + num(ctx, a.e) + ')';
+        case 'id':
+          if (typeOf(ctx, a) === 'string') return 'FUNCTION NUMVAL(' + name(ctx, a.name) + ')';
+          return name(ctx, a.name);
+        case 'idx':
+          if (typeOf(ctx, a) === 'string') return 'FUNCTION NUMVAL(' + textRef(ctx, a).field + ')';
+          return name(ctx, strip(a.obj).name) + '(' + sub(ctx, a.index) + ')';
+        case 'len': {
+          const o = strip(a.obj);
+          if (A.isArrayType(typeOf(ctx, o))) return name(ctx, o.name) + '-LEN';
+          if (isTextRef(ctx, o)) return textRef(ctx, o).len;
+          return '(' + sumLens(textParts(ctx, o).map((p) => p.len)) + ')';
+        }
+        case 'un':
+          if (a.op === '+') return num(ctx, a.a, minPrec);
+          return strip(a.a).k === 'num' ? wrap('-' + strip(a.a).raw, 7) : '(- ' + num(ctx, a.a, 7) + ')';
+        case 'bin': {
+          if (a.op === '/') return 'FUNCTION INTEGER-PART(' + num(ctx, a.a, 6) + ' / ' + num(ctx, a.b, 7) + ')';
+          if (a.op === '%') return 'FUNCTION REM(' + num(ctx, a.a) + ', ' + num(ctx, a.b) + ')';
+          if (a.op === '+' && typeOf(ctx, a) === 'string') return 'FUNCTION NUMVAL(' + textOperand(ctx, a) + ')';
+          if (!'+-*'.includes(a.op)) return '0';
+          const p = a.op === '*' ? 6 : 5;
+          return wrap(num(ctx, a.a, p) + ' ' + a.op + ' ' + num(ctx, a.b, p + 1), p);
+        }
+        default: return '0';
+      }
+    }
+
+    function parts(ctx, ast) {
+      const s = strip(ast);
+      if (s.k === 'bin' && s.op === '+' && typeOf(ctx, s) === 'string') return parts(ctx, s.a).concat(parts(ctx, s.b));
+      return [ast];
+    }
+
+    /** Teile eines Text-Ausdrucks als { op, len } (Zahlen werden vorher in Druckfelder gerechnet). */
+    function textParts(ctx, ast) {
+      const out = [];
+      for (const p of parts(ctx, ast)) {
+        const s = strip(p);
+        const t = typeOf(ctx, s);
+        if (s.k === 'str') out.push(...litParts(s.v));
+        else if (isTextRef(ctx, s)) { const r = textRef(ctx, s); out.push({ op: r.field + '(1:' + r.len + ')', len: r.len }); }
+        else if (t === 'bool') {
+          const b = temp(ctx, 'B');
+          line(ctx, 'IF ' + cond(ctx, s) + ' MOVE "true" TO ' + b + ' ELSE MOVE "false" TO ' + b + ' END-IF');
+          out.push({ op: 'FUNCTION TRIM(' + b + ')', len: 'FUNCTION LENGTH(FUNCTION TRIM(' + b + '))' });
+        } else {
+          const z = temp(ctx, 'Z');
+          line(ctx, simpleNum(s) ? 'MOVE ' + num(ctx, s) + ' TO ' + z : 'COMPUTE ' + z + ' = ' + num(ctx, s));
+          out.push({ op: 'FUNCTION TRIM(' + z + ')', len: 'FUNCTION LENGTH(FUNCTION TRIM(' + z + '))' });
+        }
+      }
+      return out;
+    }
+
+    /** Ein Operand für einen Text-Ausdruck (Feld, Teil oder FUNCTION CONCATENATE). */
+    function textOperand(ctx, ast) {
+      const s = strip(ast);
+      if (isTextRef(ctx, s)) return textRef(ctx, s).field;
+      const ps = textParts(ctx, s);
+      if (!ps.length) return 'SPACES';
+      if (ps.length === 1) return ps[0].op;
+      return 'FUNCTION CONCATENATE(' + ps.map((p) => p.op).join(', ') + ')';
+    }
+
+    /** Operand für Vergleiche: Texte werden mit Leerzeichen aufgefüllt verglichen. */
+    function cmpText(ctx, ast) {
+      const s = strip(ast);
+      if (s.k === 'str' && s.v === '') return 'SPACES';
+      return textOperand(ctx, s);
+    }
+
+    const CMP = { '==': '=', '!=': 'NOT =', '<': '<', '<=': '<=', '>': '>', '>=': '>=' };
+
+    function cond(ctx, s, minPrec = 0) {
+      const wrap = (x, p) => (p < minPrec ? '(' + x + ')' : x);
+      if (s.k === 'paren') return '(' + cond(ctx, s.e) + ')';
+      if (s.k === 'un' && s.op === '!') return 'NOT (' + cond(ctx, strip(s.a)) + ')';
+      if (s.k === 'bin') {
+        if (s.op === '&&') return wrap(cond(ctx, s.a, 2) + ' AND ' + cond(ctx, s.b, 2), 2);
+        if (s.op === '||') return wrap(cond(ctx, s.a, 1) + ' OR ' + cond(ctx, s.b, 1), 1);
+        if (CMP[s.op]) {
+          if (typeOf(ctx, s.a) === 'string' || typeOf(ctx, s.b) === 'string') return cmpText(ctx, s.a) + ' ' + CMP[s.op] + ' ' + cmpText(ctx, s.b);
+          return num(ctx, s.a) + ' ' + CMP[s.op] + ' ' + num(ctx, s.b);
+        }
+      }
+      if (typeOf(ctx, s) === 'string') return cmpText(ctx, s) + ' NOT = SPACES';
+      return num(ctx, s) + ' NOT = 0';
+    }
+
+    function condFrom(ctx, src) {
+      const ast = tryParse(src);
+      return ast ? cond(ctx, strip(ast)) : '1 = 1';
+    }
+
+    /** Text in { field, len } schreiben. */
+    function assignText(ctx, dst, ast) {
+      const s = ast && strip(ast);
+      if (s && isTextRef(ctx, s)) {
+        const r = textRef(ctx, s);
+        line(ctx, 'MOVE ' + r.field + ' TO ' + dst.field);
+        line(ctx, 'MOVE ' + r.len + ' TO ' + dst.len);
+        return;
+      }
+      const ps = s ? textParts(ctx, s) : [];
+      if (!ps.length) { line(ctx, 'MOVE SPACES TO ' + dst.field); line(ctx, 'MOVE 0 TO ' + dst.len); return; }
+      line(ctx, 'MOVE ' + (ps.length === 1 ? ps[0].op : 'FUNCTION CONCATENATE(' + ps.map((p) => p.op).join(', ') + ')') + ' TO ' + dst.field);
+      const sum = sumLens(ps.map((p) => p.len));
+      line(ctx, /^\d+$/.test(sum) ? 'MOVE ' + sum + ' TO ' + dst.len : 'COMPUTE ' + dst.len + ' = ' + sum);
+    }
+
+    /** Wert zuweisen; dst ist ein Feldname (Zahl) oder { field, len } (Text). */
+    function assign(ctx, dst, type, src) {
+      const ast = tryParse(src);
+      if (type === 'string') { assignText(ctx, dst, ast); return; }
+      if (!ast) { line(ctx, 'MOVE 0 TO ' + dst); return; }
+      const s = strip(ast);
+      if (typeOf(ctx, s) === 'string') { line(ctx, 'COMPUTE ' + dst + ' = FUNCTION NUMVAL(' + textOperand(ctx, s) + ')'); return; }
+      if (simpleNum(s)) line(ctx, 'MOVE ' + num(ctx, s) + ' TO ' + dst);
+      else line(ctx, 'COMPUTE ' + dst + ' = ' + num(ctx, s));
+    }
+
+    /** Ziel einer Zuweisung: Feldname (Zahl) oder { field, len } (Text). */
+    function dest(ctx, src) {
+      const t = tryTarget(src);
+      if (!t) return String(src || '').trim().toUpperCase() || 'X';
+      if (typeOf(ctx, t) === 'string') return textRef(ctx, t);
+      if (t.k === 'id') return name(ctx, t.name);
+      return name(ctx, strip(t.obj).name) + '(' + sub(ctx, t.index) + ')';
+    }
+    const targetType = (ctx, src) => { const t = tryTarget(src); return t ? typeOf(ctx, t) : '?'; };
+    const refs = (d) => (typeof d === 'string' ? d : d.field + ' ' + d.len);
+
+    // ------------------------------------------------------------ Anweisungen
+
+    function genStmt(ctx, n) {
+      ctx.cnt = {};
+      if (n.comment && n.kind !== 'comment') line(ctx, '*> ' + n.comment.replace(/\s+/g, ' '));
+      switch (n.kind) {
+        case 'comment':
+          for (const l of String(n.text || '').split('\n')) line(ctx, '*> ' + l);
+          return;
+        case 'decl': {
+          const nm = name(ctx, n.name || 'variable');
+          if (n.vtype.endsWith('[]')) {
+            assign(ctx, nm + '-LEN', 'integer', tryParse(n.length) ? n.length : '0');
+            line(ctx, 'INITIALIZE ' + nm + '-TAB');
+          } else if (!ctx.valued.has(n)) assign(ctx, n.vtype === 'string' ? { field: nm, len: nm + '-LEN' } : nm, n.vtype, n.init);
+          return;
+        }
+        case 'assign':
+          assign(ctx, dest(ctx, n.target), targetType(ctx, n.target), n.expr);
+          return;
+        case 'input': {
+          const tt = targetType(ctx, n.target);
+          const p = tryParse(n.prompt);
+          const d = dest(ctx, n.target);
+          if (tt === 'integer') {
+            used.num = true;
+            const t = temp(ctx, 'T');
+            assignText(ctx, { field: t, len: t + '-LEN' }, p);
+            line(ctx, 'CALL "' + HN.prog + '" USING BY CONTENT ' + t + ' ' + t + '-LEN BY REFERENCE ' + d);
+          } else {
+            const ps = p ? textParts(ctx, strip(p)) : [];
+            if (ps.length) line(ctx, 'DISPLAY ' + ps.map((x) => x.op).join(' ') + ' WITH NO ADVANCING');
+            line(ctx, 'MOVE SPACES TO ' + d.field);
+            line(ctx, 'ACCEPT ' + d.field);
+            line(ctx, 'COMPUTE ' + d.len + ' = FUNCTION LENGTH(FUNCTION TRIM(' + d.field + ' TRAILING))');
+          }
+          return;
+        }
+        case 'output': {
+          const ast = tryParse(n.expr);
+          const ps = ast ? textParts(ctx, strip(ast)) : [];
+          line(ctx, 'DISPLAY ' + (ps.length ? ps.map((x) => x.op).join(' ') : '""'));
+          return;
+        }
+        case 'if': {
+          // WENN … SONST WENN … → EVALUATE TRUE
+          const chain = [{ cond: n.cond, body: n.then }];
+          let rest = n.else;
+          while (rest && rest.length === 1 && rest[0].kind === 'if' && !rest[0].comment) { chain.push({ cond: rest[0].cond, body: rest[0].then }); rest = rest[0].else; }
+          if (chain.length > 2) {
+            const cs = chain.map((c) => condFrom(ctx, c.cond));
+            line(ctx, 'EVALUATE TRUE');
+            chain.forEach((c, i) => { line(ctx, 'WHEN ' + cs[i]); block(ctx, c.body); });
+            if (rest && rest.length) { line(ctx, 'WHEN OTHER'); block(ctx, rest); }
+            line(ctx, 'END-EVALUATE');
+            return;
+          }
+          line(ctx, 'IF ' + condFrom(ctx, n.cond));
+          block(ctx, n.then);
+          if (n.else && n.else.length) { line(ctx, 'ELSE'); block(ctx, n.else); }
+          line(ctx, 'END-IF');
+          return;
+        }
+        case 'while':
+        case 'until': {
+          const at = ctx.lines.length;
+          const c = condFrom(ctx, n.cond);
+          const pre = ctx.lines.splice(at);
+          if (!pre.length) {
+            line(ctx, n.kind === 'while' ? 'PERFORM UNTIL NOT (' + c + ')' : 'PERFORM WITH TEST AFTER UNTIL ' + c);
+            block(ctx, n.body);
+          } else {
+            // Bedingung braucht Hilfsfelder → bei jedem Durchlauf neu berechnen
+            const test = () => {
+              for (const l of pre) ctx.lines.push(IND + l);
+              ctx.ind++; line(ctx, (n.kind === 'while' ? 'IF NOT (' + c + ')' : 'IF ' + c) + ' EXIT PERFORM END-IF'); ctx.ind--;
+            };
+            line(ctx, 'PERFORM FOREVER');
+            if (n.kind === 'while') test();
+            block(ctx, n.body);
+            if (n.kind === 'until') test();
+          }
+          line(ctx, 'END-PERFORM');
+          return;
+        }
+        case 'for': {
+          const k = dest(ctx, n.counter);
+          const operand = (src, dflt) => {
+            const ast = tryParse(src);
+            if (!ast) return dflt;
+            const s = strip(ast);
+            if (simpleNum(s)) return num(ctx, s);
+            const tmp = temp(ctx, 'N');
+            line(ctx, 'COMPUTE ' + tmp + ' = ' + num(ctx, s));
+            return tmp;
+          };
+          const from = operand(n.from, '0');
+          const stepAst = tryParse(n.step);
+          const lit = stepAst ? A.literalValue(stepAst) : 1;
+          const step = typeof lit === 'number' ? String(lit) : operand(n.step, '1');
+          const toAst = tryParse(n.to);
+          const to = toAst ? num(ctx, strip(toAst)) : '0';
+          let until;
+          if (typeof lit === 'number') until = k + (lit >= 0 ? ' > ' : ' < ') + to;
+          else until = '(' + step + ' > 0 AND ' + k + ' > ' + to + ') OR (' + step + ' < 0 AND ' + k + ' < ' + to + ')';
+          line(ctx, 'PERFORM VARYING ' + k + ' FROM ' + from + ' BY ' + step + ' UNTIL ' + until);
+          block(ctx, n.body);
+          line(ctx, 'END-PERFORM');
+          return;
+        }
+        case 'switch': {
+          const sel = tryParse(n.expr);
+          const isText = sel && typeOf(ctx, sel) === 'string';
+          const val = (a) => (isText ? cmpText(ctx, a) : num(ctx, strip(a)));
+          const subj = sel ? val(sel) : '0';
+          const vals = n.cases.map((c) => { const v = tryParse(c.value); return v ? val(v) : '0'; });
+          line(ctx, 'EVALUATE ' + subj);
+          n.cases.forEach((c, i) => { line(ctx, 'WHEN ' + vals[i]); block(ctx, c.body); });
+          if (n.else) { line(ctx, 'WHEN OTHER'); block(ctx, n.else); }
+          line(ctx, 'END-EVALUATE');
+          return;
+        }
+        case 'call': {
+          const callee = program.fns.find((f) => !f.isMain && f.name === n.fn);
+          if (!callee) { line(ctx, '*> ' + (n.fn || '?') + '(…)'); return; }
+          const using = [];
+          callee.params.forEach((p, i) => {
+            const src = n.args[i] || '';
+            if (A.isArrayType(p.type)) {
+              const t = tryTarget(src);
+              const nm = t ? name(ctx, t.k === 'id' ? t.name : strip(t.obj).name) : cobName(src);
+              using.push('BY REFERENCE ' + nm + '-TAB ' + nm + '-LEN');
+            } else if (p.byRef) using.push('BY REFERENCE ' + refs(dest(ctx, src)));
+            else {
+              const ast = tryParse(src);
+              const s = ast && strip(ast);
+              if (s && (s.k === 'id' || s.k === 'idx') && typeOf(ctx, s) === p.type) using.push('BY CONTENT ' + refs(p.type === 'string' ? textRef(ctx, s) : num(ctx, s)));
+              else if (p.type === 'string') {
+                const tmp = temp(ctx, 'T');
+                assignText(ctx, { field: tmp, len: tmp + '-LEN' }, ast);
+                using.push('BY CONTENT ' + tmp + ' ' + tmp + '-LEN');
+              } else {
+                const tmp = temp(ctx, 'N');
+                assign(ctx, tmp, 'integer', src);
+                using.push('BY CONTENT ' + tmp);
+              }
+            }
+          });
+          let after = null;
+          if (callee.returnType !== 'void') {
+            const tt = n.target && n.target.trim() ? targetType(ctx, n.target) : null;
+            const d = tt ? dest(ctx, n.target) : null;
+            if (tt === callee.returnType) using.push('BY REFERENCE ' + refs(d));
+            else if (callee.returnType === 'string') {
+              const tmp = temp(ctx, 'T');
+              using.push('BY REFERENCE ' + tmp + ' ' + tmp + '-LEN');
+              if (d) after = () => line(ctx, 'COMPUTE ' + d + ' = FUNCTION NUMVAL(' + tmp + ')');
+            } else {
+              const tmp = temp(ctx, 'N');
+              using.push('BY REFERENCE ' + tmp);
+              if (d) {
+                after = () => {
+                  const z = temp(ctx, 'Z');
+                  line(ctx, 'MOVE ' + tmp + ' TO ' + z);
+                  line(ctx, 'MOVE FUNCTION TRIM(' + z + ') TO ' + d.field);
+                  line(ctx, 'COMPUTE ' + d.len + ' = FUNCTION LENGTH(FUNCTION TRIM(' + z + '))');
+                };
+              }
+            }
+          }
+          line(ctx, 'CALL "' + fnName.get(callee.name) + '"' + (using.length ? ' USING ' + using.join(' ') : ''));
+          if (after) after();
+          return;
+        }
+        default: return;
+      }
+    }
+
+    // ------------------------------------------------------------ Zusammenbau
+
+    genFunction(program.fns.find((f) => f.isMain));
+    for (const fn of program.fns.filter((f) => !f.isMain)) genFunction(fn);
+
+    if (used.num) {
+      programs.push([
+        '*> ' + tr('javaHelperNumDoc'),
+        'IDENTIFICATION DIVISION.',
+        'PROGRAM-ID. ' + HN.prog + '.',
+        'DATA DIVISION.',
+        'LOCAL-STORAGE SECTION.',
+        '01 ' + HN.line + ' ' + TXT + '.',
+        'LINKAGE SECTION.',
+        '01 ' + HN.prompt + ' ' + TXT + '.',
+        '01 ' + HN.plen + ' ' + TLEN + '.',
+        '01 ' + HN.value + ' ' + NUM + '.',
+        'PROCEDURE DIVISION USING ' + HN.prompt + ' ' + HN.plen + ' ' + HN.value + '.',
+        IND + 'PERFORM FOREVER',
+        IND + IND + 'DISPLAY ' + HN.prompt + '(1:' + HN.plen + ') WITH NO ADVANCING',
+        IND + IND + 'MOVE SPACES TO ' + HN.line,
+        IND + IND + 'ACCEPT ' + HN.line,
+        IND + IND + IND + 'ON EXCEPTION',
+        IND + IND + IND + IND + 'MOVE 0 TO ' + HN.value,
+        IND + IND + IND + IND + 'GOBACK',
+        IND + IND + 'END-ACCEPT',
+        IND + IND + 'IF ' + HN.line + ' NOT = SPACES AND FUNCTION TEST-NUMVAL(' + HN.line + ') = 0',
+        IND + IND + IND + 'MOVE FUNCTION NUMVAL(' + HN.line + ') TO ' + HN.value,
+        IND + IND + IND + 'GOBACK',
+        IND + IND + 'END-IF',
+        IND + IND + 'DISPLAY ' + litParts(tr('javaNeedInt'))[0].op,
+        IND + 'END-PERFORM.',
+        'END PROGRAM ' + HN.prog + '.'
+      ].join('\n'));
+    }
+
+    const head = ['       >>SOURCE FORMAT FREE', '*> ' + tr('cobolHeader1'), '*> ' + tr('cobolHeader2'), ''];
+    return head.join('\n') + programs.join('\n\n') + '\n';
+  }
+
+  BBE.cobolgen = { generate };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
 /* js/core/examples.js */
 /* Blockbild-Editor – eingebaute Beispiele (im .bb-Format, Texte je nach Sprache) */
 (function (G) {
@@ -7711,7 +9055,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     get waiting() { return !!this.pending; }
   }
 
-  // ---------------------------------------------------------------- Quelltext (C, Java, Python)
+  // ---------------------------------------------------------------- Quelltext (C, C++, C#, Java, Python, JavaScript, Fortran, COBOL)
 
   const words = (s) => new Set(s.split(' '));
   const LANGS = {
@@ -7739,6 +9083,22 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       kw: words('def return if elif else while for in break continue pass match case import from and or not True False None is lambda try except'),
       types: words('int str float list print input range len isinstance'),
       line: '#', block: false, pp: false, quotes: '"\''
+    },
+    js: {
+      kw: words('function return if else while for do switch case default break continue let const var new true false null undefined of in typeof try catch throw'),
+      types: words('console process require Number String Array Math Buffer prompt'),
+      line: '//', block: true, pp: false, quotes: '"\'`'
+    },
+    // Fortran und COBOL unterscheiden nicht zwischen Groß- und Kleinschreibung (ci)
+    fortran: {
+      kw: words('program end contains implicit none function subroutine recursive result call if then else do while select case default exit cycle return print write read allocate deallocate type intent in out inout value present optional'),
+      types: words('integer character logical len allocatable size mod trim merge int achar allocated is_iostat_eor len_trim'),
+      line: '!', block: false, pp: false, quotes: '\'"', ci: true
+    },
+    cobol: {
+      kw: words('identification division program-id data working-storage local-storage linkage section procedure using by content reference value pic occurs move to compute display accept with no advancing if else end-if evaluate when other end-evaluate perform varying from until test after forever end-perform exit call goback stop run end program recursive initialize not and or continue on exception end-accept spaces true'),
+      types: words('function concatenate trim trailing length numval rem integer-part test-numval'),
+      line: '*>', block: false, pp: /^\s*>>/, quotes: '"', ci: true, word: /^[A-Za-z_][\w-]*/
     }
   };
 
@@ -7750,7 +9110,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       const el = h('span.cl');
       let i = 0;
       const push = (cls, text) => { if (!text) return; el.appendChild(cls ? h('span.' + cls, null, text) : document.createTextNode(text)); };
-      if (L.pp && !inBlock && /^\s*#/.test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
+      if (L.pp && !inBlock && (L.pp instanceof RegExp ? L.pp : /^\s*#/).test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
       let buf = '';
       const flush = () => { push(null, buf); buf = ''; };
       while (i < line.length) {
@@ -7776,10 +9136,11 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
           i += j + 1;
           continue;
         }
-        const m = /^[A-Za-z_]\w*/.exec(rest);
+        const m = (L.word || /^[A-Za-z_]\w*/).exec(rest);
         if (m) {
-          if (L.kw.has(m[0])) { flush(); push('tok-kw', m[0]); }
-          else if (L.types.has(m[0])) { flush(); push('tok-type', m[0]); }
+          const w = L.ci ? m[0].toLowerCase() : m[0];
+          if (L.kw.has(w)) { flush(); push('tok-kw', m[0]); }
+          else if (L.types.has(w)) { flush(); push('tok-type', m[0]); }
           else buf += m[0];
           i += m[0].length;
           continue;
@@ -8063,7 +9424,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   <a href="#h-sub">Unterprogramme</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Ausführen</a>
-  <a href="#h-c">Code (C, C++, C#, Java, Python)</a>
+  <a href="#h-c">Code (C, C++, C#, Java, Python, JavaScript, Fortran, COBOL)</a>
   <a href="#h-files">Dateien</a>
   <a href="#h-python">Python übernehmen</a>
   <a href="#h-keys">Tastenkürzel</a>
@@ -8143,9 +9504,12 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code: C, C++, C#, Java, Python</h3>
-  <p>Der Reiter <b>Code</b> zeigt das Programm wahlweise in <b>C</b>, <b>C++</b>, <b>C#</b>, <b>Java</b> oder <b>Python</b>; <i>Exportieren</i> speichert die Datei.
-  In C++ werden InOut-Parameter zu Referenzen (<code>int&amp; a</code>), in C# zu <code>ref</code>.
+  <h3>Code: C, C++, C#, Java, Python, JavaScript, Fortran, COBOL</h3>
+  <p>Der Reiter <b>Code</b> zeigt das Programm wahlweise in <b>C</b>, <b>C++</b>, <b>C#</b>, <b>Java</b>, <b>Python</b>,
+  <b>JavaScript</b>, <b>Fortran</b> oder <b>COBOL</b>; <i>Exportieren</i> speichert die Datei.
+  In C++ werden InOut-Parameter zu Referenzen (<code>int&amp; a</code>), in C# zu <code>ref</code>, in Fortran zu <code>intent(inout)</code>,
+  in COBOL zu <code>BY REFERENCE</code>. JavaScript läuft mit <code>node datei.js</code>, Fortran mit <code>gfortran</code>,
+  COBOL mit GnuCOBOL (<code>cobc -x datei.cob</code>; Arrays dort mit höchstens 1000 Elementen).
   In Java heißt die Klasse wie die Datei, InOut-Zahlen stehen dort in einem Array mit einem Element. In Python geben Unterprogramme
   InOut-Werte zurück (<code>x, y = tausche(x, y)</code>).</p>
   <p>Der Reiter <b>C-Code</b> zeigt das Programm als C99-Quelltext, der sich mit <code>gcc</code> übersetzen lässt.
@@ -8201,7 +9565,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   <a href="#h-sub">Subprograms</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Running</a>
-  <a href="#h-c">Code (C, C++, C#, Java, Python)</a>
+  <a href="#h-c">Code (C, C++, C#, Java, Python, JavaScript, Fortran, COBOL)</a>
   <a href="#h-files">Files</a>
   <a href="#h-python">Importing Python</a>
   <a href="#h-keys">Shortcuts</a>
@@ -8281,9 +9645,12 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code: C, C++, C#, Java, Python</h3>
-  <p>The <b>Code</b> tab shows the program in <b>C</b>, <b>C++</b>, <b>C#</b>, <b>Java</b> or <b>Python</b>; <i>Export</i> saves the file.
-  In C++ InOut parameters become references (<code>int&amp; a</code>), in C# <code>ref</code>.
+  <h3>Code: C, C++, C#, Java, Python, JavaScript, Fortran, COBOL</h3>
+  <p>The <b>Code</b> tab shows the program in <b>C</b>, <b>C++</b>, <b>C#</b>, <b>Java</b>, <b>Python</b>,
+  <b>JavaScript</b>, <b>Fortran</b> or <b>COBOL</b>; <i>Export</i> saves the file.
+  In C++ InOut parameters become references (<code>int&amp; a</code>), in C# <code>ref</code>, in Fortran <code>intent(inout)</code>,
+  in COBOL <code>BY REFERENCE</code>. JavaScript runs with <code>node file.js</code>, Fortran with <code>gfortran</code>,
+  COBOL with GnuCOBOL (<code>cobc -x file.cob</code>; arrays there hold at most 1000 elements).
   In Java the class is named after the file and InOut numbers live in a one-element array. In Python subprograms
   return InOut values (<code>x, y = swap(x, y)</code>).</p>
   <p>The <b>C code</b> tab shows the program as C99 source that compiles with <code>gcc</code>.
@@ -8369,8 +9736,13 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     { id: 'cpp', label: 'C++', ext: '.cpp', mime: 'text/x-c++src' },
     { id: 'cs', label: 'C#', ext: '.cs', mime: 'text/x-csharp' },
     { id: 'java', label: 'Java', ext: '.java', mime: 'text/x-java' },
-    { id: 'python', label: 'Python', ext: '.py', mime: 'text/x-python' }
+    { id: 'python', label: 'Python', ext: '.py', mime: 'text/x-python' },
+    { id: 'js', label: 'JS', ext: '.js', mime: 'text/javascript' },
+    { id: 'fortran', label: 'Fortran', ext: '.f90', mime: 'text/x-fortran' },
+    { id: 'cobol', label: 'COBOL', ext: '.cob', mime: 'text/x-cobol' }
   ];
+  const CODE_GEN = { cpp: 'cppgen', python: 'pygen', js: 'jsgen', fortran: 'fortgen', cobol: 'cobolgen', c: 'cgen' };
+  const LINE_COMMENT = { python: '# ', fortran: '! ', cobol: '*> ' };
 
   const defaults = {
     lang: I18N.detect(), theme: 'system', layout: 'bb', colors: true, addresses: false,
@@ -8786,12 +10158,10 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       try {
         if (lang === 'java') S.codeCache[lang] = BBE.javagen.generate(S.program, { t, className: javaClass() });
         else if (lang === 'cs') S.codeCache[lang] = BBE.csgen.generate(S.program, { t, className: javaClass() });
-        else if (lang === 'cpp') S.codeCache[lang] = BBE.cppgen.generate(S.program, { t });
-        else if (lang === 'python') S.codeCache[lang] = BBE.pygen.generate(S.program, { t });
-        else S.codeCache[lang] = BBE.cgen.generate(S.program, { t });
+        else S.codeCache[lang] = BBE[CODE_GEN[lang] || 'cgen'].generate(S.program, { t });
       } catch (e) {
         console.error(e);
-        S.codeCache[lang] = (lang === 'python' ? '# ' : '// ') + t('rInternal', e.message) + '\n';
+        S.codeCache[lang] = (LINE_COMMENT[lang] || '// ') + t('rInternal', e.message) + '\n';
       }
     }
     return S.codeCache[lang];
@@ -9518,6 +10888,9 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       { label: t('exp.cs'), icon: 'code', action: () => exportCode('cs') },
       { label: t('exp.java'), icon: 'code', action: () => exportCode('java') },
       { label: t('exp.py'), icon: 'code', action: () => exportCode('python') },
+      { label: t('exp.js'), icon: 'code', action: () => exportCode('js') },
+      { label: t('exp.f90'), icon: 'code', action: () => exportCode('fortran') },
+      { label: t('exp.cob'), icon: 'code', action: () => exportCode('cobol') },
       { label: t('exp.png'), icon: 'image', action: exportPng }
     ];
     if (store.getRaw(KEY_OLD)) items.push('-', { label: t('exp.recoverOld'), icon: 'history', action: recoverOld });
@@ -9927,7 +11300,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     if (dlNs === undefined) { try { dlNs = await G.claude.use('downloads'); } catch (e) { dlNs = null; } }
     if (!dlNs) return 'none';
     // nur bestimmte Endungen sind im Viewer erlaubt
-    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py)$/, '.$1.txt');
+    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
   }
 

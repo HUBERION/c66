@@ -157,7 +157,7 @@
     get waiting() { return !!this.pending; }
   }
 
-  // ---------------------------------------------------------------- Quelltext (C, Java, Python)
+  // ---------------------------------------------------------------- Quelltext (C, C++, C#, Java, Python, JavaScript, Fortran, COBOL)
 
   const words = (s) => new Set(s.split(' '));
   const LANGS = {
@@ -185,6 +185,22 @@
       kw: words('def return if elif else while for in break continue pass match case import from and or not True False None is lambda try except'),
       types: words('int str float list print input range len isinstance'),
       line: '#', block: false, pp: false, quotes: '"\''
+    },
+    js: {
+      kw: words('function return if else while for do switch case default break continue let const var new true false null undefined of in typeof try catch throw'),
+      types: words('console process require Number String Array Math Buffer prompt'),
+      line: '//', block: true, pp: false, quotes: '"\'`'
+    },
+    // Fortran und COBOL unterscheiden nicht zwischen Groß- und Kleinschreibung (ci)
+    fortran: {
+      kw: words('program end contains implicit none function subroutine recursive result call if then else do while select case default exit cycle return print write read allocate deallocate type intent in out inout value present optional'),
+      types: words('integer character logical len allocatable size mod trim merge int achar allocated is_iostat_eor len_trim'),
+      line: '!', block: false, pp: false, quotes: '\'"', ci: true
+    },
+    cobol: {
+      kw: words('identification division program-id data working-storage local-storage linkage section procedure using by content reference value pic occurs move to compute display accept with no advancing if else end-if evaluate when other end-evaluate perform varying from until test after forever end-perform exit call goback stop run end program recursive initialize not and or continue on exception end-accept spaces true'),
+      types: words('function concatenate trim trailing length numval rem integer-part test-numval'),
+      line: '*>', block: false, pp: /^\s*>>/, quotes: '"', ci: true, word: /^[A-Za-z_][\w-]*/
     }
   };
 
@@ -196,7 +212,7 @@
       const el = h('span.cl');
       let i = 0;
       const push = (cls, text) => { if (!text) return; el.appendChild(cls ? h('span.' + cls, null, text) : document.createTextNode(text)); };
-      if (L.pp && !inBlock && /^\s*#/.test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
+      if (L.pp && !inBlock && (L.pp instanceof RegExp ? L.pp : /^\s*#/).test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
       let buf = '';
       const flush = () => { push(null, buf); buf = ''; };
       while (i < line.length) {
@@ -222,10 +238,11 @@
           i += j + 1;
           continue;
         }
-        const m = /^[A-Za-z_]\w*/.exec(rest);
+        const m = (L.word || /^[A-Za-z_]\w*/).exec(rest);
         if (m) {
-          if (L.kw.has(m[0])) { flush(); push('tok-kw', m[0]); }
-          else if (L.types.has(m[0])) { flush(); push('tok-type', m[0]); }
+          const w = L.ci ? m[0].toLowerCase() : m[0];
+          if (L.kw.has(w)) { flush(); push('tok-kw', m[0]); }
+          else if (L.types.has(w)) { flush(); push('tok-type', m[0]); }
           else buf += m[0];
           i += m[0].length;
           continue;
