@@ -1961,7 +1961,9 @@
       h('p', null, t('about.credit')),
       h('p', null, t('about.thanks')),
       h('p', null, t('about.v3')),
-      h('a', { href: 'https://github.com/eggers97/block-diagram-editor', target: '_blank', rel: 'noopener' }, t('about.original') + ' ↗'));
+      h('p.about-links', null,
+        h('a', { href: 'https://github.com/HUBERION/c66', target: '_blank', rel: 'noopener' }, t('about.repo') + ' ↗'),
+        h('a', { href: 'https://github.com/eggers97/block-diagram-editor', target: '_blank', rel: 'noopener' }, t('about.original') + ' ↗')));
   }
 
   function setLanguage(lang) {

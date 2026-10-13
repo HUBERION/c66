@@ -4,6 +4,8 @@ Neuentwicklung des Blockbild-Editors (Struktogramme / Nassi-Shneiderman-Diagramm
 Programmierunterricht. Läuft komplett im Browser, ohne Server, ohne externe Bibliotheken und
 **liest und schreibt die `.bb`-Dateien des bisherigen Editors (Version 2.x)**.
 
+Live: **https://c66.xeox.at/** · Quelltext: **https://github.com/HUBERION/c66**
+
 ## Bereitstellen
 
 ```bash

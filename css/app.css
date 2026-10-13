@@ -825,6 +825,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 .about p { margin: 0 0 8px; color: var(--fg-2); font-size: 13px; max-width: 65ch; }
 .about a { color: var(--accent); font-weight: 600; font-size: 13px; text-decoration: none; }
 .about a:hover { text-decoration: underline; }
+.about-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 0; }
 .help .about { margin-bottom: 22px; }
 
 .ex-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }

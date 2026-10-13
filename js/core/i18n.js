@@ -118,7 +118,7 @@
     'about.credit': 'Der Blockbild-Editor wurde von Stefan Egger und Michael Delfser entwickelt (Version 1.0 im März 2016, Version 2.2 im September 2018) und hilft seither Schülerinnen und Schülern, sauber strukturiert programmieren zu lernen.',
     'about.thanks': 'Version 3 ist eine Neuentwicklung, die auf ihrer Idee, ihrer Bedienung und ihrem Dateiformat aufbaut. Vielen Dank an Stefan Egger und Michael Delfser für diese Grundlage!',
     'about.v3': 'Die Idee, den Blockbild-Editor als Version 3.0 neu zu bauen, stammt von Martin Huber – vielen Dank dafür!',
-    'about.original': 'Original-Projekt auf GitHub',
+    'about.repo': 'Version 3 auf GitHub (Quelltext, Fehler melden)', 'about.original': 'Original-Projekt (Version 2.2) auf GitHub',
 
     'toast.saved': 'Gespeichert als {0}', 'toast.copied': 'In die Zwischenablage kopiert', 'toast.pasted': 'Eingefügt',
     'toast.nothingToPaste': 'Zwischenablage ist leer', 'toast.deleted': '{0} Block/Blöcke gelöscht', 'toast.undo': 'Rückgängig',
@@ -424,7 +424,7 @@
     'about.credit': 'The block diagram editor was created by Stefan Egger and Michael Delfser (version 1.0 in March 2016, version 2.2 in September 2018) and has helped students learn clean structured programming ever since.',
     'about.thanks': 'Version 3 is a rewrite built on their idea, their way of working and their file format. Many thanks to Stefan Egger and Michael Delfser for this foundation!',
     'about.v3': 'The idea of rebuilding the block diagram editor as version 3.0 came from Martin Huber – many thanks!',
-    'about.original': 'Original project on GitHub',
+    'about.repo': 'Version 3 on GitHub (source code, report issues)', 'about.original': 'Original project (version 2.2) on GitHub',
 
     'toast.saved': 'Saved as {0}', 'toast.copied': 'Copied to clipboard', 'toast.pasted': 'Pasted',
     'toast.nothingToPaste': 'Clipboard is empty', 'toast.deleted': '{0} block(s) deleted', 'toast.undo': 'Undo',
