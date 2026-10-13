@@ -1911,6 +1911,13 @@
     const ex = BBE.examples.list.find((e) => e.id === id);
     const lang = I18N.lang === 'en' ? 'en' : 'de';
     loadProgram(M.programFromBB(BBE.examples.build(id, lang)), slug((lang === 'en' ? 'example-' : 'beispiel-') + ex.id), null);
+    // Beispiele für eine bestimmte Export-Sprache öffnen gleich den Code-Reiter in dieser Sprache
+    if (ex.codeLang && CODE_LANGS.some((l) => l.id === ex.codeLang)) {
+      S.settings.codeLang = ex.codeLang;
+      saveSettings();
+      setSide('code');
+      renderCode();
+    }
   }
 
   function showSettings() {
@@ -1953,6 +1960,7 @@
       h('h3', null, t('about.title')),
       h('p', null, t('about.credit')),
       h('p', null, t('about.thanks')),
+      h('p', null, t('about.v3')),
       h('a', { href: 'https://github.com/eggers97/block-diagram-editor', target: '_blank', rel: 'noopener' }, t('about.original') + ' ↗'));
   }
 

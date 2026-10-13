@@ -40,7 +40,7 @@ const work = fs.mkdtempSync(path.join(os.tmpdir(), 'bbe-export-'));
 // ------------------------------------------------------------------ Programme sammeln
 const inputsFor = {
   hello: [], eva: [7, 3], even: [-9], loops: [6], grade: [8, 0, 2], max: [4, 11], ggt: [-48, 18],
-  swap: [], quick: [], fak: [6], avg: [3, 4, 8, 15], sort: [], words: { de: ['Ada', 'vielleicht', 'ja'], en: ['Ada', 'maybe', 'yes'] }
+  swap: [], quick: [], fak: [6], avg: [3, 4, 8, 15], sort: [], martin: [5], words: { de: ['Ada', 'vielleicht', 'ja'], en: ['Ada', 'maybe', 'yes'] }
 };
 const cases = [];
 for (const lang of ['de', 'en']) {

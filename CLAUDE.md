@@ -16,6 +16,7 @@ exportieren sie als C-Code. Zielgruppe: Unterricht in Österreich, daher **Deuts
   (https://github.com/eggers97/block-diagram-editor, GPL-3.0, lief auf c65.at/BE/pages/Blocks-Editor.html).
   **Version 3 ist eine komplette Neuentwicklung** – kein Code übernommen, nur Bedienidee und Dateiformat.
   Die Credits für Egger/Delfser stehen in Einstellungen, Hilfe und README und sollen bleiben.
+- Die Idee zur Version 3.0 stammt von **Martin Huber** (Credit ebenfalls in Einstellungen/Hilfe `about.v3` und README).
 
 ## Harte Anforderungen (nicht brechen)
 

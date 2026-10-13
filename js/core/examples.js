@@ -292,6 +292,28 @@
             [out(L('"Schade – probier mal die Beispiele aus."', '"Too bad – try the examples."'))])
         )
       })
+    },
+    {
+      // Gleiche Idee wie Martins Fakultät-Beispiel in der Definition von MARTIN GOES
+      id: 'martin', level: 2, codeLang: 'mg',
+      title: { de: 'MARTIN GOES: Fakultät', en: 'MARTIN GOES: factorial' },
+      desc: {
+        de: 'Öffnet den Reiter Code mit MARTIN GOES – Variablen werden Zellen, die Schleife wird zu E- und G-Sprüngen.',
+        en: 'Opens the Code tab in MARTIN GOES – variables become cells, the loop becomes E and G jumps.'
+      },
+      build: (L) => ({
+        main: S(
+          NOTE(L('MARTIN GOES: Reiter Code zeigt dieses Programm als Zellen und Sprünge (Definition in der Hilfe).',
+            'MARTIN GOES: the Code tab shows this program as cells and jumps (definition in the help).')),
+          decl('integer', 'n', '0', L('Zelle 0', 'cell 0')),
+          decl('integer', 'ergebnis', '1', L('Zelle 1', 'cell 1')),
+          inp('"n = "', 'n'),
+          WHILE('n != 0',
+            set('ergebnis', 'ergebnis * n', L('wird zu  M 1 0', 'becomes  M 1 0')),
+            set('n', 'n - 1', L('wird zu  R 0 #1', 'becomes  R 0 #1'))),
+          out(L('"Fakultät: " + ergebnis', '"Factorial: " + ergebnis'))
+        )
+      })
     }
   ];
 

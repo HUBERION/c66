@@ -170,6 +170,7 @@ Der ursprüngliche Blockbild-Editor wurde von **Stefan Egger** und **Michael Del
 eingesetzt: [eggers97/block-diagram-editor](https://github.com/eggers97/block-diagram-editor) (GPL-3.0).
 Idee, Bedienkonzept und das `.bb`-Dateiformat stammen von ihnen – vielen Dank für diese Grundlage!
 
+Die Idee, den Editor als **Version 3.0** neu zu bauen, stammt von **Martin Huber** – danke dafür!
 Version 3 ist eine Neuentwicklung; aus dem alten Projekt wurde kein Code übernommen.
 Im Editor stehen die Credits unter *Einstellungen* und am Ende der *Hilfe*.
 

@@ -70,7 +70,7 @@
     const TEMP0 = K0 + KCELLS;
     let maxTemp = 0, maxK = 0;
     const usedReg = new Set();
-    let usesHeap = false, usesStack = false;
+    let usesHeap = false, usesStack = false, usesEnd = false;
     const usedHelp = new Set();
     const callSites = [];
 
@@ -309,6 +309,7 @@
       const b = String(temp(ctx)), q = String(temp(ctx)), sq = String(temp(ctx)), sr = String(temp(ctx)), diff = String(temp(ctx));
       const aPos = newLabel(), bChk = newLabel(), bPos = newLabel(), loop = newLabel(), done = newLabel(), aNeg = newLabel(), bNeg = newLabel();
       emit('S', [b, d], op === '/' ? tr('mgCmtDiv') : tr('mgCmtMod'));
+      usesEnd = true;
       emit('E', [b, END]);                // Division durch 0 → Programmende
       emit('S', [q, '#0']);
       emit('S', [sq, '#1']);
@@ -345,6 +346,14 @@
       if (s.k === 'un' && s.op === '!') { condJump(ctx, s.a, no, yes); return; }
       if (s.k === 'bin' && ['==', '!=', '<', '<=', '>', '>='].includes(s.op)) {
         if (typeOf(ctx, s.a) === 'string' || typeOf(ctx, s.b) === 'string') { textCond(ctx, s, yes, no); return; }
+        // Vergleich mit 0 direkt mit E:  n != 0  →  E n …
+        const zero = (x) => strip(x).k === 'num' && strip(x).v === 0;
+        if ((s.op === '==' || s.op === '!=') && (zero(s.a) || zero(s.b))) {
+          const v = val(ctx, zero(s.b) ? s.a : s.b);
+          emit('E', [v, s.op === '==' ? yes : no]);
+          emit('G', [s.op === '==' ? no : yes]);
+          return;
+        }
         const swap = s.op === '<=' || s.op === '>';
         const d = temp(ctx), D = String(d);
         emit('S', [D, val(ctx, swap ? s.b : s.a)]);
@@ -631,6 +640,7 @@
     // ------------------------------------------------------------ Eingebaute Text-Routinen
 
     function genHelpers() {
+      if (!usedHelp.size) return;
       const K = (i) => String(K0 + i);
       const X1 = reg('X1'), X2 = reg('X2'), RV = reg('RV'), HP = reg('HP'), HR = reg('HR'), RID = reg('RID');
       const ret = () => { emit('S', [RID, HR]); emit('G', [RET]); };
@@ -754,8 +764,7 @@
       callSites.forEach((l) => { emit('R', [RID, '#1']); emit('E', [RID, l]); });
       emit('T');
     }
-    label(END);
-    emit('T');
+    if (usesEnd) { label(END); emit('T'); }
 
     // Startwerte für Stapel und Halde vor das Hauptprogramm
     const heapBase = Math.ceil((TEMP0 + maxTemp + 1) / 100) * 100;
@@ -773,6 +782,13 @@
         if (j < code.length && code[j].label === c.args[0]) { code.splice(i, 1); i--; }
       }
     }
+    // Labels, zu denen nie gesprungen wird, weglassen (Unterprogramme und Routinen behalten ihren Namen)
+    const target = new Set();
+    for (const c of code) {
+      if (c.op === 'G') target.add(c.args[0]);
+      if (c.op === 'E') target.add(c.args[1]);
+    }
+    for (const c of code) if (c.label && /^(L|zu)\d+$/.test(c.label) && !target.has(c.label)) c.label = null;
 
     // Ausgabe
     const out = ['; ' + tr('mgHeader1'), '; ' + tr('mgHeader2'), ';'];
@@ -780,9 +796,9 @@
     if (textStored) cells.unshift('0 = ' + tr('mgEmptyText'));
     if (cells.length) out.push('; ' + tr('mgCells') + ' ' + cells.join(', '));
     const regs = Object.entries(R).filter(([k]) => usedReg.has(k)).map(([k, c]) => c + ' = ' + k);
-    if (maxK) regs.push(K0 + '…' + (K0 + maxK - 1) + ' = ' + tr('mgHelpCells'));
-    if (maxTemp) regs.push(TEMP0 + '…' + (TEMP0 + maxTemp - 1) + ' = ' + tr('mgTemps'));
-    if (regs.length) out.push('; ' + tr('mgRegs') + ' ' + regs.join(', '));
+    const span = (a, b) => (a === b ? String(a) : a + '…' + b);
+    if (maxK) regs.push(span(K0, K0 + maxK - 1) + ' = ' + tr('mgHelpCells'));
+    if (maxTemp) regs.push(span(TEMP0, TEMP0 + maxTemp - 1) + ' = ' + tr('mgTemps'));
     const uniq = [...new Set(unsupported)];
     if (uniq.length) out.push(';', '; ⚠ ' + uniq.join(' '));
     out.push('');
