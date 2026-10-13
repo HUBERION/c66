@@ -201,6 +201,46 @@
       kw: words('identification division program-id data working-storage local-storage linkage section procedure using by content reference value pic occurs move to compute display accept with no advancing if else end-if evaluate when other end-evaluate perform varying from until test after forever end-perform exit call goback stop run end program recursive initialize not and or continue on exception end-accept spaces true'),
       types: words('function concatenate trim trailing length numval rem integer-part test-numval'),
       line: '*>', block: false, pp: /^\s*>>/, quotes: '"', ci: true, word: /^[A-Za-z_][\w-]*/
+    },
+    bash: {
+      kw: words('if then else elif fi for while until do done case esac in function return break continue local declare true false'),
+      types: words('printf read echo main'),
+      line: '#', block: false, pp: /^#!/, quotes: '"\''
+    },
+    csh: {
+      kw: words('if then else endif while end foreach switch case breaksw endsw default goto set setenv unset shift exit break continue'),
+      types: words('printf echo'),
+      line: '#', block: false, pp: /^#!/, quotes: '"\''
+    },
+    lua: {
+      kw: words('local function return if then elseif else end while do for in repeat until break and or not nil true false'),
+      types: words('print io math string table tostring tonumber utf8'),
+      line: '--', block: false, pp: false, quotes: '"\''
+    },
+    rust: {
+      kw: words('fn let mut if else while loop for in match return break continue use as ref true false struct impl pub const'),
+      types: words('i32 i64 usize String Vec str bool std io println print format'),
+      line: '//', block: true, pp: /^\s*#!?\[/, quotes: '"'
+    },
+    asm: {
+      kw: words('mov add sub imul idiv cwd cmp jmp je jne jl jle jg jge jz jnz call ret push pop int inc dec neg lea xor and or not test loop org section db dw times equ'),
+      types: words('ax bx cx dx si di bp sp al ah bl bh cl ch dl dh cs ds es ss word byte'),
+      line: ';', block: false, pp: false, quotes: '"\'', ci: true
+    },
+    basic: {
+      kw: words('if then else elseif end sub function dim as declare call do loop while wend until for to step next select case is print input line let return exit shared byval'),
+      types: words('integer long string mid ltrim rtrim str val len ubound'),
+      line: '\'', block: false, pp: false, quotes: '"', ci: true, word: /^[A-Za-z_][\w$&]*/
+    },
+    rpg: {
+      kw: words('ctl-opt dcl-s dcl-c dcl-ds dcl-proc end-proc dcl-pi end-pi dcl-pr end-pr if elseif else endif dow dou enddo for to downto by endfor select when other endsl return leave iter monitor on-error endmon dsply inz const value dim'),
+      types: words('int varchar char ind %char %int %rem %div %len %trim %elem'),
+      line: '//', block: false, pp: /^\*\*free/i, quotes: '\'', ci: true, word: /^[%A-Za-z_][\w-]*/
+    },
+    mg: {
+      kw: words('M A R T I N G O E S'),
+      types: words(''),
+      line: ';', block: false, pp: false, quotes: '', word: /^[A-Za-z_]\w*:?/
     }
   };
 

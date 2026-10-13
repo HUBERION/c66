@@ -26,18 +26,25 @@
     { grp: 'grp.misc', items: ['call', 'comment'] }
   ];
   const STATEMENT_KINDS = ['decl', 'assign', 'input', 'output', 'if', 'switch', 'while', 'for', 'until', 'call', 'comment'];
+  // Export-Sprachen: group = Gruppe in der Auswahlliste (code.group.*), gen = Modul BBE.<gen>, exp = Menütext
   const CODE_LANGS = [
-    { id: 'c', label: 'C', ext: '.c', mime: 'text/x-c' },
-    { id: 'cpp', label: 'C++', ext: '.cpp', mime: 'text/x-c++src' },
-    { id: 'cs', label: 'C#', ext: '.cs', mime: 'text/x-csharp' },
-    { id: 'java', label: 'Java', ext: '.java', mime: 'text/x-java' },
-    { id: 'python', label: 'Python', ext: '.py', mime: 'text/x-python' },
-    { id: 'js', label: 'JS', ext: '.js', mime: 'text/javascript' },
-    { id: 'fortran', label: 'Fortran', ext: '.f90', mime: 'text/x-fortran' },
-    { id: 'cobol', label: 'COBOL', ext: '.cob', mime: 'text/x-cobol' }
-  ];
-  const CODE_GEN = { cpp: 'cppgen', python: 'pygen', js: 'jsgen', fortran: 'fortgen', cobol: 'cobolgen', c: 'cgen' };
-  const LINE_COMMENT = { python: '# ', fortran: '! ', cobol: '*> ' };
+    { id: 'c', label: 'C', ext: '.c', mime: 'text/x-c', group: 'main', gen: 'cgen', exp: 'exp.c' },
+    { id: 'cpp', label: 'C++', ext: '.cpp', mime: 'text/x-c++src', group: 'main', gen: 'cppgen', exp: 'exp.cpp' },
+    { id: 'cs', label: 'C#', ext: '.cs', mime: 'text/x-csharp', group: 'main', gen: 'csgen', exp: 'exp.cs' },
+    { id: 'java', label: 'Java', ext: '.java', mime: 'text/x-java', group: 'main', gen: 'javagen', exp: 'exp.java' },
+    { id: 'python', label: 'Python', ext: '.py', mime: 'text/x-python', group: 'main', gen: 'pygen', exp: 'exp.py', cmt: '# ' },
+    { id: 'js', label: 'JavaScript', ext: '.js', mime: 'text/javascript', group: 'main', gen: 'jsgen', exp: 'exp.js' },
+    { id: 'bash', label: 'bash', ext: '.sh', mime: 'text/x-sh', group: 'script', gen: 'bashgen', exp: 'exp.sh', cmt: '# ' },
+    { id: 'csh', label: 'csh', ext: '.csh', mime: 'text/x-sh', group: 'script', gen: 'cshgen', exp: 'exp.csh', cmt: '# ' },
+    { id: 'lua', label: 'Lua', ext: '.lua', mime: 'text/x-lua', group: 'script', gen: 'luagen', exp: 'exp.lua', cmt: '-- ' },
+    { id: 'rust', label: 'Rust', ext: '.rs', mime: 'text/x-rust', group: 'system', gen: 'rustgen', exp: 'exp.rs' },
+    { id: 'asm', label: 'x86-Assembler (MS-DOS)', ext: '.asm', mime: 'text/x-asm', group: 'system', gen: 'asmgen', exp: 'exp.asm', cmt: '; ' },
+    { id: 'fortran', label: 'Fortran', ext: '.f90', mime: 'text/x-fortran', group: 'classic', gen: 'fortgen', exp: 'exp.f90', cmt: '! ' },
+    { id: 'cobol', label: 'COBOL', ext: '.cob', mime: 'text/x-cobol', group: 'classic', gen: 'cobolgen', exp: 'exp.cob', cmt: '*> ' },
+    { id: 'basic', label: 'BASIC', ext: '.bas', mime: 'text/x-basic', group: 'classic', gen: 'basicgen', exp: 'exp.bas', cmt: "' " },
+    { id: 'rpg', label: 'RPG IV', ext: '.rpgle', mime: 'text/plain', group: 'classic', gen: 'rpggen', exp: 'exp.rpgle' },
+    { id: 'mg', label: 'MARTIN GOES', ext: '.mg', mime: 'text/plain', group: 'teach', gen: 'mggen', exp: 'exp.mg', cmt: '; ' }
+  ].filter((l) => BBE[l.gen]);
 
   const defaults = {
     lang: I18N.detect(), theme: 'system', layout: 'bb', colors: true, addresses: false,
@@ -221,13 +228,11 @@
     copyBtn.addEventListener('click', async () => { const ok = await copyText(currentCode()); toast(ok ? t('code.copied') : t('dlg.copy')); });
     const dlBtn = h('button.btn.sm', { type: 'button', title: t('code.download') }, icon('download'), h('span.lbl-hide', null, t('code.download')));
     dlBtn.addEventListener('click', () => exportCode(codeLang()));
-    // Sprachwahl für den Export
-    el.langSeg = h('div.lang-seg', { role: 'radiogroup', 'aria-label': t('code.lang') },
-      CODE_LANGS.map((l) => {
-        const b = h('button', { type: 'button', role: 'radio', dataset: { lang: l.id } }, l.label);
-        b.addEventListener('click', () => { S.settings.codeLang = l.id; saveSettings(); renderCode(); });
-        return b;
-      }));
+    // Sprachwahl für den Export (Auswahlliste mit Gruppen)
+    el.langSeg = h('select.lang-select', { 'aria-label': t('code.lang'), title: t('code.lang') },
+      [...new Set(CODE_LANGS.map((l) => l.group))].map((g) => h('optgroup', { label: t('code.group.' + g) },
+        CODE_LANGS.filter((l) => l.group === g).map((l) => h('option', { value: l.id }, l.label)))));
+    el.langSeg.addEventListener('change', () => { S.settings.codeLang = el.langSeg.value; saveSettings(); renderCode(); });
     const codePanel = h('div.side-panel', { dataset: { panel: 'code' }, hidden: true },
       h('div.pane-head.code-head', null, el.langSeg, h('div.pane-actions', null, copyBtn, dlBtn)),
       h('div.code-wrap', null, el.code));
@@ -451,12 +456,12 @@
     if (S.codeStale || !S.codeCache) { S.codeCache = {}; S.codeStale = false; }
     if (!(lang in S.codeCache)) {
       try {
-        if (lang === 'java') S.codeCache[lang] = BBE.javagen.generate(S.program, { t, className: javaClass() });
-        else if (lang === 'cs') S.codeCache[lang] = BBE.csgen.generate(S.program, { t, className: javaClass() });
-        else S.codeCache[lang] = BBE[CODE_GEN[lang] || 'cgen'].generate(S.program, { t });
+        const L = CODE_LANGS.find((x) => x.id === lang) || CODE_LANGS[0];
+        S.codeCache[lang] = BBE[L.gen].generate(S.program, { t, className: javaClass() });
       } catch (e) {
         console.error(e);
-        S.codeCache[lang] = (LINE_COMMENT[lang] || '// ') + t('rInternal', e.message) + '\n';
+        const L = CODE_LANGS.find((x) => x.id === lang);
+        S.codeCache[lang] = ((L && L.cmt) || '// ') + t('rInternal', e.message) + '\n';
       }
     }
     return S.codeCache[lang];
@@ -465,7 +470,7 @@
 
   function renderCode() {
     const lang = codeLang();
-    if (el.langSeg) el.langSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.lang === lang; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+    if (el.langSeg && el.langSeg.value !== lang) el.langSeg.value = lang;
     const code = currentCode(lang);
     if (el.code.dataset.lang !== lang) { el.code.dataset.lang = lang; el.code.dataset.src = ''; }
     if (el.code.dataset.src !== code) {
@@ -1178,14 +1183,9 @@
       { label: t('exp.bb'), icon: 'save', key: kb('Strg+S'), action: saveFile },
       { label: t('exp.copyBB'), icon: 'clipboard', action: async () => { const ok = await copyText(bbText()); toast(ok ? t('toast.copied') : t('dlg.copy')); } },
       '-',
-      { label: t('exp.c'), icon: 'code', action: exportC },
-      { label: t('exp.cpp'), icon: 'code', action: () => exportCode('cpp') },
-      { label: t('exp.cs'), icon: 'code', action: () => exportCode('cs') },
-      { label: t('exp.java'), icon: 'code', action: () => exportCode('java') },
-      { label: t('exp.py'), icon: 'code', action: () => exportCode('python') },
-      { label: t('exp.js'), icon: 'code', action: () => exportCode('js') },
-      { label: t('exp.f90'), icon: 'code', action: () => exportCode('fortran') },
-      { label: t('exp.cob'), icon: 'code', action: () => exportCode('cobol') },
+      // die verbreiteten Sprachen direkt, die gewählte Sprache des Code-Reiters, alle anderen über den Reiter
+      ...CODE_LANGS.filter((l) => l.group === 'main' || l.id === codeLang()).map((l) => ({ label: t(l.exp), icon: 'code', action: () => exportCode(l.id) })),
+      { label: t('exp.more'), icon: 'code', action: () => { setSide('code'); if (el.langSeg) el.langSeg.focus(); } },
       { label: t('exp.png'), icon: 'image', action: exportPng }
     ];
     if (store.getRaw(KEY_OLD)) items.push('-', { label: t('exp.recoverOld'), icon: 'history', action: recoverOld });
@@ -1595,7 +1595,7 @@
     if (dlNs === undefined) { try { dlNs = await G.claude.use('downloads'); } catch (e) { dlNs = null; } }
     if (!dlNs) return 'none';
     // nur bestimmte Endungen sind im Viewer erlaubt
-    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob)$/, '.$1.txt');
+    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob|sh|csh|lua|rs|bas|asm|rpgle|mg)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
   }
 

@@ -19,10 +19,20 @@ const tools = {
   cs: ok('dotnet', ['--list-sdks']),
   js: true
 };
-const unix = (cmd) => (ok(cmd, ['--version']) ? 'native' : (win && ok('wsl', ['-e', cmd, '--version']) ? 'wsl' : null));
-tools.cpp = unix('g++');
-tools.fortran = unix('gfortran');
-tools.cobol = unix('cobc');
+const unix = (cmd) => (ok('sh', ['-c', 'command -v ' + cmd]) && !win ? 'native' : (win && ok('wsl', ['sh', '-c', 'command -v ' + cmd]) ? 'wsl' : null));
+// Sprachen, die (unter Windows über WSL) übersetzt/ausgeführt werden. $f = Quelldatei, $n = Name ohne Endung.
+// gen = Modul BBE.<gen>; fehlt das Modul oder das Werkzeug, wird die Sprache übersprungen.
+const UNIX_LANGS = [
+  { id: 'cpp', tag: 'cpp', ext: '.cpp', gen: 'cppgen', tool: 'g++', compile: 'g++ -std=c++11 -Wall -Wextra -o "/tmp/bbe_$n" "$f"' },
+  { id: 'fortran', tag: 'f90', ext: '.f90', gen: 'fortgen', tool: 'gfortran', compile: 'gfortran -std=f2008 -Wall -Wextra -o "/tmp/bbe_$n" "$f"' },
+  { id: 'cobol', tag: 'cob', ext: '.cob', gen: 'cobolgen', tool: 'cobc', compile: 'cp "$f" /tmp/bbe_prog.cob && cobc -x -Wall -o "/tmp/bbe_$n" /tmp/bbe_prog.cob' },
+  { id: 'bash', tag: 'sh', ext: '.sh', gen: 'bashgen', tool: 'bash', compile: 'bash -n "$f"', run: 'bash "$f"' },
+  { id: 'csh', tag: 'csh', ext: '.csh', gen: 'cshgen', tool: 'tcsh', compile: 'true', run: 'tcsh -f "$f"' },
+  { id: 'lua', tag: 'lua', ext: '.lua', gen: 'luagen', tool: 'lua5.4', compile: 'luac5.4 -p "$f"', run: 'lua5.4 "$f"' },
+  { id: 'rust', tag: 'rs', ext: '.rs', gen: 'rustgen', tool: 'rustc', compile: 'rustc -O -C strip=symbols -o "/tmp/bbe_$n" "$f"' },
+  { id: 'basic', tag: 'bas', ext: '.bas', gen: 'basicgen', tool: 'fbc', compile: 'fbc -lang qb -x "/tmp/bbe_$n" "$f"' }
+];
+for (const L of UNIX_LANGS) tools[L.id] = BBE[L.gen] ? unix(L.tool) : null;
 // nur bestimmte Sprachen prüfen:  BBE_ONLY=cobol,fortran node tests/export.cjs
 if (process.env.BBE_ONLY) for (const k of Object.keys(tools)) if (!process.env.BBE_ONLY.split(',').includes(k)) tools[k] = null;
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'bbe-export-'));
@@ -66,9 +76,47 @@ function stripPrompts(stdout, prompts) {
   return s.replace(/\n$/, '').split('\n').filter((l, i, a) => !(a.length === 1 && l === ''));
 }
 
+/**
+ * MARTIN GOES kennt nur Zahlen: erwartet werden die Zahlen-Teile jeder Ausgabe, je eine Zeile.
+ * Dazu läuft die Simulation mit einem umgebauten Programm (Ausgabe "Summe: " + s → Ausgabe s).
+ */
+function mgExpected(c) {
+  const program = BBE.model.programFromBB(JSON.parse(JSON.stringify(c.bb)));
+  let k = 0;
+  for (const fn of program.fns) {
+    const scope = BBE.analyze.scopeOf(fn);
+    const fix = (seq) => {
+      if (!seq) return;
+      for (let i = seq.length - 1; i >= 0; i--) {
+        const n = seq[i];
+        ['then', 'else', 'body'].forEach((f) => fix(n[f]));
+        if (n.cases) n.cases.forEach((cs) => fix(cs.body));
+        if (n.kind !== 'output') continue;
+        const parts = [];
+        const walk = (a) => {
+          const s = BBE.expr.strip(a);
+          if (s.k === 'bin' && s.op === '+' && BBE.analyze.typeOf(s, scope) === 'string') { walk(s.a); walk(s.b); } else parts.push(s);
+        };
+        try { walk(BBE.expr.parseCached(n.expr)); } catch (e) { continue; }
+        const nums = parts.filter((p) => BBE.analyze.typeOf(p, scope) === 'integer');
+        seq.splice(i, 1, ...nums.map((p) => ({ id: 'mg' + (++k), kind: 'output', expr: BBE.analyze.exprText(p), comment: '' })));
+      }
+    };
+    fix(fn.body);
+  }
+  const out = [];
+  const it = new BBE.interp.Interpreter(program, { output: (s) => out.push(s) });
+  const gen = it.run();
+  const queue = c.inputs.slice();
+  let send, r;
+  while (!(r = gen.next(send)).done) { send = undefined; if (r.value.type === 'input') send = queue.shift(); }
+  return out;
+}
+
 // ------------------------------------------------------------------ Simulation + Quelltexte erzeugen
 const csDir = path.join(work, 'cs');
-const dirs = { cpp: path.join(work, 'cpp'), fortran: path.join(work, 'f90'), cobol: path.join(work, 'cob') };
+const dirs = {};
+for (const L of UNIX_LANGS) dirs[L.id] = path.join(work, L.tag);
 fs.mkdirSync(csDir);
 for (const d of Object.values(dirs)) fs.mkdirSync(d);
 for (const c of cases) {
@@ -92,10 +140,16 @@ for (const c of cases) {
   fs.writeFileSync(path.join(work, c.name, c.cls + '.java'), BBE.javagen.generate(program, { t: BBE.i18n.t, className: c.cls }));
   fs.writeFileSync(path.join(csDir, c.cls + '.cs'), BBE.csgen.generate(program, { t: BBE.i18n.t, className: c.cls }));
   fs.writeFileSync(path.join(work, c.name + '.js'), BBE.jsgen.generate(program, { t: BBE.i18n.t }));
-  fs.writeFileSync(path.join(dirs.cpp, c.name + '.cpp'), BBE.cppgen.generate(program, { t: BBE.i18n.t }));
-  fs.writeFileSync(path.join(dirs.fortran, c.name + '.f90'), BBE.fortgen.generate(program, { t: BBE.i18n.t }));
-  if (BBE.cobolgen) fs.writeFileSync(path.join(dirs.cobol, c.name + '.cob'), BBE.cobolgen.generate(program, { t: BBE.i18n.t }));
-  for (const d of Object.values(dirs)) fs.writeFileSync(path.join(d, c.name + '.in'), c.stdin);
+  for (const L of UNIX_LANGS) {
+    if (!tools[L.id]) continue;
+    try { fs.writeFileSync(path.join(dirs[L.id], c.name + L.ext), BBE[L.gen].generate(program, { t: BBE.i18n.t, className: c.cls })); }
+    catch (e) { c.results.push(L.tag.toUpperCase() + '-ERROR Generator: ' + e.message); }
+    fs.writeFileSync(path.join(dirs[L.id], c.name + '.in'), c.stdin);
+  }
+  if (BBE.mggen) {
+    c.mg = BBE.mggen.generate(program, { t: BBE.i18n.t, report: true });
+    c.mgExpected = mgExpected(c);
+  }
 }
 
 const compare = (c, label, stdout) => {
@@ -158,9 +212,11 @@ class Runner { static void Main(string[] a) {
 }
 
 // ------------------------------------------------------------------ C++, Fortran, COBOL (unter Windows über WSL)
-function runUnix(lang, ext, compile) {
+function runUnix(L) {
+  const { id: lang, ext, compile } = L;
   const dir = dirs[lang];
-  const script = 'ulimit -f 20000; cd "$1"; for f in *' + ext + '; do n=${f%' + ext + '}; if ' + compile + ' 2> "$n.err"; then timeout 10 "/tmp/bbe_$n" < "$n.in" > "$n.out" 2>> "$n.err"; ' +
+  const run = L.run || '"/tmp/bbe_$n"';
+  const script = 'ulimit -f 20000; cd "$1"; for f in *' + ext + '; do n=${f%' + ext + '}; if ' + compile + ' 2> "$n.err"; then timeout 10 ' + run + ' < "$n.in" > "$n.out" 2>> "$n.err"; ' +
     'echo $? > "$n.code"; else echo compile > "$n.code"; fi; done';
   fs.writeFileSync(path.join(dir, 'run.sh'), script);
   if (tools[lang] === 'wsl') {
@@ -169,8 +225,9 @@ function runUnix(lang, ext, compile) {
   } else {
     spawnSync('sh', [path.join(dir, 'run.sh'), dir], { encoding: 'utf8' });
   }
-  const tag = { cpp: 'cpp', fortran: 'f90', cobol: 'cob' }[lang];
+  const tag = L.tag;
   for (const c of cases) {
+    if (!fs.existsSync(path.join(dir, c.name + ext))) continue;
     const read = (e) => { const p = path.join(dir, c.name + e); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''; };
     const code = read('.code').trim();
     const err = read('.err').split('\n').filter((l) => !/_FORTIFY_SOURCE|command-line>/.test(l)).join('\n').trim();
@@ -181,9 +238,66 @@ function runUnix(lang, ext, compile) {
     if (code !== 'compile' && w.length) c.results.push(tag + '-warn: ' + w[0].replace(/^.*?[Ww]arning: /, '').slice(0, 120));
   }
 }
-if (tools.cpp) runUnix('cpp', '.cpp', 'g++ -std=c++11 -Wall -Wextra -o "/tmp/bbe_$n" "$f"');
-if (tools.fortran) runUnix('fortran', '.f90', 'gfortran -std=f2008 -Wall -Wextra -o "/tmp/bbe_$n" "$f"');
-if (tools.cobol && BBE.cobolgen) runUnix('cobol', '.cob', 'cp "$f" /tmp/bbe_prog.cob && cobc -x -Wall -o "/tmp/bbe_$n" /tmp/bbe_prog.cob');
+for (const L of UNIX_LANGS) if (tools[L.id]) runUnix(L);
+
+// ------------------------------------------------------------------ x86-Assembler für MS-DOS (asmgen.js): nasm + DOSBox
+// Jedes Programm wird mit "nasm -f bin" zu Pnn.COM übersetzt und in DOSBox ohne Fenster ausgeführt
+// (SDL_VIDEODRIVER=dummy, [autoexec]: "Pnn < Pnn.IN > Pnn.OUT" und exit). DOS kennt nur 8.3-Dateinamen.
+tools.asm = BBE.asmgen && (!process.env.BBE_ONLY || process.env.BBE_ONLY.split(',').includes('asm')) ? unix('nasm') : null;
+if (tools.asm && !(tools.asm === 'wsl' ? ok('wsl', ['sh', '-c', 'command -v dosbox']) : ok('sh', ['-c', 'command -v dosbox']))) tools.asm = null;
+if (tools.asm) {
+  const dir = path.join(work, 'asm');
+  fs.mkdirSync(dir);
+  cases.forEach((c, i) => {
+    c.dos = 'P' + String(i + 1).padStart(3, '0');
+    BBE.i18n.lang = c.lang;
+    const program = BBE.model.programFromBB(JSON.parse(JSON.stringify(c.bb)));
+    try { fs.writeFileSync(path.join(dir, c.dos + '.asm'), BBE.asmgen.generate(program, { t: BBE.i18n.t })); }
+    catch (e) { c.results.push('ASM-ERROR Generator: ' + e.message); }
+    fs.writeFileSync(path.join(dir, c.dos + '.IN'), c.stdin.replace(/\n/g, '\r\n'));
+  });
+  // ein DOSBox-Start je Programm; timeout schützt vor Endlosschleifen
+  const script = [
+    'cd "$1"',
+    'for f in P*.asm; do',
+    '  n=${f%.asm}',
+    '  if nasm -f bin -o "$n.COM" "$f" 2> "$n.err"; then',
+    '    printf "[sdl]\\noutput=surface\\n[cpu]\\ncycles=max\\n[mixer]\\nnosound=true\\n[speaker]\\npcspeaker=false\\n[autoexec]\\nmount c \\"%s\\"\\nc:\\n%s < %s.IN > %s.OUT\\nexit\\n" "$PWD" "$n" "$n" "$n" > "$n.conf"',
+    '    SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy timeout 30 dosbox -conf "$n.conf" > /dev/null 2>&1',
+    '    echo $? > "$n.code"',
+    '  else echo compile > "$n.code"; fi',
+    'done'
+  ].join('\n');
+  fs.writeFileSync(path.join(dir, 'run.sh'), script);
+  if (tools.asm === 'wsl') {
+    const wp = spawnSync('wsl', ['wslpath', '-a', dir.replace(/\\/g, '/')], { encoding: 'utf8' }).stdout.trim();
+    spawnSync('wsl', ['sh', wp + '/run.sh', wp], { encoding: 'utf8', env: Object.assign({}, process.env, { MSYS_NO_PATHCONV: '1' }) });
+  } else spawnSync('sh', [path.join(dir, 'run.sh'), dir], { encoding: 'utf8' });
+  const files = fs.readdirSync(dir);
+  for (const c of cases) {
+    if (!c.dos) continue;
+    const read = (e) => { const f = files.find((x) => x.toUpperCase() === (c.dos + e).toUpperCase()); return f ? fs.readFileSync(path.join(dir, f), 'utf8') : null; };
+    const code = (read('.code') || '').trim();
+    const out = read('.OUT');
+    if (code === 'compile') c.results.push('ASM-COMPILE ' + (read('.err') || '').trim().split('\n').slice(0, 2).join(' | ').slice(0, 300));
+    else if (code === '124') c.results.push('ASM-ERROR timeout');
+    else if (out === null) c.results.push('ASM-ERROR keine Ausgabe (DOSBox exit ' + code + ')');
+    else compare(c, 'asm', out);
+  }
+}
+
+// ------------------------------------------------------------------ MARTIN GOES (eigener Interpreter in mggen.js)
+tools.mg = BBE.mggen && (!process.env.BBE_ONLY || process.env.BBE_ONLY.split(',').includes('mg'));
+if (tools.mg) {
+  for (const c of cases) {
+    if (c.mg.unsupported.length) { c.results.push('mg – (Text)'); continue; }
+    const queue = c.inputs.slice();
+    const got = [];
+    const r = BBE.mggen.run(c.mg.code, { input: () => (queue.length ? BigInt(Math.trunc(Number(queue.shift()))) : null), output: (v) => got.push(v.toString()) });
+    if (r.error) c.results.push('MG-ERROR ' + r.error);
+    else c.results.push(JSON.stringify(got) === JSON.stringify(c.mgExpected) ? 'mg ok' : 'MG-DIFF ' + JSON.stringify(got) + ' vs ' + JSON.stringify(c.mgExpected));
+  }
+}
 
 // ------------------------------------------------------------------ Ergebnis
 let fail = 0;

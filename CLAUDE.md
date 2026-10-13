@@ -30,7 +30,8 @@ exportieren sie als C-Code. Zielgruppe: Unterricht in Österreich, daher **Deuts
    - Typen intern `integer|string|integer[]|string[]`; beim Laden werden auch alte Anzeigenamen
      (`Number`, `Zahl`, `Text[]` …) akzeptiert (`model.normType`).
    - Die Ergebnisvariable heißt immer `result` (im alten DE-Modus hieß sie `resultat`, war dort aber kaputt).
-3. **Simulation = C = C++ = C# = Java = Python = JavaScript = Fortran = COBOL.** Gleiche Eingaben müssen gleiche Ausgaben liefern.
+3. **Simulation = alle Export-Sprachen** (C, C++, C#, Java, Python, JavaScript, bash, csh, Lua, Rust, x86-DOS, Fortran, COBOL,
+   BASIC, RPG, MARTIN GOES – bei MARTIN GOES nur die Zahlen). Gleiche Eingaben müssen gleiche Ausgaben liefern.
    Das ist durch Tests abgesichert (siehe unten) – nach Änderungen an `interp.js`, `cgen.js` oder
    `pyimport.js` immer die Tests laufen lassen und den C-Code mit gcc übersetzen.
 4. **Bedienbar auf Desktop, Tablet und Handy** (Touch: Antippen fügt ein, langes Drücken zieht).
@@ -55,6 +56,14 @@ js/core/            ohne DOM, auch in Node lauffähig (Tests!)
   jsgen.js          Übersetzung nach JavaScript (Node.js/Browser, InOut wie Python als Rückgabe)
   fortgen.js        Übersetzung nach Fortran 2008 (contains, allocatable, intent(inout))
   cobolgen.js       Übersetzung nach COBOL (GnuCOBOL, freies Format, ein Programm je Unterprogramm)
+  bashgen.js        bash 4.3+ (Arrays als Namensreferenz auf globale Felder _aN, Rückgabe über _ret)
+  cshgen.js         csh/tcsh (keine Funktionen: goto + Rücksprungliste bb_ret + eigener Stapel)
+  luagen.js         Lua 5.3+ (Tabellen ab 0, Länge in .n, InOut als Rückgabewerte)
+  rustgen.js        Rust (i64/String/Vec, InOut &mut, Array-Elemente als Kopie)
+  asmgen.js         x86-Assembler für MS-DOS (NASM, .COM, 8086, 16 Bit, eigene Laufzeitbibliothek)
+  basicgen.js       BASIC im QBasic-Stil (für FreeBASIC -lang qb)
+  rpggen.js         RPG IV **FREE (IBM i 7.3+, DSPLY) – nicht ausführbar getestet
+  mggen.js          MARTIN GOES (Lehrmaschine von Martin) + Interpreter BBE.mggen.run
   examples.js       eingebaute Beispiele (im .bb-Format, Texte je Sprache über L(de, en))
   pyimport.js       Python → Blockbild (eigener Tokenizer/Parser für die Schul-Teilmenge)
 js/ui/              Oberfläche
@@ -108,7 +117,7 @@ FALLS mit Text → `if/else if`, verschachtelte Deklarationen werden an den Funk
 Bekannte harmlose gcc-Hinweise mit `-Wall -Wextra`: `-Wformat-truncation` bei `snprintf`, ungenutzter
 `…Size`-Parameter, wenn ein Unterprogramm die Array-Länge nicht braucht.
 
-### Export nach C++, C#, Java, Python, JavaScript, Fortran, COBOL (cppgen, csgen, javagen, pygen, jsgen, fortgen, cobolgen)
+### Export in weitere Sprachen (je ein Generator js/core/*gen.js)
 
 Reiter *Code* hat eine Sprachwahl (`settings.codeLang`, Liste `CODE_LANGS` + `CODE_GEN` in app.js, Farben in `panels.js` LANGS),
 *Exportieren* bietet alle Downloads.
@@ -139,6 +148,28 @@ Reiter *Code* hat eine Sprachwahl (`settings.codeLang`, Liste `CODE_LANGS` + `CO
   Namen: reservierte Wörter (Liste aus `cobc --list-reserved`) bekommen `-V`. cobc-Eigenheit: `COMPUTE … NUMVAL` im
   Hilfsprogramm nach einem Programm mit `FUNCTION REM` erzeugte C-Code mit unbekanntem `cob_decimal` → dort `MOVE` statt `COMPUTE`.
   cobc warnt bei `CALL … BY REFERENCE A(J + 1) A(J + 2)` (»duplicate USING item«) – harmlos.
+- **bash:** Zahlen in `$(( ))`, Arrays: Inhalt in globalen Feldern `_a1, _a2 …`, Variable = `local -n` darauf, Übergabe als
+  `"${!name}"` (so stören gleichnamige lokale Variablen bei Rekursion nicht). Rückgabe + InOut nach dem Aufruf aus `_ret`.
+  Kommazahl-Faktor `x * 1.25` → `x * 5 / 4`. Textvergleiche `<`/`>` mit `LC_COLLATE=C`.
+- **csh:** Unterprogramme = Labels, Aufruf legt Rücksprung-Nr. auf `bb_ret`, Ende `goto bb_return`. Blöcke mit Aufrufen werden
+  komplett mit goto geschrieben (in ein csh-`while` kann man nicht zurückspringen). Variablen global mit Vorsilbe des
+  Unterprogramms, bei Rekursion Sichern auf `bb_stack`. Leere Wörter verschwinden in csh-Listen → Elemente mit `x`-Präfix.
+  Läuft mit tcsh -f und BSD csh -f. Braucht sh/awk/expr.
+- **Lua:** Tabellen ab Index 0, Länge in `.n`, `idiv` für Division wie C, Bedingungen explizit (`x ~= 0`, 0 ist in Lua wahr).
+- **Rust:** `i64`, `&mut` für InOut; Array-Elemente als InOut (`tausche(a[j], a[j+1])`) über Kopie + Zurückschreiben, weil Rust
+  zwei `&mut` auf denselben Vec verbietet. `#![allow(...)]` oben gegen Namens-/Unused-Warnungen.
+- **x86-DOS:** NASM `org 100h`, nur 8086-Befehle (bedingte Sprünge ±127 Byte → `jcc .ok / jmp ziel`). Rahmen mit BP, Parameter
+  von links nach rechts, `ret n`. Texte = Längenbyte + 255 Zeichen, Heap wächst nach oben, Stack ab FFFEh. Test: DOSBox headless
+  (`SDL_VIDEODRIVER=dummy`, autoexec `P001 < P001.IN > P001.OUT`), eigener Abschnitt in tests/export.cjs.
+- **BASIC:** QBasic-Stil. bwbasic (apt, 2.20) ist unbrauchbar und gefährlich (reicht unbekannte Zeilen an sh weiter) –
+  Testwerkzeug ist FreeBASIC `fbc -lang qb` (nicht in apt). QBasic wertet AND/OR immer ganz aus → Bedingungen mit
+  Array-Zugriff rechts werden schrittweise mit Hilfsvariable gebaut.
+- **RPG:** ohne IBM i nicht ausführbar; Ausgabe über `DSPLY` in 52-Zeichen-Stücken, Texte `varchar(256)`, Arrays `dim(1000)`.
+  Unsicherheiten stehen im Kopf von rpggen.js.
+- **MARTIN GOES:** Definition in Hilfe und README. Hauptprogramm-Variablen = Zellen 0, 1, …; danach SP, FP, HP, RV, RID und
+  Zwischenzellen. `<` per Zählschleife (signJump), `/` und `%` durch wiederholtes Abziehen, Unterprogramme mit Rahmen ab
+  Zelle 1000000 und Rücksprung über die Nummer in RID (Label `zurueck`). Texte gibt es nicht: `generate(p, {report: true})`
+  liefert `unsupported`; der Test vergleicht nur die Zahlen-Teile der Ausgaben (`mgExpected` in tests/export.cjs).
 - Alle Generatoren: erst alle Hilfsfunktionen definieren, `run()` am Ende aufrufen (const-Funktionen sind vorher
   nicht initialisiert).
 
@@ -159,8 +190,10 @@ node tools/serve.cjs                 # Entwicklung: http://localhost:8765/  (ind
 node tests/unit.cjs                  # 24 Grenzfälle: Parser, Interpreter, Prüfung, .bb-Format
 node tests/examples.cjs [ordner]     # alle eingebauten Beispiele DE+EN; mit Ordner: .c + .in schreiben
 node tests/python.cjs                # Python-Beispiele: Ausgabe von echtem Python vs. übersetztem Blockbild
-node tests/export.cjs [alte-.bb]     # Export: python, javac/java, dotnet (ein Projekt), node, g++/gfortran/cobc (auch über WSL)
-                                     # gegen die Simulation; nur einzelne Sprachen: BBE_ONLY=cobol,fortran node tests/export.cjs
+node tests/export.cjs [alte-.bb]     # Export: alle Sprachen gegen die Simulation (python, javac, dotnet, node; in WSL: g++, gfortran, cobc,
+                                     # bash, tcsh, lua5.4, rustc, nasm+dosbox, fbc; MARTIN GOES mit eigenem Interpreter). Tabelle UNIX_LANGS.
+                                     # WSL-Pakete: sudo apt install g++ gfortran gnucobol lua5.4 nasm tcsh csh rustc dosbox
+                                     # nur einzelne Sprachen: BBE_ONLY=cobol,fortran,mg node tests/export.cjs
 node tests/smoke-original.cjs <ordner-mit-alten-.bb>   # Original-Beispiele des 2.x-Editors
 sh tests/compile-c.sh <ordner>       # (Linux/WSL) gcc -std=c99 -Wall -Wextra + Ausführen mit .in-Dateien
 node tools/build.mjs                 # vor jedem Commit: dist/blockbild-editor.html neu bauen
@@ -207,3 +240,4 @@ Automatische Sicherung im `localStorage` (`bbe3.autosave`, `bbe3.settings`); das
 - C-Export: ungenutzte `…Size`-Parameter mit `(void)` markieren; optional `double` statt `int`.
 - Mehr Python-Testprogramme in `tests/python/` (jede neue Fähigkeit mit einem Vergleich gegen echtes Python absichern).
 - Tests für die Oberfläche (bisher nur manuell im Browser bzw. per Skript gegen `BBE.app.api`).
+- BASIC-Export mit FreeBASIC (`fbc -lang qb`) testen – bisher nur von Hand geprüft; RPG auf einem echten IBM i übersetzen.

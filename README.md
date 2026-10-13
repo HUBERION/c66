@@ -45,7 +45,17 @@ der alten Version wiederherstellen* das zuletzt automatisch gesicherte Diagramm 
   `strcmp` für Textvergleiche, `snprintf` für Verkettungen, `scanf(" %254[^\n]")` statt `gets`,
   Zeiger für InOut-Zahlen, Größenvariablen für Arrays, FALLS mit Text als `if`/`else if`
 
-**Export nach C, C++, C#, Java, Python, JavaScript, Fortran und COBOL**
+**Export in 16 Sprachen** – C, C++, C#, Java, Python, JavaScript, bash, csh, Lua, Rust, x86-Assembler (MS-DOS), Fortran,
+COBOL, BASIC, RPG IV und MARTIN GOES (Auswahlliste im Reiter *Code*)
+- bash 4.3+: Funktionen mit `local`, Arrays als Namensreferenz (`local -n`), Rückgabe/InOut über `_ret`
+- csh/tcsh: keine Funktionen – Unterprogramme sind Sprungmarken (`goto`), Rücksprung über eine Liste, Rekursion mit eigenem Stapel
+- Lua 5.3+: Arrays als Tabelle ab Index 0 (Länge in `.n`), InOut als Rückgabewerte, Division wie C
+- Rust: `i64`, `String`, `Vec`, InOut als `&mut` (zwei Elemente desselben Arrays werden kopiert und zurückgeschrieben)
+- x86-Assembler (NASM, MS-DOS .COM, 8086): 16-Bit-Zahlen, Stapelrahmen mit BP, Texte mit Längenbyte, Arrays auf dem Heap,
+  kleine Laufzeitbibliothek (INT 21h); getestet mit DOSBox
+- BASIC im QBasic-Stil (SUB/FUNCTION, SELECT CASE, `\` und `MOD`) – für FreeBASIC `fbc -lang qb` gedacht
+- RPG IV (vollständig freies Format, IBM i 7.3+): Prozeduren, `varchar`, `dim(1000)`, Ein-/Ausgabe über `DSPLY`
+- MARTIN GOES: Zellen, ganze Zahlen und Sprünge (Definition unten); nur Programme ohne Texte lassen sich vollständig übersetzen
 - JavaScript: läuft mit `node datei.js` (oder im Browser über `prompt`), InOut-Werte werden zurückgegeben (`[x, y] = tausche(x, y)`)
 - Fortran 2008: ein Programm mit `contains`, Texte als `character(len=:), allocatable`, Arrays ab Index 0, InOut als `intent(inout)`
 - COBOL (GnuCOBOL 3, freies Format): jedes Unterprogramm ein eigenes `RECURSIVE`-Programm, `CALL … USING BY CONTENT/BY REFERENCE`,
@@ -55,8 +65,34 @@ der alten Version wiederherstellen* das zuletzt automatisch gesicherte Diagramm 
 - Reiter *Code* mit Sprachwahl, Download über *Exportieren*
 - Java: eine Klasse mit statischen Methoden, `Scanner` für Eingaben, InOut-Zahlen über ein Array mit einem Element
 - Python 3.10+: f-Strings, `range`, `match/case`; InOut-Werte werden zurückgegeben (`x, y = tausche(x, y)`)
-- `node tests/export.cjs` übersetzt 44 Programme, führt sie mit echtem Python, javac/java, dotnet, node, g++, gfortran und cobc aus
-  und vergleicht mit der Simulation
+- `node tests/export.cjs` übersetzt 44 Programme, führt sie mit echtem Python, javac/java, dotnet, node, g++, gfortran, cobc,
+  bash, tcsh, lua5.4, rustc, nasm + DOSBox und dem MARTIN-GOES-Interpreter aus und vergleicht mit der Simulation
+  (BASIC nur mit installiertem FreeBASIC; RPG lässt sich ohne IBM i nicht ausführen)
+
+**MARTIN GOES** (Lehrmaschine, Definition: Martin)
+- Speicher: unendlich viele Zellen 0, 1, 2, …; jede Zelle hält eine beliebig große ganze Zahl (auch negativ), am Anfang 0.
+- Programm: eine Liste von Befehlen mit optionalen Labels (`name:`), Kommentare mit `;`. Die Ausführung startet beim ersten
+  Befehl und läuft der Reihe nach, außer ein Sprung lenkt um. Läuft das Programm über den letzten Befehl hinaus, endet es wie bei `T`.
+- Operanden: `#5` Konstante 5 (nur als Quelle), `5` Zelle 5, `@5` Zelle, deren Adresse in Zelle 5 steht (indirekt – macht Arrays,
+  Stapel und „Band“ möglich).
+- Befehle: `M x y` (Multiply, x := x · y), `A x y` (Add, x := x + y), `R x y` (Reduce, x := x − y), `T` (Terminate),
+  `I x` (Input), `N x` (Negate, x := −x), `G L` (Goto), `O x` (Output), `E x L` (Equal zero? – wenn x = 0, springe zu L),
+  `S x y` (Set/Store, x := y).
+- Turing-vollständig: `A x #1`, `R x #1` und `E` auf unbegrenzten Zellen ergeben eine Minsky-Maschine; M, N, G, S, I und O sind Komfort.
+- Beispiel Fakultät (Eingabe 5 → 120):
+  ```
+        I  0          ; n einlesen
+        S  1 #1       ; ergebnis := 1
+  loop: E  0 ende     ; n = 0? -> fertig
+        M  1 0        ; ergebnis := ergebnis · n
+        R  0 #1       ; n := n − 1
+        G  loop
+  ende: O  1          ; ergebnis ausgeben
+        T
+  ```
+- Übersetzung aus dem Blockbild: „kleiner als“ über eine Zählschleife (E prüft nur auf 0), Division durch wiederholtes Abziehen,
+  Unterprogramme mit Rahmen auf einem Stapel ab Zelle 1000000 und Rücksprung über eine Nummer, Arrays auf einer Halde.
+  Ein Interpreter steckt in `js/core/mggen.js` (`BBE.mggen.run`).
 
 **Python → Blockbild**
 - *Öffnen* nimmt auch `.py`-Dateien: Zuweisungen, `input`/`print`, f-Strings, `if/elif/else`, `while`,
