@@ -611,6 +611,19 @@ body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-sele
 .side-toggle:hover { background: var(--surface-3); color: var(--fg); }
 .side-toggle svg { width: 18px; height: 18px; transform: rotate(-90deg); }
 .main.side-collapsed { grid-template-columns: 236px minmax(0, 1fr) 52px; }
+/* Gezogene Breite der rechten Leiste (Griff am linken Rand) */
+.main.side-sized:not(.side-collapsed) { grid-template-columns: 236px minmax(0, 1fr) var(--side-w); }
+.side { position: relative; }
+.side-resizer {
+  position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; z-index: 5; cursor: col-resize; touch-action: none;
+}
+.side-resizer::after {
+  content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 2px; background: var(--accent);
+  opacity: 0; transition: opacity .16s ease;
+}
+.side-resizer:hover::after, body.resizing .side-resizer::after { opacity: .7; }
+body.resizing { cursor: col-resize; user-select: none; }
+.side-collapsed .side-resizer { display: none; }
 .side-collapsed .side { grid-template-rows: minmax(0, 1fr); }
 .side-collapsed .side-tabs { flex-direction: column; align-items: center; padding: 10px 6px; gap: 6px; border-bottom: 0; }
 .side-collapsed .side-tab { top: 0; width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 9px; border: 1px solid transparent; position: relative; }
@@ -883,6 +896,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 @media (max-width: 1180px) {
   .main { grid-template-columns: 200px minmax(0, 1fr) minmax(290px, 330px); }
   .main.side-collapsed { grid-template-columns: 200px minmax(0, 1fr) 52px; }
+  .main.side-sized:not(.side-collapsed) { grid-template-columns: 200px minmax(0, 1fr) var(--side-w); }
   .palette { padding-left: 12px; padding-right: 8px; }
   .pal-item .pal-desc { display: none; }
   .btn .lbl-hide { display: none; }
@@ -891,7 +905,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 @media (max-width: 900px) {
   html, body { height: 100%; overflow: hidden; }
   .app { height: 100%; height: 100dvh; }
-  .main, .main.side-collapsed { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) minmax(0, 42%); }
+  .main, .main.side-collapsed, .main.side-sized:not(.side-collapsed) { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) minmax(0, 42%); }
+  .side-resizer { display: none; }
   .main.side-collapsed { grid-template-rows: auto minmax(0, 1fr) auto; }
   .palette {
     border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; overflow-x: auto; overflow-y: hidden;
@@ -941,7 +956,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 @media (max-width: 560px) {
   .run-panel { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
   .run-panel .pane + .pane { border-left: 0; border-top: 1px solid var(--line); }
-  .main, .main.side-collapsed { grid-template-rows: auto minmax(0, 1fr) minmax(0, 46%); }
+  .main, .main.side-collapsed, .main.side-sized:not(.side-collapsed) { grid-template-rows: auto minmax(0, 1fr) minmax(0, 46%); }
   .main.side-collapsed { grid-template-rows: auto minmax(0, 1fr) auto; }
   .side-tab { padding: 0 9px; }
   .side-tab .tab-ic { display: none; }
@@ -955,7 +970,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 
 /* Handy quer: wenig Höhe – Ablauf rechts neben dem Diagramm */
 @media (max-width: 900px) and (max-height: 520px) {
-  .main, .main.side-collapsed { grid-template-columns: minmax(0, 1fr) minmax(0, 40%); grid-template-rows: auto minmax(0, 1fr); }
+  .main, .main.side-collapsed, .main.side-sized:not(.side-collapsed) { grid-template-columns: minmax(0, 1fr) minmax(0, 40%); grid-template-rows: auto minmax(0, 1fr); }
   .main.side-collapsed { grid-template-columns: minmax(0, 1fr) auto; }
   .palette { grid-column: 1 / -1; padding-block: 5px; }
   .pal-item { padding-block: 3px; }
@@ -1112,7 +1127,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     'st.ready': 'Bereit', 'st.running': 'Läuft', 'st.paused': 'Pausiert', 'st.input': 'Wartet auf Eingabe', 'st.done': 'Beendet',
     'st.error': 'Fehler', 'st.breakpoint': 'Haltepunkt', 'st.steps': '{0} Schritte', 'st.saved': 'Automatisch gesichert',
     'st.ok': 'Keine Probleme', 'st.problems': '{0} Fehler', 'st.warnings': '{0} Hinweise', 'st.problems.1': '1 Fehler', 'st.warnings.1': '1 Hinweis', 'st.zoom': 'Zoom',
-    'side.collapse': 'Seitenleiste einklappen', 'side.expand': 'Seitenleiste ausklappen',
+    'side.collapse': 'Seitenleiste einklappen', 'side.resize': 'Ziehen ändert die Breite, Doppelklick stellt sie zurück', 'side.expand': 'Seitenleiste ausklappen',
 
     // Dialoge
     'dlg.ok': 'OK', 'dlg.cancel': 'Abbrechen', 'dlg.close': 'Schließen', 'dlg.apply': 'Übernehmen',
@@ -1414,7 +1429,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     'st.ready': 'Ready', 'st.running': 'Running', 'st.paused': 'Paused', 'st.input': 'Waiting for input', 'st.done': 'Finished',
     'st.error': 'Error', 'st.breakpoint': 'Breakpoint', 'st.steps': '{0} steps', 'st.saved': 'Saved automatically',
     'st.ok': 'No problems', 'st.problems': '{0} errors', 'st.warnings': '{0} notes', 'st.problems.1': '1 error', 'st.warnings.1': '1 note', 'st.zoom': 'Zoom',
-    'side.collapse': 'Collapse side panel', 'side.expand': 'Expand side panel',
+    'side.collapse': 'Collapse side panel', 'side.resize': 'Drag to change the width, double-click to reset', 'side.expand': 'Expand side panel',
 
     'dlg.ok': 'OK', 'dlg.cancel': 'Cancel', 'dlg.close': 'Close', 'dlg.apply': 'Apply',
     'dlg.newTitle': 'Start a new diagram?', 'dlg.newText': 'The current diagram will be discarded. Unsaved changes are lost.',
@@ -15504,7 +15519,29 @@ done: O  1          ; output result
     el.sideToggle = h('button.side-toggle', { type: 'button' }, icon('chevron'));
     el.sideToggle.addEventListener('click', () => setSideCollapsed(!S.settings.sideCollapsed));
     const sideTabs = h('div.side-tabs', { role: 'tablist' }, sideTab('run', 'play', t('side.run')), sideTab('code', 'code', t('side.code')), tabProblems, el.sideToggle);
-    el.side = h('aside.side', null, sideTabs, runPanel, codePanel, probPanel);
+    // Griff am linken Rand: Breite der rechten Leiste ziehen (Doppelklick = Standardbreite)
+    const resizer = h('div.side-resizer', { role: 'separator', 'aria-orientation': 'vertical', title: t('side.resize') });
+    el.side = h('aside.side', null, resizer, sideTabs, runPanel, codePanel, probPanel);
+    resizer.addEventListener('pointerdown', (ev) => {
+      if (ev.button !== 0) return;
+      ev.preventDefault();
+      resizer.setPointerCapture(ev.pointerId);
+      document.body.classList.add('resizing');
+      const right = el.main.getBoundingClientRect().right;
+      const max = () => Math.max(300, el.main.clientWidth - el.palette.offsetWidth - 320);
+      const move = (e) => setSideWidth(Math.round(Math.min(max(), Math.max(260, right - e.clientX))), false);
+      const up = () => {
+        resizer.removeEventListener('pointermove', move);
+        resizer.removeEventListener('pointerup', up);
+        resizer.removeEventListener('pointercancel', up);
+        document.body.classList.remove('resizing');
+        saveSettings();
+      };
+      resizer.addEventListener('pointermove', move);
+      resizer.addEventListener('pointerup', up);
+      resizer.addEventListener('pointercancel', up);
+    });
+    resizer.addEventListener('dblclick', () => { setSideWidth(0, true); });
     for (const bar of [topbar, el.palette, el.tabs, sideTabs]) hScroll(bar);
 
     // ---- Statusleiste
@@ -15554,6 +15591,7 @@ done: O  1          ; output result
     updateSpeedLabel();
     setSide(S.settings.side || 'run', true);
     setSideCollapsed(!!S.settings.sideCollapsed);
+    setSideWidth(+S.settings.sideWidth || 0, false);
   }
 
   // Einmalige globale Ereignisse
@@ -15667,6 +15705,14 @@ done: O  1          ; output result
     renderTabs();
     renderCanvas();
     if (!keepScroll) el.canvas.scrollTo({ top: 0, left: 0 });
+  }
+
+  /** Breite der rechten Leiste in px (0 = Standard aus dem CSS). */
+  function setSideWidth(w, save) {
+    S.settings.sideWidth = w || 0;
+    el.main.classList.toggle('side-sized', !!w);
+    if (w) el.main.style.setProperty('--side-w', w + 'px'); else el.main.style.removeProperty('--side-w');
+    if (save) saveSettings();
   }
 
   function setSideCollapsed(v) {

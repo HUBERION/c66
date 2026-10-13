@@ -601,6 +601,19 @@ body.is-selecting, body.is-selecting * { cursor: crosshair !important; user-sele
 .side-toggle:hover { background: var(--surface-3); color: var(--fg); }
 .side-toggle svg { width: 18px; height: 18px; transform: rotate(-90deg); }
 .main.side-collapsed { grid-template-columns: 236px minmax(0, 1fr) 52px; }
+/* Gezogene Breite der rechten Leiste (Griff am linken Rand) */
+.main.side-sized:not(.side-collapsed) { grid-template-columns: 236px minmax(0, 1fr) var(--side-w); }
+.side { position: relative; }
+.side-resizer {
+  position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; z-index: 5; cursor: col-resize; touch-action: none;
+}
+.side-resizer::after {
+  content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 2px; background: var(--accent);
+  opacity: 0; transition: opacity .16s ease;
+}
+.side-resizer:hover::after, body.resizing .side-resizer::after { opacity: .7; }
+body.resizing { cursor: col-resize; user-select: none; }
+.side-collapsed .side-resizer { display: none; }
 .side-collapsed .side { grid-template-rows: minmax(0, 1fr); }
 .side-collapsed .side-tabs { flex-direction: column; align-items: center; padding: 10px 6px; gap: 6px; border-bottom: 0; }
 .side-collapsed .side-tab { top: 0; width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 9px; border: 1px solid transparent; position: relative; }
@@ -873,6 +886,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 @media (max-width: 1180px) {
   .main { grid-template-columns: 200px minmax(0, 1fr) minmax(290px, 330px); }
   .main.side-collapsed { grid-template-columns: 200px minmax(0, 1fr) 52px; }
+  .main.side-sized:not(.side-collapsed) { grid-template-columns: 200px minmax(0, 1fr) var(--side-w); }
   .palette { padding-left: 12px; padding-right: 8px; }
   .pal-item .pal-desc { display: none; }
   .btn .lbl-hide { display: none; }
@@ -881,7 +895,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 @media (max-width: 900px) {
   html, body { height: 100%; overflow: hidden; }
   .app { height: 100%; height: 100dvh; }
-  .main, .main.side-collapsed { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) minmax(0, 42%); }
+  .main, .main.side-collapsed, .main.side-sized:not(.side-collapsed) { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) minmax(0, 42%); }
+  .side-resizer { display: none; }
   .main.side-collapsed { grid-template-rows: auto minmax(0, 1fr) auto; }
   .palette {
     border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; overflow-x: auto; overflow-y: hidden;
@@ -931,7 +946,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 @media (max-width: 560px) {
   .run-panel { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
   .run-panel .pane + .pane { border-left: 0; border-top: 1px solid var(--line); }
-  .main, .main.side-collapsed { grid-template-rows: auto minmax(0, 1fr) minmax(0, 46%); }
+  .main, .main.side-collapsed, .main.side-sized:not(.side-collapsed) { grid-template-rows: auto minmax(0, 1fr) minmax(0, 46%); }
   .main.side-collapsed { grid-template-rows: auto minmax(0, 1fr) auto; }
   .side-tab { padding: 0 9px; }
   .side-tab .tab-ic { display: none; }
@@ -945,7 +960,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 
 /* Handy quer: wenig Höhe – Ablauf rechts neben dem Diagramm */
 @media (max-width: 900px) and (max-height: 520px) {
-  .main, .main.side-collapsed { grid-template-columns: minmax(0, 1fr) minmax(0, 40%); grid-template-rows: auto minmax(0, 1fr); }
+  .main, .main.side-collapsed, .main.side-sized:not(.side-collapsed) { grid-template-columns: minmax(0, 1fr) minmax(0, 40%); grid-template-rows: auto minmax(0, 1fr); }
   .main.side-collapsed { grid-template-columns: minmax(0, 1fr) auto; }
   .palette { grid-column: 1 / -1; padding-block: 5px; }
   .pal-item { padding-block: 3px; }

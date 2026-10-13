@@ -243,7 +243,29 @@
     el.sideToggle = h('button.side-toggle', { type: 'button' }, icon('chevron'));
     el.sideToggle.addEventListener('click', () => setSideCollapsed(!S.settings.sideCollapsed));
     const sideTabs = h('div.side-tabs', { role: 'tablist' }, sideTab('run', 'play', t('side.run')), sideTab('code', 'code', t('side.code')), tabProblems, el.sideToggle);
-    el.side = h('aside.side', null, sideTabs, runPanel, codePanel, probPanel);
+    // Griff am linken Rand: Breite der rechten Leiste ziehen (Doppelklick = Standardbreite)
+    const resizer = h('div.side-resizer', { role: 'separator', 'aria-orientation': 'vertical', title: t('side.resize') });
+    el.side = h('aside.side', null, resizer, sideTabs, runPanel, codePanel, probPanel);
+    resizer.addEventListener('pointerdown', (ev) => {
+      if (ev.button !== 0) return;
+      ev.preventDefault();
+      resizer.setPointerCapture(ev.pointerId);
+      document.body.classList.add('resizing');
+      const right = el.main.getBoundingClientRect().right;
+      const max = () => Math.max(300, el.main.clientWidth - el.palette.offsetWidth - 320);
+      const move = (e) => setSideWidth(Math.round(Math.min(max(), Math.max(260, right - e.clientX))), false);
+      const up = () => {
+        resizer.removeEventListener('pointermove', move);
+        resizer.removeEventListener('pointerup', up);
+        resizer.removeEventListener('pointercancel', up);
+        document.body.classList.remove('resizing');
+        saveSettings();
+      };
+      resizer.addEventListener('pointermove', move);
+      resizer.addEventListener('pointerup', up);
+      resizer.addEventListener('pointercancel', up);
+    });
+    resizer.addEventListener('dblclick', () => { setSideWidth(0, true); });
     for (const bar of [topbar, el.palette, el.tabs, sideTabs]) hScroll(bar);
 
     // ---- Statusleiste
@@ -293,6 +315,7 @@
     updateSpeedLabel();
     setSide(S.settings.side || 'run', true);
     setSideCollapsed(!!S.settings.sideCollapsed);
+    setSideWidth(+S.settings.sideWidth || 0, false);
   }
 
   // Einmalige globale Ereignisse
@@ -406,6 +429,14 @@
     renderTabs();
     renderCanvas();
     if (!keepScroll) el.canvas.scrollTo({ top: 0, left: 0 });
+  }
+
+  /** Breite der rechten Leiste in px (0 = Standard aus dem CSS). */
+  function setSideWidth(w, save) {
+    S.settings.sideWidth = w || 0;
+    el.main.classList.toggle('side-sized', !!w);
+    if (w) el.main.style.setProperty('--side-w', w + 'px'); else el.main.style.removeProperty('--side-w');
+    if (save) saveSettings();
   }
 
   function setSideCollapsed(v) {

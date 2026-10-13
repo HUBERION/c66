@@ -86,7 +86,7 @@
     'st.ready': 'Bereit', 'st.running': 'Läuft', 'st.paused': 'Pausiert', 'st.input': 'Wartet auf Eingabe', 'st.done': 'Beendet',
     'st.error': 'Fehler', 'st.breakpoint': 'Haltepunkt', 'st.steps': '{0} Schritte', 'st.saved': 'Automatisch gesichert',
     'st.ok': 'Keine Probleme', 'st.problems': '{0} Fehler', 'st.warnings': '{0} Hinweise', 'st.problems.1': '1 Fehler', 'st.warnings.1': '1 Hinweis', 'st.zoom': 'Zoom',
-    'side.collapse': 'Seitenleiste einklappen', 'side.expand': 'Seitenleiste ausklappen',
+    'side.collapse': 'Seitenleiste einklappen', 'side.resize': 'Ziehen ändert die Breite, Doppelklick stellt sie zurück', 'side.expand': 'Seitenleiste ausklappen',
 
     // Dialoge
     'dlg.ok': 'OK', 'dlg.cancel': 'Abbrechen', 'dlg.close': 'Schließen', 'dlg.apply': 'Übernehmen',
@@ -388,7 +388,7 @@
     'st.ready': 'Ready', 'st.running': 'Running', 'st.paused': 'Paused', 'st.input': 'Waiting for input', 'st.done': 'Finished',
     'st.error': 'Error', 'st.breakpoint': 'Breakpoint', 'st.steps': '{0} steps', 'st.saved': 'Saved automatically',
     'st.ok': 'No problems', 'st.problems': '{0} errors', 'st.warnings': '{0} notes', 'st.problems.1': '1 error', 'st.warnings.1': '1 note', 'st.zoom': 'Zoom',
-    'side.collapse': 'Collapse side panel', 'side.expand': 'Expand side panel',
+    'side.collapse': 'Collapse side panel', 'side.resize': 'Drag to change the width, double-click to reset', 'side.expand': 'Expand side panel',
 
     'dlg.ok': 'OK', 'dlg.cancel': 'Cancel', 'dlg.close': 'Close', 'dlg.apply': 'Apply',
     'dlg.newTitle': 'Start a new diagram?', 'dlg.newText': 'The current diagram will be discarded. Unsaved changes are lost.',

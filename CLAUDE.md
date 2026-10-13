@@ -226,7 +226,8 @@ Commit-Stil bisher: deutsche Betreffzeile, kurze Aufzählung im Text.
 ## Bedienkonzept (Kurzfassung)
 
 Palette links (Klick fügt nach dem markierten Block ein, Ziehen legt gezielt ab; SONST/FALL dockt an WENN/FALLS an),
-Zeichenfläche mit Zoom, Reiter pro Unterprogramm, rechts Ablauf (Stack + Konsole) / C-Code / Prüfung.
+Zeichenfläche mit Zoom, Reiter pro Unterprogramm, rechts Ablauf (Stack + Konsole) / Code / Prüfung (Breite am linken Rand
+ziehbar, `settings.sideWidth`, Doppelklick = Standard).
 Blöcke verschieben (Strg = kopieren), auf den Baukasten ziehen = löschen, Auswahlrahmen auf freier Fläche,
 Kontextmenü bzw. ⋯/Aktionsleiste (Touch), Undo/Redo, Haltepunkte (F9), Darstellung „Blockbild“ (Beschriftung
 links, wie der Vorgänger) oder „Nassi-Shneiderman“ (Zweige nebeneinander), hell/dunkel, DE/EN.
