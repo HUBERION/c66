@@ -106,7 +106,7 @@
   <p>Alle Übersetzungen rechnen wie C mit ganzen Zahlen (<code>7 / 2</code> ergibt 3). Einschränkungen: x86-Assembler rechnet mit
   16 Bit (−32768 … 32767), COBOL und RPG kennen höchstens 1000 Array-Elemente, RPG gibt über <code>DSPLY</code> aus
   (höchstens 52 Zeichen pro Zeile), csh kennt keine Funktionen (Unterprogramme werden zu Sprungmarken mit <code>goto</code>),
-  MARTIN GOES kennt keine Texte.</p>
+  MARTIN GOES rechnet nur mit ganzen Zahlen (Texte ja, Kommazahlen nein).</p>
   <p>
   In C++ werden InOut-Parameter zu Referenzen (<code>int&amp; a</code>), in C# zu <code>ref</code>, in Fortran zu <code>intent(inout)</code>,
   in COBOL zu <code>BY REFERENCE</code>. JavaScript läuft mit <code>node datei.js</code>, Fortran mit <code>gfortran</code>,
@@ -119,11 +119,13 @@
 </section>
 <section id="h-mg">
   <h3>MARTIN GOES</h3>
-  <p>MARTIN GOES ist eine kleine Lehrmaschine (Definition: Martin): nur Zellen, ganze Zahlen und Sprünge.
+  <p>MARTIN GOES ist eine kleine Lehrmaschine (Definition: Martin): Zellen, ganze Zahlen, Texte und Sprünge.
   Der Code-Reiter übersetzt ein Blockbild in diese Sprache – so sieht man, was ein Compiler aus WENN, Schleifen,
-  Unterprogrammen und Arrays macht.</p>
+  Unterprogrammen, Arrays und Texten macht.</p>
   <h4>Speicher</h4>
   <p>Unendlich viele Zellen 0, 1, 2, … Jede Zelle hält eine beliebig große ganze Zahl, auch negativ, und ist am Anfang 0.</p>
+  <p><b>Texte</b> liegen ebenfalls in Zellen: ab Zelle a steht zuerst die Länge n, in den Zellen a+1 … a+n folgen die
+  Zeichencodes (Unicode, z. B. 65 = „A“). Eine Zelle mit 0 ist also auch ein leerer Text.</p>
   <h4>Programm</h4>
   <p>Eine Liste von Befehlen mit optionalen Labels (<code>name:</code>). Die Ausführung startet beim ersten Befehl und läuft
   der Reihe nach, außer ein Sprung lenkt um. Läuft das Programm über den letzten Befehl hinaus, endet es wie bei <code>T</code>.
@@ -134,8 +136,11 @@
     <tr><td><code>#5</code></td><td>Konstante 5 (nur als Quelle)</td></tr>
     <tr><td><code>5</code></td><td>Zelle 5</td></tr>
     <tr><td><code>@5</code></td><td>Zelle, deren Adresse in Zelle 5 steht (indirekt)</td></tr>
+    <tr><td><code>"Hallo"</code></td><td>Textkonstante (nur als Quelle); <code>\n</code> = Zeilenumbruch, <code>\"</code> = Anführungszeichen, <code>\</code> = Backslash</td></tr>
+    <tr><td><code>$5</code></td><td>der Text, der ab Zelle 5 steht</td></tr>
+    <tr><td><code>$@5</code></td><td>der Text ab der Adresse, die in Zelle 5 steht</td></tr>
   </table>
-  <p>Das indirekte <code>@</code> macht Arrays, Stapel und „Band“ möglich.</p>
+  <p>Das indirekte <code>@</code> macht Arrays, Stapel, Texte und „Band“ möglich.</p>
   <h4>Befehle</h4>
   <table>
     <tr><th>Befehl</th><th>Name</th><th>Wirkung</th></tr>
@@ -143,13 +148,18 @@
     <tr><td><code>A x y</code></td><td>Add</td><td>x := x + y</td></tr>
     <tr><td><code>R x y</code></td><td>Reduce</td><td>x := x − y</td></tr>
     <tr><td><code>T</code></td><td>Terminate</td><td>Programm beenden</td></tr>
-    <tr><td><code>I x</code></td><td>Input</td><td>Zahl einlesen nach x</td></tr>
+    <tr><td><code>I x</code></td><td>Input</td><td>eine Zeile lesen; ganze Zahl nach x (ungültig oder Ende der Eingabe → 0)</td></tr>
+    <tr><td><code>I $x</code></td><td>Input</td><td>eine Zeile als Text ab Zelle x ablegen (Länge, dann Zeichen)</td></tr>
     <tr><td><code>N x</code></td><td>Negate</td><td>x := −x</td></tr>
     <tr><td><code>G L</code></td><td>Goto</td><td>springe zu Label L</td></tr>
-    <tr><td><code>O x</code></td><td>Output</td><td>x ausgeben</td></tr>
+    <tr><td><code>O x</code></td><td>Output</td><td>Zahl x ausgeben</td></tr>
+    <tr><td><code>O "…"</code> / <code>O $x</code></td><td>Output</td><td>Text ausgeben (Konstante bzw. ab Zelle x)</td></tr>
     <tr><td><code>E x L</code></td><td>Equal zero?</td><td>wenn x = 0, springe zu L</td></tr>
     <tr><td><code>S x y</code></td><td>Set/Store</td><td>x := y (kopieren, mit @ auch Laden/Speichern)</td></tr>
+    <tr><td><code>S $x "…"</code></td><td>Set/Store</td><td>Textkonstante ab Zelle x ablegen</td></tr>
   </table>
+  <p><code>O</code> schreibt <b>ohne Zeilenumbruch</b>; einen Umbruch erzeugt <code>O "\n"</code>.
+  Texte sind keine neuen Befehle, nur neue Operanden – die Buchstaben bleiben M A R T I N G O E S.</p>
   <p><b>Turing-Vollständigkeit:</b> <code>A x #1</code>, <code>R x #1</code> und <code>E</code> auf unbegrenzten Zellen ergeben eine
   Minsky-Maschine, und die ist Turing-vollständig. M, N, G, S, I und O sind Komfort.</p>
   <h4>Beispiel: Fakultät</h4>
@@ -162,9 +172,19 @@ loop: E  0 ende     ; n = 0? -&gt; fertig
 ende: O  1          ; ergebnis ausgeben
       T</pre>
   <p>Bei Eingabe 5 kommt 120 heraus.</p>
+  <h4>Beispiel: Begrüßung</h4>
+  <pre>      O  "Wie heißt du? "
+      I  $100       ; Text ab Zelle 100
+      O  "Hallo "
+      O  $100
+      O  "! Dein Name hat "
+      O  100        ; Zelle 100 = Länge
+      O  " Zeichen.\n"
+      T</pre>
   <h4>So übersetzt der Editor</h4>
   <ul>
-    <li>Variablen des Hauptprogramms liegen in den Zellen 0, 1, 2, … (der Kopf des Programms zeigt, welche Zelle welche Variable ist).</li>
+    <li>Variablen des Hauptprogramms liegen in den Zellen 0, 1, 2, … (der Kopf des Programms zeigt, welche Zelle welche Variable ist).
+    Kommen Texte vor, bleibt Zelle 0 frei: sie ist immer 0 und dient als leerer Text.</li>
     <li><b>Vergleiche:</b> <code>E</code> prüft nur auf 0. „Kleiner als“ wird mit einer Schleife nachgebaut: die Differenz d wird
     gleichzeitig hinauf- und hinuntergezählt (d+k, d−k) – wird zuerst d−k zu 0, war d ≥ 0, sonst war d &lt; 0.</li>
     <li><b>Division und Rest</b> entstehen durch wiederholtes Abziehen (Ergebnis Richtung 0 abgeschnitten, wie in C).</li>
@@ -173,8 +193,10 @@ ende: O  1          ; ergebnis ausgeben
     das die Rücksprung-Nummer mit <code>E</code>-Befehlen der richtigen Aufrufstelle zuordnet. InOut-Parameter bekommen die
     Adresse der Variablen – Zugriff mit <code>@</code>. Rekursion funktioniert.</li>
     <li><b>Arrays</b> liegen auf einer Halde: erst die Länge, dann die Elemente. Die Variable enthält die Adresse.</li>
-    <li><b>Texte</b> gibt es nicht: Text-Teile von Ausgaben werden zu Kommentaren, die Zahlen darin werden ausgegeben.
-    Text-Variablen, -Eingaben und -Vergleiche lassen sich nicht übersetzen (Hinweis im Kopf des Programms).</li>
+    <li><b>Texte</b> liegen ebenfalls auf der Halde und werden nie verändert – eine Text-Variable enthält die Adresse.
+    Ausgaben werden Stück für Stück geschrieben (<code>O "Summe: "</code>, <code>O 5</code>, <code>O "\n"</code>).
+    Für Verkettung, Zahl → Text und Textvergleich gibt es drei eingebaute Routinen am Ende des Programms
+    (<code>txt_cat</code>, <code>txt_num</code>, <code>txt_cmp</code>). Text → Zahl lässt sich nicht übersetzen.</li>
   </ul>
 </section>
 <section id="h-files">
@@ -320,7 +342,7 @@ ende: O  1          ; ergebnis ausgeben
   </table>
   <p>All translations compute with whole numbers like C (<code>7 / 2</code> gives 3). Limits: x86 assembler uses 16 bit
   (−32768 … 32767), COBOL and RPG allow at most 1000 array elements, RPG prints via <code>DSPLY</code> (at most 52 characters
-  per line), csh has no functions (subprograms become labels with <code>goto</code>), MARTIN GOES has no texts.</p>
+  per line), csh has no functions (subprograms become labels with <code>goto</code>), MARTIN GOES only knows whole numbers (texts yes, decimals no).</p>
   <p>
   In C++ InOut parameters become references (<code>int&amp; a</code>), in C# <code>ref</code>, in Fortran <code>intent(inout)</code>,
   in COBOL <code>BY REFERENCE</code>. JavaScript runs with <code>node file.js</code>, Fortran with <code>gfortran</code>,
@@ -333,11 +355,13 @@ ende: O  1          ; ergebnis ausgeben
 </section>
 <section id="h-mg">
   <h3>MARTIN GOES</h3>
-  <p>MARTIN GOES is a tiny teaching machine (defined by Martin): only cells, whole numbers and jumps.
+  <p>MARTIN GOES is a tiny teaching machine (defined by Martin): cells, whole numbers, texts and jumps.
   The Code tab translates a diagram into this language – so you can see what a compiler makes of IF, loops,
-  subprograms and arrays.</p>
+  subprograms, arrays and texts.</p>
   <h4>Memory</h4>
   <p>Infinitely many cells 0, 1, 2, … Every cell holds an arbitrarily large whole number, also negative, and starts at 0.</p>
+  <p><b>Texts</b> live in cells too: starting at cell a there is first the length n, then the character codes in cells
+  a+1 … a+n (Unicode, e.g. 65 = “A”). So a cell containing 0 is also an empty text.</p>
   <h4>Program</h4>
   <p>A list of commands with optional labels (<code>name:</code>). Execution starts at the first command and runs in order
   unless a jump redirects it. Running past the last command ends the program like <code>T</code>. Comments start with <code>;</code>.</p>
@@ -347,8 +371,11 @@ ende: O  1          ; ergebnis ausgeben
     <tr><td><code>#5</code></td><td>constant 5 (source only)</td></tr>
     <tr><td><code>5</code></td><td>cell 5</td></tr>
     <tr><td><code>@5</code></td><td>the cell whose address is in cell 5 (indirect)</td></tr>
+    <tr><td><code>"Hello"</code></td><td>text constant (source only); <code>\n</code> = line break, <code>\"</code> = quote, <code>\</code> = backslash</td></tr>
+    <tr><td><code>$5</code></td><td>the text stored from cell 5 on</td></tr>
+    <tr><td><code>$@5</code></td><td>the text stored from the address that is in cell 5</td></tr>
   </table>
-  <p>Indirect <code>@</code> makes arrays, stacks and a “tape” possible.</p>
+  <p>Indirect <code>@</code> makes arrays, stacks, texts and a “tape” possible.</p>
   <h4>Commands</h4>
   <table>
     <tr><th>Command</th><th>Name</th><th>Effect</th></tr>
@@ -356,13 +383,18 @@ ende: O  1          ; ergebnis ausgeben
     <tr><td><code>A x y</code></td><td>Add</td><td>x := x + y</td></tr>
     <tr><td><code>R x y</code></td><td>Reduce</td><td>x := x − y</td></tr>
     <tr><td><code>T</code></td><td>Terminate</td><td>end the program</td></tr>
-    <tr><td><code>I x</code></td><td>Input</td><td>read a number into x</td></tr>
+    <tr><td><code>I x</code></td><td>Input</td><td>read a line; whole number into x (invalid or end of input → 0)</td></tr>
+    <tr><td><code>I $x</code></td><td>Input</td><td>store a line as text from cell x on (length, then characters)</td></tr>
     <tr><td><code>N x</code></td><td>Negate</td><td>x := −x</td></tr>
     <tr><td><code>G L</code></td><td>Goto</td><td>jump to label L</td></tr>
-    <tr><td><code>O x</code></td><td>Output</td><td>output x</td></tr>
+    <tr><td><code>O x</code></td><td>Output</td><td>output the number x</td></tr>
+    <tr><td><code>O "…"</code> / <code>O $x</code></td><td>Output</td><td>output a text (constant or from cell x)</td></tr>
     <tr><td><code>E x L</code></td><td>Equal zero?</td><td>if x = 0, jump to L</td></tr>
     <tr><td><code>S x y</code></td><td>Set/Store</td><td>x := y (copy; with @ also load/store)</td></tr>
+    <tr><td><code>S $x "…"</code></td><td>Set/Store</td><td>store a text constant from cell x on</td></tr>
   </table>
+  <p><code>O</code> writes <b>without a line break</b>; <code>O "\n"</code> makes one.
+  Texts add no new commands, only new operands – the letters stay M A R T I N G O E S.</p>
   <p><b>Turing completeness:</b> <code>A x #1</code>, <code>R x #1</code> and <code>E</code> on unbounded cells form a Minsky machine,
   which is Turing complete. M, N, G, S, I and O are for comfort.</p>
   <h4>Example: factorial</h4>
@@ -375,9 +407,19 @@ loop: E  0 done     ; n = 0? -&gt; finished
 done: O  1          ; output result
       T</pre>
   <p>Input 5 gives 120.</p>
+  <h4>Example: greeting</h4>
+  <pre>      O  "What's your name? "
+      I  $100       ; text from cell 100
+      O  "Hello "
+      O  $100
+      O  "! Your name has "
+      O  100        ; cell 100 = length
+      O  " characters.\n"
+      T</pre>
   <h4>How the editor translates</h4>
   <ul>
-    <li>Variables of the main program live in cells 0, 1, 2, … (the program header lists which cell holds which variable).</li>
+    <li>Variables of the main program live in cells 0, 1, 2, … (the program header lists which cell holds which variable).
+    If texts occur, cell 0 stays free: it is always 0 and serves as the empty text.</li>
     <li><b>Comparisons:</b> <code>E</code> only tests for 0. “Less than” is built with a loop: the difference d is counted up and
     down at the same time (d+k, d−k) – if d−k reaches 0 first, d ≥ 0, otherwise d &lt; 0.</li>
     <li><b>Division and remainder</b> use repeated subtraction (result cut toward 0, like C).</li>
@@ -386,8 +428,10 @@ done: O  1          ; output result
     return number to the right call site with <code>E</code> commands. InOut parameters receive the variable's address –
     accessed with <code>@</code>. Recursion works.</li>
     <li><b>Arrays</b> live on a heap: first the length, then the elements. The variable holds the address.</li>
-    <li><b>Texts</b> do not exist: text parts of outputs become comments, the numbers in them are output.
-    Text variables, text input and text comparisons cannot be translated (note in the program header).</li>
+    <li><b>Texts</b> also live on the heap and are never changed – a text variable holds the address.
+    Outputs are written piece by piece (<code>O "Sum: "</code>, <code>O 5</code>, <code>O "\n"</code>).
+    Joining, number → text and text comparison use three built-in routines at the end of the program
+    (<code>txt_cat</code>, <code>txt_num</code>, <code>txt_cmp</code>). Text → number cannot be translated.</li>
   </ul>
 </section>
 <section id="h-files">

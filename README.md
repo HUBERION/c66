@@ -55,7 +55,7 @@ COBOL, BASIC, RPG IV und MARTIN GOES (Auswahlliste im Reiter *Code*)
   kleine Laufzeitbibliothek (INT 21h); getestet mit DOSBox
 - BASIC im QBasic-Stil (SUB/FUNCTION, SELECT CASE, `\` und `MOD`) – für FreeBASIC `fbc -lang qb` gedacht
 - RPG IV (vollständig freies Format, IBM i 7.3+): Prozeduren, `varchar`, `dim(1000)`, Ein-/Ausgabe über `DSPLY`
-- MARTIN GOES: Zellen, ganze Zahlen und Sprünge (Definition unten); nur Programme ohne Texte lassen sich vollständig übersetzen
+- MARTIN GOES: Zellen, ganze Zahlen, Texte und Sprünge (Definition unten); Text → Zahl lässt sich nicht übersetzen
 - JavaScript: läuft mit `node datei.js` (oder im Browser über `prompt`), InOut-Werte werden zurückgegeben (`[x, y] = tausche(x, y)`)
 - Fortran 2008: ein Programm mit `contains`, Texte als `character(len=:), allocatable`, Arrays ab Index 0, InOut als `intent(inout)`
 - COBOL (GnuCOBOL 3, freies Format): jedes Unterprogramm ein eigenes `RECURSIVE`-Programm, `CALL … USING BY CONTENT/BY REFERENCE`,
@@ -71,13 +71,17 @@ COBOL, BASIC, RPG IV und MARTIN GOES (Auswahlliste im Reiter *Code*)
 
 **MARTIN GOES** (Lehrmaschine, Definition: Martin)
 - Speicher: unendlich viele Zellen 0, 1, 2, …; jede Zelle hält eine beliebig große ganze Zahl (auch negativ), am Anfang 0.
+- Texte liegen ebenfalls in Zellen: ab Zelle a die Länge n, dann in a+1 … a+n die Zeichencodes (Unicode). 0 = leerer Text.
 - Programm: eine Liste von Befehlen mit optionalen Labels (`name:`), Kommentare mit `;`. Die Ausführung startet beim ersten
   Befehl und läuft der Reihe nach, außer ein Sprung lenkt um. Läuft das Programm über den letzten Befehl hinaus, endet es wie bei `T`.
 - Operanden: `#5` Konstante 5 (nur als Quelle), `5` Zelle 5, `@5` Zelle, deren Adresse in Zelle 5 steht (indirekt – macht Arrays,
-  Stapel und „Band“ möglich).
+  Stapel, Texte und „Band“ möglich), `"Hallo"` Textkonstante (nur als Quelle; `\n`, `\"`, `\`), `$5` der Text ab Zelle 5,
+  `$@5` der Text ab der Adresse in Zelle 5.
 - Befehle: `M x y` (Multiply, x := x · y), `A x y` (Add, x := x + y), `R x y` (Reduce, x := x − y), `T` (Terminate),
-  `I x` (Input), `N x` (Negate, x := −x), `G L` (Goto), `O x` (Output), `E x L` (Equal zero? – wenn x = 0, springe zu L),
-  `S x y` (Set/Store, x := y).
+  `I x` (Input: Zeile lesen, ganze Zahl nach x; ungültig/Ende → 0), `I $x` (Zeile als Text ab Zelle x), `N x` (Negate, x := −x),
+  `G L` (Goto), `O x` (Output: Zahl), `O "…"` / `O $x` (Text ausgeben), `E x L` (Equal zero? – wenn x = 0, springe zu L),
+  `S x y` (Set/Store, x := y), `S $x "…"` (Textkonstante ab Zelle x ablegen).
+- `O` schreibt ohne Zeilenumbruch, `O "\n"` macht einen. Texte bringen keine neuen Befehle, nur Operanden – die Buchstaben bleiben M A R T I N G O E S.
 - Turing-vollständig: `A x #1`, `R x #1` und `E` auf unbegrenzten Zellen ergeben eine Minsky-Maschine; M, N, G, S, I und O sind Komfort.
 - Beispiel Fakultät (Eingabe 5 → 120):
   ```
@@ -90,8 +94,20 @@ COBOL, BASIC, RPG IV und MARTIN GOES (Auswahlliste im Reiter *Code*)
   ende: O  1          ; ergebnis ausgeben
         T
   ```
+- Beispiel Begrüßung (Eingabe Ada → „Hallo Ada! Dein Name hat 3 Zeichen.“):
+  ```
+        O  "Wie heißt du? "
+        I  $100       ; Text ab Zelle 100
+        O  "Hallo "
+        O  $100
+        O  "! Dein Name hat "
+        O  100        ; Zelle 100 = Länge
+        O  " Zeichen.\n"
+        T
+  ```
 - Übersetzung aus dem Blockbild: „kleiner als“ über eine Zählschleife (E prüft nur auf 0), Division durch wiederholtes Abziehen,
-  Unterprogramme mit Rahmen auf einem Stapel ab Zelle 1000000 und Rücksprung über eine Nummer, Arrays auf einer Halde.
+  Unterprogramme mit Rahmen auf einem Stapel ab Zelle 1000000 und Rücksprung über eine Nummer, Arrays und Texte auf einer Halde,
+  eingebaute Routinen `txt_cat`, `txt_num`, `txt_cmp` für Verkettung, Zahl → Text und Textvergleich.
   Ein Interpreter steckt in `js/core/mggen.js` (`BBE.mggen.run`).
 
 **Python → Blockbild**

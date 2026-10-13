@@ -4,20 +4,22 @@
  *   Befehle: M x y (x·=y), A x y (x+=y), R x y (x−=y), T (Ende), I x (einlesen), N x (x=−x), G L (Sprung),
  *            O x (ausgeben), E x L (wenn x = 0 → L), S x y (x:=y).
  *   Operanden: #5 Konstante, 5 Zelle 5, @5 Zelle, deren Adresse in Zelle 5 steht.
+ *   Texte: im Speicher ab Zelle a: Länge, dann die Zeichencodes. "…" Textkonstante (\n \" \\),
+ *          $x / $@x = der Text ab Zelle x bzw. ab der Adresse in Zelle x.
+ *          O "…" / O $x Text ausgeben, I $x Zeile als Text einlesen, S $x "…" Textkonstante ablegen.
+ *          O schreibt ohne Zeilenumbruch (O "\n" für einen Umbruch).
  *
  *   Übersetzung:
- *   - Variablen des Hauptprogramms liegen in den Zellen 0, 1, 2, … (Kommentar am Anfang zeigt welche).
- *   - Danach Hilfszellen: SP (Stapelzeiger), FP (Rahmenzeiger), HP (Haldenzeiger), RV (Rückgabewert),
- *     RID (Rücksprung-Nummer) und Zwischenergebnisse.
+ *   - Variablen des Hauptprogramms liegen in den Zellen 0, 1, 2, … (bei Texten ab 1: Zelle 0 bleibt 0 = leerer Text).
+ *   - Danach Hilfszellen: SP, FP, HP (Halde), RV (Rückgabewert), RID (Rücksprung-Nr.), HR/X1/X2 (für die
+ *     Text-Routinen), K… (deren Zwischenzellen) und die Zwischenergebnisse der Anweisungen.
  *   - Unterprogramme: Rahmen auf dem Stapel (ab Zelle 1000000): [Rücksprung-Nr., alter FP, Parameter, Variablen].
- *     Zugriff indirekt über @. Da es nur G mit festem Label gibt, springt jedes Unterprogramm am Ende
- *     zu "zurueck", das die Rücksprung-Nummer mit E-Befehlen der passenden Aufrufstelle zuordnet.
- *   - InOut-Parameter bekommen die Adresse der Variablen, Arrays die Adresse ihres Speichers auf der Halde
- *     ([Länge, Element 0, Element 1, …]); neue Arrays sind immer frisch (Zellen sind 0).
+ *     Jedes Unterprogramm springt am Ende zu "zurueck", das die Rücksprung-Nummer der Aufrufstelle zuordnet.
+ *   - InOut-Parameter bekommen die Adresse der Variablen, Arrays die Adresse ihres Speichers auf der Halde.
+ *   - Texte liegen auf der Halde und werden nie verändert; eine Text-Variable enthält die Adresse
+ *     (0 = leerer Text). Verkettung, Zahl → Text und Textvergleich sind eingebaute Routinen (txt_cat, txt_num, txt_cmp).
  *   - Vergleiche: nur E (= 0) existiert. x < 0 wird mit einer Schleife geprüft (x+k und x−k, bis eines 0 wird).
  *   - Division/Rest: wiederholtes Abziehen mit Vorzeichenbehandlung (schneidet ab wie C).
- *   - Texte gibt es nicht: Text-Ausgaben werden zu Kommentaren, Zahlen darin werden ausgegeben.
- *     Text-Variablen, -Eingaben und -Vergleiche sind nicht übersetzbar (Kommentar + Meldung).
  */
 (function (G) {
   'use strict';
@@ -26,6 +28,7 @@
   const A = BBE.analyze;
 
   const STACK = 1000000;
+  const KCELLS = 12;
   const FOLD = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue', 'ß': 'ss' };
   const tryParse = (src) => { try { return parseCached(String(src || '').trim()); } catch (e) { return null; } };
   const tryTarget = (src) => { try { return parseTarget(String(src || '').trim()); } catch (e) { return null; } };
@@ -34,6 +37,8 @@
     if (!/^[A-Za-z]/.test(s)) s = 'u' + s;
     return s;
   };
+  /** Textkonstante in MARTIN-GOES-Schreibweise */
+  const lit = (s) => '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\t/g, '\\t').replace(/\r/g, '\\r') + '"';
 
   function generate(program, opts = {}) {
     const tr = opts.t || ((k) => k);
@@ -43,24 +48,30 @@
     const newLabel = (hint) => (hint || 'L') + (++labelNo);
     const RET = tr('mgReturnLabel');
     const END = tr('mgEndLabel');
+    const HELP = { cat: 'txt_cat', num: 'txt_num', cmp: 'txt_cmp' };
     const fnLabel = new Map();
     for (const f of program.fns.filter((x) => !x.isMain)) {
       let n = labelName(f.name);
-      while ([...fnLabel.values()].includes(n) || /^(L|zu)\d+$/.test(n) || n === RET || n === END) n += '_';
+      while ([...fnLabel.values()].includes(n) || /^(L|zu)\d+$/.test(n) || n === RET || n === END || Object.values(HELP).includes(n)) n += '_';
       fnLabel.set(f.name, n);
     }
 
     // ---- Zellen
     const main = program.fns.find((f) => f.isMain);
     const mainScope = A.scopeOf(main);
+    // Werden Texte gespeichert? Dann bleibt Zelle 0 frei (immer 0 = Länge 0 = leerer Text).
+    const textStored = program.fns.some((f) => f.returnType === 'string' || [...A.scopeOf(f).values()].some((v) => v.type === 'string' || v.type === 'string[]'));
     const mainCell = new Map();
-    for (const [n] of mainScope) mainCell.set(n, mainCell.size);
-    const base = mainCell.size;
-    const R = { SP: base, FP: base + 1, HP: base + 2, RV: base + 3, RID: base + 4 };
-    const TEMP0 = base + 5;
-    let maxTemp = 0;
+    const first = textStored ? 1 : 0;
+    for (const [n] of mainScope) mainCell.set(n, first + mainCell.size);
+    const base = first + mainCell.size;
+    const R = { SP: base, FP: base + 1, HP: base + 2, RV: base + 3, RID: base + 4, HR: base + 5, X1: base + 6, X2: base + 7 };
+    const K0 = base + 8;
+    const TEMP0 = K0 + KCELLS;
+    let maxTemp = 0, maxK = 0;
     const usedReg = new Set();
     let usesHeap = false, usesStack = false;
+    const usedHelp = new Set();
     const callSites = [];
 
     let pendingLabel = null;
@@ -74,7 +85,6 @@
     }
     function note(text) { code.push({ text }); }
 
-    // ---- Kontext je Unterprogramm
     function frameOf(fn) {
       const scope = A.scopeOf(fn);
       const slot = new Map();
@@ -85,11 +95,12 @@
     }
 
     function temp(ctx) {
+      if (ctx.helper) { const t = K0 + ctx.tmp++; maxK = Math.max(maxK, ctx.tmp); return t; }
       const t = TEMP0 + ctx.tmp++;
       maxTemp = Math.max(maxTemp, ctx.tmp);
       return t;
     }
-    const reg = (r) => { usedReg.add(r); return R[r]; };
+    const reg = (r) => { usedReg.add(r); return String(R[r]); };
     const typeOf = (ctx, a) => A.typeOf(a, ctx.scope);
 
     /** Zelle (Operand) einer Variablen zum Lesen/Schreiben. */
@@ -97,14 +108,14 @@
       if (ctx.fn.isMain) return String(mainCell.get(n) ?? 0);
       const slot = ctx.frame.slot.get(n) ?? 2;
       const t = temp(ctx);
-      emit('S', [String(t), String(reg('FP'))]);
+      emit('S', [String(t), reg('FP')]);
       emit('A', [String(t), '#' + slot]);
       const v = ctx.scope.get(n);
       if (v && v.kind === 'param' && v.byRef && !A.isArrayType(v.type)) emit('S', [String(t), '@' + t], tr('mgCmtAddr', n));
       return '@' + t;
     }
 
-    /** Operand, der den Wert liefert (#k, Zelle oder @t). */
+    /** Operand, der den Wert liefert (#k, Zelle oder @t). Bei Texten ist der Wert die Adresse. */
     function val(ctx, a) {
       const s = strip(a);
       if (s.k === 'num' && Number.isInteger(s.v)) return '#' + s.v;
@@ -113,12 +124,21 @@
       if (s.k === 'idx') return elemOperand(ctx, s);
       if (s.k === 'len') {
         const o = strip(s.obj);
-        if (!A.isArrayType(typeOf(ctx, o))) { unsupported.push(tr('mgNoText')); return '#0'; }
-        const t = temp(ctx);
-        emit('S', [String(t), val(ctx, o)]);
-        return '@' + t;
+        const at = A.isArrayType(typeOf(ctx, o)) ? cellOf(ctx, val(ctx, o)) : textAddr(ctx, o);
+        if (at === '#0') return '#0';
+        return '@' + at;   // Länge steht an der Adresse
       }
+      if (typeOf(ctx, s) === 'string') return textAddr(ctx, s);
       return String(evalInto(ctx, s));
+    }
+
+    /** Operand in eine direkte Zelle bringen (für @…/$@…). */
+    function cellOf(ctx, op) {
+      if (/^\d+$/.test(op)) return op;
+      if (op === '#0') return '#0';
+      const t = String(temp(ctx));
+      emit('S', [t, op]);
+      return t;
     }
 
     /** Element a[i]: Adresse = Basis + i + 1 */
@@ -139,6 +159,85 @@
       if (ctx.fn.isMain) return '#' + (mainCell.get(s.name) ?? 0);
       return varOperand(ctx, s.name).slice(1);
     }
+
+    // ------------------------------------------------------------ Texte
+
+    /** Aufruf einer eingebauten Text-Routine; Ergebnis (RV) in eine neue Zwischenzelle. */
+    function helperCall(ctx, name, args) {
+      usedHelp.add(name);
+      if (args[0] !== undefined) emit('S', [reg('X1'), args[0]]);
+      if (args[1] !== undefined) emit('S', [reg('X2'), args[1]]);
+      const id = callSites.length + 1;
+      const back = newLabel('zu');
+      callSites.push(back);
+      emit('S', [reg('HR'), '#' + id]);
+      emit('G', [HELP[name]]);
+      label(back);
+      const t = String(temp(ctx));
+      emit('S', [t, reg('RV')]);
+      return t;
+    }
+
+    /** Textkonstante auf der Halde ablegen → Zelle mit der Adresse. */
+    function textLiteral(ctx, v) {
+      if (v === '') return '#0';
+      usesHeap = true;
+      const hp = reg('HP');
+      const t = String(temp(ctx));
+      emit('S', [t, hp]);
+      emit('S', ['$@' + hp, lit(v)]);
+      emit('A', [hp, '#' + ([...v].length + 1)]);
+      return t;
+    }
+
+    function parts(ctx, ast) {
+      const s = strip(ast);
+      if (s.k === 'bin' && s.op === '+' && typeOf(ctx, s) === 'string') return parts(ctx, s.a).concat(parts(ctx, s.b));
+      return [s];
+    }
+
+    /** Text-Ausdruck → Zelle (oder #0) mit der Adresse des Texts. */
+    function textAddr(ctx, a) {
+      const ps = parts(ctx, a);
+      let acc = null;
+      for (const p of ps) {
+        const t = typeOf(ctx, p);
+        let x;
+        if (p.k === 'str') x = textLiteral(ctx, p.v);
+        else if (t === 'string') x = cellOf(ctx, p.k === 'id' ? varOperand(ctx, p.name) : p.k === 'idx' ? elemOperand(ctx, p) : '#0');
+        else if (t === 'bool') {
+          const yes = newLabel(), no = newLabel(), end = newLabel();
+          x = String(temp(ctx));
+          condJump(ctx, p, yes, no);
+          label(yes); emit('S', [x, textLiteral(ctx, 'true')]); emit('G', [end]);
+          label(no); emit('S', [x, textLiteral(ctx, 'false')]);
+          label(end);
+        } else x = helperCall(ctx, 'num', [val(ctx, p)]);
+        if (x === '#0' && acc !== null) continue;
+        acc = acc === null ? x : helperCall(ctx, 'cat', [acc, x]);
+      }
+      return acc === null ? '#0' : acc;
+    }
+
+    /** Text ausgeben, Stück für Stück (ohne neuen Text zu bauen). */
+    function emitTextOut(ctx, a) {
+      for (const p of parts(ctx, a)) {
+        const t = typeOf(ctx, p);
+        if (p.k === 'str') { if (p.v !== '') emit('O', [lit(p.v)]); }
+        else if (t === 'string') {
+          const c = cellOf(ctx, p.k === 'id' ? varOperand(ctx, p.name) : elemOperand(ctx, p));
+          if (c !== '#0') emit('O', ['$@' + c]);
+        } else if (t === 'bool') {
+          const yes = newLabel(), no = newLabel(), end = newLabel();
+          condJump(ctx, p, yes, no);
+          label(yes); emit('O', ['"true"']); emit('G', [end]);
+          label(no); emit('O', ['"false"']);
+          label(end);
+        } else emit('O', [val(ctx, p)]);
+      }
+    }
+
+    // ------------------------------------------------------------ Zahlen
 
     /** Ausdruck in eine neue Hilfszelle rechnen; liefert die Zellnummer. */
     function evalInto(ctx, a) {
@@ -170,7 +269,7 @@
       if (s.k === 'un' && s.op === '-') { emit('S', [T, val(ctx, s.a)]); emit('N', [T]); return t; }
       if (s.k === 'un' && s.op === '+') { emit('S', [T, val(ctx, s.a)]); return t; }
       if (s.k === 'num') { emit('S', [T, '#' + Math.trunc(s.v)]); return t; }
-      if (typeOf(ctx, s) === 'string') { unsupported.push(tr('mgNoText')); emit('S', [T, '#0']); return t; }
+      if (typeOf(ctx, s) === 'string') { unsupported.push(tr('mgNoTextNum')); emit('S', [T, '#0']); return t; }
       // Wahrheitswert → 0/1
       const yes = newLabel(), no = newLabel();
       emit('S', [T, '#0']);
@@ -208,8 +307,7 @@
     function divmod(ctx, aCell, d, op, dst) {
       const a = String(aCell);
       const b = String(temp(ctx)), q = String(temp(ctx)), sq = String(temp(ctx)), sr = String(temp(ctx)), diff = String(temp(ctx));
-      const L = (h) => newLabel(h);
-      const aPos = L(), bChk = L(), bPos = L(), loop = L(), done = L(), aNeg = L(), bNeg = L(), stop = L();
+      const aPos = newLabel(), bChk = newLabel(), bPos = newLabel(), loop = newLabel(), done = newLabel(), aNeg = newLabel(), bNeg = newLabel();
       emit('S', [b, d], op === '/' ? tr('mgCmtDiv') : tr('mgCmtMod'));
       emit('E', [b, END]);                // Division durch 0 → Programmende
       emit('S', [q, '#0']);
@@ -237,7 +335,6 @@
       label(done);
       if (op === '/') { emit('M', [q, sq]); emit('S', [String(dst), q]); }
       else { emit('M', [a, sr]); emit('S', [String(dst), a]); }
-      void stop;
     }
 
     /** Bedingung als Sprünge. */
@@ -247,7 +344,7 @@
       if (s.k === 'bin' && s.op === '||') { const mid = newLabel(); condJump(ctx, s.a, yes, mid); label(mid); condJump(ctx, s.b, yes, no); return; }
       if (s.k === 'un' && s.op === '!') { condJump(ctx, s.a, no, yes); return; }
       if (s.k === 'bin' && ['==', '!=', '<', '<=', '>', '>='].includes(s.op)) {
-        if (typeOf(ctx, s.a) === 'string' || typeOf(ctx, s.b) === 'string') { unsupported.push(tr('mgNoText')); emit('G', [no]); return; }
+        if (typeOf(ctx, s.a) === 'string' || typeOf(ctx, s.b) === 'string') { textCond(ctx, s, yes, no); return; }
         const swap = s.op === '<=' || s.op === '>';
         const d = temp(ctx), D = String(d);
         emit('S', [D, val(ctx, swap ? s.b : s.a)]);
@@ -259,11 +356,46 @@
           default: signJump(ctx, D, no, yes); return;                 // <=: b−a < 0 → falsch;  >=: a−b < 0 → falsch
         }
       }
-      if (typeOf(ctx, s) === 'string') { unsupported.push(tr('mgNoText')); emit('G', [no]); return; }
+      if (typeOf(ctx, s) === 'string') {
+        // Text als Bedingung: nicht leer
+        const c = textAddr(ctx, s);
+        if (c === '#0') { emit('G', [no]); return; }
+        const n = String(temp(ctx));
+        emit('S', [n, '@' + c]);
+        emit('E', [n, no]);
+        emit('G', [yes]);
+        return;
+      }
       const v = val(ctx, s);
       if (v.startsWith('#')) { emit('G', [v === '#0' ? no : yes]); return; }
       emit('E', [v, no]);
       emit('G', [yes]);
+    }
+
+    /** Textvergleich über txt_cmp (Ergebnis −1, 0, 1). */
+    function textCond(ctx, s, yes, no) {
+      const isEmpty = (x) => strip(x).k === 'str' && strip(x).v === '';
+      // Vergleich mit "" → nur die Länge prüfen
+      if ((s.op === '==' || s.op === '!=') && (isEmpty(s.a) || isEmpty(s.b))) {
+        const other = isEmpty(s.a) ? s.b : s.a;
+        const c = textAddr(ctx, other);
+        if (c === '#0') { emit('G', [s.op === '==' ? yes : no]); return; }
+        const n = String(temp(ctx));
+        emit('S', [n, '@' + c]);
+        emit('E', [n, s.op === '==' ? yes : no]);
+        emit('G', [s.op === '==' ? no : yes]);
+        return;
+      }
+      const a = textAddr(ctx, s.a), b = textAddr(ctx, s.b);
+      const r = helperCall(ctx, 'cmp', [a, b]);
+      switch (s.op) {
+        case '==': emit('E', [r, yes]); emit('G', [no]); return;
+        case '!=': emit('E', [r, no]); emit('G', [yes]); return;
+        case '<': emit('A', [r, '#1']); emit('E', [r, yes]); emit('G', [no]); return;   // −1 → kleiner
+        case '>=': emit('A', [r, '#1']); emit('E', [r, no]); emit('G', [yes]); return;
+        case '>': emit('R', [r, '#1']); emit('E', [r, yes]); emit('G', [no]); return;   // 1 → größer
+        default: emit('R', [r, '#1']); emit('E', [r, no]); emit('G', [yes]); return;    // <=
+      }
     }
 
     function condFrom(ctx, src, yes, no) {
@@ -276,10 +408,15 @@
     function store(ctx, targetSrc, ast) {
       const tgt = tryTarget(targetSrc);
       if (!tgt) return;
-      if (typeOf(ctx, tgt) === 'string') { unsupported.push(tr('mgNoText')); note('; ' + tr('mgSkipped')); return; }
-      if (!ast) { const d = lval(ctx, tgt); emit('S', [d, '#0']); return; }
+      const tt = typeOf(ctx, tgt);
+      if (tt === 'string') {
+        const v = ast ? textAddr(ctx, ast) : '#0';
+        emit('S', [lval(ctx, tgt), v]);
+        return;
+      }
+      if (!ast) { emit('S', [lval(ctx, tgt), '#0']); return; }
       const s = strip(ast);
-      if (typeOf(ctx, s) === 'string') { unsupported.push(tr('mgNoText')); note('; ' + tr('mgSkipped')); return; }
+      if (typeOf(ctx, s) === 'string') { unsupported.push(tr('mgNoTextNum')); note('; ' + tr('mgSkipped')); return; }
       // x = x + y → A x y (bei Zellen des Hauptprogramms)
       if (tgt.k === 'id' && ctx.fn.isMain && s.k === 'bin' && '+-*'.includes(s.op) && strip(s.a).k === 'id' && strip(s.a).name === tgt.name &&
           !isFrac(strip(s.b))) {
@@ -288,8 +425,7 @@
         return;
       }
       const v = val(ctx, s);
-      const d = lval(ctx, tgt);
-      emit('S', [d, v]);
+      emit('S', [lval(ctx, tgt), v]);
     }
 
     function lval(ctx, tgt) {
@@ -309,24 +445,21 @@
           for (const l of String(n.text || '').split('\n')) note('; ' + l);
           return;
         case 'decl': {
-          if (n.vtype === 'string' || n.vtype === 'string[]') { unsupported.push(tr('mgNoText')); head(tr('mgTextVar', n.name)); return; }
-          if (n.vtype === 'integer[]') {
+          if (A.isArrayType(n.vtype)) {
             head(n.name + ' = ' + tr('mgNewArray', n.length));
             usesHeap = true;
             const len = tryParse(n.length);
-            const tgt = { k: 'id', name: n.name };
-            const hp = String(reg('HP'));
+            const hp = reg('HP');
             const lenV = len ? val(ctx, len) : '#0';
             const t = String(temp(ctx));
             emit('S', [t, lenV]);
             emit('S', ['@' + hp, t], tr('mgCmtLen'));
-            const d = lval(ctx, tgt);
-            emit('S', [d, hp]);
+            emit('S', [lval(ctx, { k: 'id', name: n.name }), hp]);
             emit('A', [hp, t]);
             emit('A', [hp, '#1']);
             return;
           }
-          head(n.name + ' = ' + (String(n.init || '').trim() || '0'));
+          head(n.name + ' = ' + (String(n.init || '').trim() || (n.vtype === 'string' ? '""' : '0')));
           store(ctx, n.name, tryParse(n.init));
           return;
         }
@@ -337,26 +470,27 @@
         case 'input': {
           const tgt = tryTarget(n.target);
           head(tr('mgInput', n.target) + (String(n.prompt || '').trim() ? '  ' + n.prompt : ''));
-          if (!tgt || typeOf(ctx, tgt) !== 'integer') { unsupported.push(tr('mgNoText')); return; }
-          emit('I', [lval(ctx, tgt)]);
+          if (!tgt) return;
+          const p = tryParse(n.prompt);
+          if (p) emitTextOut(ctx, p);
+          ctx.tmp = 0;
+          if (typeOf(ctx, tgt) === 'string') {
+            usesHeap = true;
+            const hp = reg('HP');
+            const t = String(temp(ctx));
+            emit('S', [t, hp]);
+            emit('I', ['$@' + t], tr('mgCmtReadText'));
+            emit('A', [hp, '@' + t]);
+            emit('A', [hp, '#1']);
+            emit('S', [lval(ctx, tgt), t]);
+          } else emit('I', [lval(ctx, tgt)]);
           return;
         }
         case 'output': {
           head(tr('mgOutput', n.expr));
           const ast = tryParse(n.expr);
-          if (!ast) return;
-          const ps = [];
-          const walkParts = (x) => {
-            const s = strip(x);
-            if (s.k === 'bin' && s.op === '+' && typeOf(ctx, s) === 'string') { walkParts(s.a); walkParts(s.b); } else ps.push(s);
-          };
-          walkParts(ast);
-          for (const p of ps) {
-            const t = typeOf(ctx, p);
-            if (t === 'string' || t === 'bool') { if (p.k !== 'str') unsupported.push(tr('mgNoText')); continue; }
-            ctx.tmp = 0;
-            emit('O', [val(ctx, p)]);
-          }
+          if (ast) emitTextOut(ctx, ast);
+          emit('O', ['"\\n"']);
           return;
         }
         case 'if': {
@@ -396,11 +530,11 @@
           const top = newLabel(), body = newLabel(), end = newLabel();
           store(ctx, n.counter, tryParse(n.from));
           const stepAst = tryParse(n.step) || { k: 'num', v: 1, raw: '1' };
-          const lit = A.literalValue(stepAst);
+          const lit1 = A.literalValue(stepAst);
           const k = tryParse(n.counter), to = tryParse(n.to) || { k: 'num', v: 0, raw: '0' };
           label(top);
           ctx.tmp = 0;
-          if (typeof lit === 'number') condJump(ctx, { k: 'bin', op: lit >= 0 ? '<=' : '>=', a: k, b: to }, body, end);
+          if (typeof lit1 === 'number') condJump(ctx, { k: 'bin', op: lit1 >= 0 ? '<=' : '>=', a: k, b: to }, body, end);
           else {
             const pos = newLabel(), neg = newLabel();
             const s = String(temp(ctx));
@@ -424,18 +558,23 @@
         case 'switch': {
           head(tr('mgSwitch', n.expr));
           const sel = tryParse(n.expr);
-          if (!sel || typeOf(ctx, sel) === 'string') { unsupported.push(tr('mgNoText')); return; }
+          if (!sel) return;
+          const isText = typeOf(ctx, sel) === 'string';
           const end = newLabel();
           const labels = n.cases.map(() => newLabel());
           const other = newLabel();
-          const sv = String(temp(ctx));
-          emit('S', [sv, val(ctx, sel)]);
+          const sv = isText ? textAddr(ctx, sel) : cellOf(ctx, val(ctx, sel));
           n.cases.forEach((c, i) => {
-            const v = tryParse(c.value);
-            const d = String(temp(ctx));
-            emit('S', [d, sv]);
-            emit('R', [d, v ? val(ctx, v) : '#0']);
-            emit('E', [d, labels[i]]);
+            const v = tryParse(c.value) || { k: isText ? 'str' : 'num', v: isText ? '' : 0, raw: '0' };
+            if (isText) {
+              const r = helperCall(ctx, 'cmp', [sv, textAddr(ctx, v)]);
+              emit('E', [r, labels[i]]);
+            } else {
+              const d = String(temp(ctx));
+              emit('S', [d, sv]);
+              emit('R', [d, val(ctx, v)]);
+              emit('E', [d, labels[i]]);
+            }
           });
           emit('G', [other]);
           n.cases.forEach((c, i) => { label(labels[i]); genSeq(ctx, c.body); emit('G', [end]); });
@@ -450,13 +589,12 @@
           if (!callee) return;
           usesStack = true;
           const fr = frames.get(callee);
-          const SP = String(reg('SP')), FP = String(reg('FP'));
+          const SP = reg('SP'), FP = reg('FP');
           // Argumente in den neuen Rahmen schreiben (ab SP)
           callee.params.forEach((p, i) => {
             ctx.tmp = 0;
             const src = tryParse(n.args[i] || '') || { k: 'num', v: 0, raw: '0' };
-            if (p.type === 'string' || p.type === 'string[]') { unsupported.push(tr('mgNoText')); return; }
-            const v = A.isArrayType(p.type) ? val(ctx, src) : p.byRef ? addrValue(ctx, src) : val(ctx, src);
+            const v = A.isArrayType(p.type) ? val(ctx, src) : p.byRef ? addrValue(ctx, src) : p.type === 'string' ? textAddr(ctx, src) : val(ctx, src);
             const a = String(temp(ctx));
             emit('S', [a, SP]);
             emit('A', [a, '#' + fr.slot.get(p.name)]);
@@ -478,8 +616,11 @@
           if (callee.returnType !== 'void' && n.target && n.target.trim()) {
             ctx.tmp = 0;
             const tgt = tryTarget(n.target);
-            if (tgt && callee.returnType === 'integer' && typeOf(ctx, tgt) === 'integer') emit('S', [lval(ctx, tgt), String(reg('RV'))]);
-            else unsupported.push(tr('mgNoText'));
+            if (!tgt) return;
+            const tt = typeOf(ctx, tgt);
+            if (tt === callee.returnType) emit('S', [lval(ctx, tgt), reg('RV')]);
+            else if (tt === 'string') { const t = helperCall(ctx, 'num', [reg('RV')]); emit('S', [lval(ctx, tgt), t]); }
+            else unsupported.push(tr('mgNoTextNum'));
           }
           return;
         }
@@ -487,6 +628,83 @@
       }
     }
 
+    // ------------------------------------------------------------ Eingebaute Text-Routinen
+
+    function genHelpers() {
+      const K = (i) => String(K0 + i);
+      const X1 = reg('X1'), X2 = reg('X2'), RV = reg('RV'), HP = reg('HP'), HR = reg('HR'), RID = reg('RID');
+      const ret = () => { emit('S', [RID, HR]); emit('G', [RET]); };
+      const hctx = { helper: true, tmp: 0 };
+      if (usedHelp.has('cat')) {
+        note(''); note('; ' + tr('mgHelpCat'));
+        const [r, d, s, k] = [K(0), K(1), K(2), K(3)];
+        const l1 = newLabel(), l2 = newLabel(), l3 = newLabel(), l4 = newLabel();
+        label(HELP.cat);
+        emit('S', [r, HP]);
+        emit('S', [k, '@' + X1]);
+        emit('A', [k, '@' + X2]);
+        emit('S', ['@' + r, k], tr('mgCmtLen'));
+        emit('S', [d, r]);
+        emit('S', [s, X1]);
+        emit('S', [k, '@' + X1]);
+        label(l1); emit('E', [k, l2]); emit('A', [s, '#1']); emit('A', [d, '#1']); emit('S', ['@' + d, '@' + s]); emit('R', [k, '#1']); emit('G', [l1]);
+        label(l2); emit('S', [s, X2]); emit('S', [k, '@' + X2]);
+        label(l3); emit('E', [k, l4]); emit('A', [s, '#1']); emit('A', [d, '#1']); emit('S', ['@' + d, '@' + s]); emit('R', [k, '#1']); emit('G', [l3]);
+        label(l4); emit('S', [HP, d]); emit('A', [HP, '#1']); emit('S', [RV, r]);
+        ret();
+      }
+      if (usedHelp.has('num')) {
+        note(''); note('; ' + tr('mgHelpNum'));
+        const [r, p, x, q, i, j, h, st] = [K(0), K(1), K(2), K(3), K(4), K(5), K(6), K(7)];
+        hctx.tmp = 8;
+        const pos = newLabel(), neg = newLabel(), digit = newLabel(), sub = newLabel(), dDone = newLabel(), dOk = newLabel(),
+          rev = newLabel(), revBody = newLabel(), done = newLabel();
+        label(HELP.num);
+        emit('S', [r, HP]);
+        emit('S', [x, X1]);
+        emit('S', [p, r]);
+        emit('A', [p, '#1']);
+        hctx.tmp = 8; signJump(hctx, x, neg, pos);
+        label(neg); emit('S', ['@' + p, '#45'], '-'); emit('A', [p, '#1']); emit('N', [x]);
+        label(pos); emit('S', [st, p]);
+        // Ziffern von hinten: x % 10 durch wiederholtes Abziehen
+        label(digit); emit('S', [q, '#0']);
+        label(sub); emit('S', [h, x]); emit('R', [h, '#10']);
+        hctx.tmp = 8; signJump(hctx, h, dDone, dOk);
+        label(dOk); emit('S', [x, h]); emit('A', [q, '#1']); emit('G', [sub]);
+        label(dDone); emit('S', ['@' + p, x]); emit('A', ['@' + p, '#48'], tr('mgCmtDigit')); emit('A', [p, '#1']);
+        emit('S', [x, q]); emit('E', [x, rev]); emit('G', [digit]);
+        // Ziffern umdrehen (st … p−1)
+        label(rev); emit('S', [i, st]); emit('S', [j, p]); emit('R', [j, '#1']);
+        label(revBody); emit('S', [h, j]); emit('R', [h, i]); emit('E', [h, done]);
+        const swap = newLabel();
+        hctx.tmp = 8; signJump(hctx, h, done, swap);
+        label(swap);
+        emit('S', [h, '@' + i]); emit('S', ['@' + i, '@' + j]); emit('S', ['@' + j, h]);
+        emit('A', [i, '#1']); emit('R', [j, '#1']); emit('G', [revBody]);
+        label(done); emit('S', [h, p]); emit('R', [h, r]); emit('R', [h, '#1']); emit('S', ['@' + r, h], tr('mgCmtLen'));
+        emit('S', [HP, p]); emit('S', [RV, r]);
+        ret();
+      }
+      if (usedHelp.has('cmp')) {
+        note(''); note('; ' + tr('mgHelpCmp'));
+        const [la, lb, pa, pb, d] = [K(0), K(1), K(2), K(3), K(4)];
+        const loop = newLabel(), next = newLabel(), aEnd = newLabel(), lt = newLabel(), gt = newLabel(), eq = newLabel(), out = newLabel();
+        label(HELP.cmp);
+        emit('S', [la, '@' + X1]); emit('S', [lb, '@' + X2]); emit('S', [pa, X1]); emit('S', [pb, X2]);
+        label(loop); emit('E', [la, aEnd]); emit('E', [lb, gt]);
+        emit('A', [pa, '#1']); emit('A', [pb, '#1']);
+        emit('S', [d, '@' + pa]); emit('R', [d, '@' + pb]); emit('E', [d, next]);
+        hctx.tmp = 5; signJump(hctx, d, lt, gt);
+        label(next); emit('R', [la, '#1']); emit('R', [lb, '#1']); emit('G', [loop]);
+        label(aEnd); emit('E', [lb, eq]); emit('G', [lt]);
+        label(lt); emit('S', [RV, '#-1']); emit('G', [out]);
+        label(gt); emit('S', [RV, '#1']); emit('G', [out]);
+        label(eq); emit('S', [RV, '#0']);
+        label(out);
+        ret();
+      }
+    }
     // ------------------------------------------------------------ Zusammenbau
 
     const frames = new Map(program.fns.filter((f) => !f.isMain).map((f) => [f, frameOf(f)]));
@@ -503,15 +721,19 @@
       note('; ' + tr('mgSub', fn.name, fn.params.map((p) => p.name).join(', ')));
       note('; ' + tr('mgFrame', [...fr.slot].map(([n, k]) => 'FP+' + k + ' ' + n).join(', ')));
       label(fnLabel.get(fn.name));
-      if (fn.returnType !== 'void') {
+      // Variablen im Rahmen auf 0 setzen (der Stapel wird wiederverwendet)
+      for (const [n, k] of fr.slot) {
+        const v = fr.scope.get(n);
+        if (v && v.kind === 'param') continue;
         ctx.tmp = 0;
-        if (fn.returnType === 'integer') store(ctx, 'result', tryParse(fn.resultInit) || { k: 'num', v: 0, raw: '0' });
-        else unsupported.push(tr('mgNoText'));
+        const t = String(temp(ctx));
+        emit('S', [t, reg('FP')]); emit('A', [t, '#' + k]); emit('S', ['@' + t, '#0']);
       }
+      if (fn.returnType !== 'void') { ctx.tmp = 0; store(ctx, 'result', tryParse(fn.resultInit)); }
       genSeq(ctx, fn.body);
       ctx.tmp = 0;
-      if (fn.returnType === 'integer') emit('S', [String(reg('RV')), varOperand(ctx, 'result')], tr('mgCmtResult'));
-      const SP = String(reg('SP')), FP = String(reg('FP')), RID = String(reg('RID'));
+      if (fn.returnType !== 'void') emit('S', [reg('RV'), varOperand(ctx, 'result')], tr('mgCmtResult'));
+      const SP = reg('SP'), FP = reg('FP'), RID = reg('RID');
       const t = String(temp(ctx));
       emit('S', [SP, FP], tr('mgCmtPop'));
       emit('S', [RID, '@' + FP]);
@@ -521,10 +743,13 @@
       emit('G', [RET]);
     }
 
+    genHelpers();
+    if (usedHelp.size) maxK = Math.max(maxK, 10);
+
     if (callSites.length) {
       note('');
       note('; ' + tr('mgCmtDispatch'));
-      const RID = String(reg('RID'));
+      const RID = reg('RID');
       label(RET);
       callSites.forEach((l) => { emit('R', [RID, '#1']); emit('E', [RID, l]); });
       emit('T');
@@ -536,10 +761,10 @@
     const heapBase = Math.ceil((TEMP0 + maxTemp + 1) / 100) * 100;
     const init = [];
     if (usesStack) init.push({ op: 'S', args: [String(R.SP), '#' + STACK], cmt: tr('mgCmtStack') });
-    if (usesHeap) init.push({ op: 'S', args: [String(R.HP), '#' + heapBase], cmt: tr('mgCmtHeap') });
+    if (usesHeap || usedHelp.size) { usedReg.add('HP'); init.push({ op: 'S', args: [String(R.HP), '#' + heapBase], cmt: tr('mgCmtHeap') }); }
     code.splice(initAt, 0, ...init);
 
-    // Leere Sprünge zum direkt folgenden Label entfernen
+    // Sprünge zum direkt folgenden Label entfernen
     for (let i = 0; i < code.length - 1; i++) {
       const c = code[i];
       if (c.op === 'G' && !c.label) {
@@ -548,20 +773,22 @@
         if (j < code.length && code[j].label === c.args[0]) { code.splice(i, 1); i--; }
       }
     }
-    // Labels, die nur auf leere Sprünge zeigen, bleiben – sie sind harmlos.
 
     // Ausgabe
     const out = ['; ' + tr('mgHeader1'), '; ' + tr('mgHeader2'), ';'];
     const cells = [...mainCell].map(([n, c]) => c + ' = ' + n);
+    if (textStored) cells.unshift('0 = ' + tr('mgEmptyText'));
     if (cells.length) out.push('; ' + tr('mgCells') + ' ' + cells.join(', '));
     const regs = Object.entries(R).filter(([k]) => usedReg.has(k)).map(([k, c]) => c + ' = ' + k);
-    if (regs.length || maxTemp) out.push('; ' + tr('mgRegs') + ' ' + regs.concat(maxTemp ? [TEMP0 + '…' + (TEMP0 + maxTemp - 1) + ' = ' + tr('mgTemps')] : []).join(', '));
+    if (maxK) regs.push(K0 + '…' + (K0 + maxK - 1) + ' = ' + tr('mgHelpCells'));
+    if (maxTemp) regs.push(TEMP0 + '…' + (TEMP0 + maxTemp - 1) + ' = ' + tr('mgTemps'));
+    if (regs.length) out.push('; ' + tr('mgRegs') + ' ' + regs.join(', '));
     const uniq = [...new Set(unsupported)];
     if (uniq.length) out.push(';', '; ⚠ ' + uniq.join(' '));
     out.push('');
     for (const c of code) {
       if (c.text !== undefined) { out.push(c.text); continue; }
-      const lab = c.label ? (c.label + ':').padEnd(10) : ' '.repeat(10);
+      const lab = c.label ? (c.label + ': ').padEnd(10) : ' '.repeat(10);
       const ins = (c.op + '  ' + c.args.join(' ')).trimEnd();
       out.push((lab + (c.cmt ? ins.padEnd(18) + '; ' + c.cmt : ins)).trimEnd());
     }
@@ -571,33 +798,81 @@
 
   // ------------------------------------------------------------ Interpreter
 
+  /** Zeile in Befehl zerlegen: Label, Befehl, Operanden (Textkonstanten mit ; und Leerzeichen erlaubt). */
+  function parseLine(raw) {
+    const toks = [];
+    let i = 0, labelName = null;
+    const s = raw;
+    while (i < s.length) {
+      const c = s[i];
+      if (c === ';') break;
+      if (/\s/.test(c)) { i++; continue; }
+      if (c === '"') {
+        let j = i + 1, v = '';
+        while (j < s.length && s[j] !== '"') {
+          if (s[j] === '\\' && j + 1 < s.length) { const e = s[j + 1]; v += e === 'n' ? '\n' : e === 't' ? '\t' : e === 'r' ? '\r' : e; j += 2; }
+          else v += s[j++];
+        }
+        toks.push({ str: v });
+        i = j + 1;
+        continue;
+      }
+      let j = i;
+      while (j < s.length && !/[\s;"]/.test(s[j])) j++;
+      toks.push(s.slice(i, j));
+      i = j;
+    }
+    const m = toks.length && typeof toks[0] === 'string' ? /^([A-Za-z_]\w*):(.*)$/.exec(toks[0]) : null;
+    if (m) { labelName = m[1]; if (m[2]) toks[0] = m[2]; else toks.shift(); }
+    else if (toks.length > 1 && toks[1] === ':') { labelName = toks.shift(); toks.shift(); }
+    return { labelName, toks };
+  }
+
   /**
    * Führt ein MARTIN-GOES-Programm aus.
    * @param src     Quelltext
-   * @param io      { input(): BigInt|number|null, output(BigInt), maxSteps }
+   * @param io      { input(): string|null (eine Zeile), output(string), maxSteps }
    * @returns       { steps, error }
    */
   function run(src, io = {}) {
     const prog = [];
     const labels = new Map();
     String(src).split('\n').forEach((raw, lineNo) => {
-      let s = raw.replace(/;.*$/, '').trim();
-      const m = /^([A-Za-z_]\w*)\s*:\s*/.exec(s);
-      if (m) { labels.set(m[1], prog.length); s = s.slice(m[0].length); }
-      if (!s) return;
-      const [op, ...args] = s.split(/\s+/);
-      prog.push({ op: op.toUpperCase(), args, line: lineNo + 1 });
+      const { labelName, toks } = parseLine(raw);
+      if (labelName) labels.set(labelName, prog.length);
+      if (!toks.length) return;
+      const [op, ...args] = toks;
+      prog.push({ op: String(op).toUpperCase(), args, line: lineNo + 1 });
     });
     const mem = new Map();
     const get = (a) => mem.get(a.toString()) || 0n;
     const set = (a, v) => mem.set(a.toString(), v);
+    const err = (ins, m) => new Error('Zeile ' + ins.line + ': ' + m);
+    const isText = (o) => typeof o === 'string' && o.startsWith('$');
     const addr = (o, ins) => {
+      if (typeof o !== 'string') throw err(ins, 'Text an falscher Stelle');
+      if (o.startsWith('$')) o = o.slice(1);
       if (o.startsWith('@')) return get(BigInt(o.slice(1)));
-      if (o.startsWith('#')) throw new Error('Zeile ' + ins.line + ': Konstante als Ziel');
+      if (o.startsWith('#')) throw err(ins, 'Konstante als Ziel');
       return BigInt(o);
     };
-    const value = (o, ins) => (o.startsWith('#') ? BigInt(o.slice(1)) : get(addr(o, ins)));
-    const jump = (l, ins) => { if (!labels.has(l)) throw new Error('Zeile ' + ins.line + ': Label ' + l + ' fehlt'); return labels.get(l); };
+    const value = (o, ins) => {
+      if (typeof o !== 'string') throw err(ins, 'Text an falscher Stelle');
+      return o.startsWith('#') ? BigInt(o.slice(1)) : get(addr(o, ins));
+    };
+    const readText = (a) => {
+      const n = Number(get(a));
+      let s = '';
+      for (let k = 1; k <= n; k++) s += String.fromCodePoint(Number(get(a + BigInt(k))));
+      return s;
+    };
+    const writeText = (a, s) => {
+      const cps = [...s];
+      set(a, BigInt(cps.length));
+      cps.forEach((ch, k) => set(a + BigInt(k + 1), BigInt(ch.codePointAt(0))));
+    };
+    const jump = (l, ins) => { if (!labels.has(l)) throw err(ins, 'Label ' + l + ' fehlt'); return labels.get(l); };
+    const out = (s) => { if (io.output) io.output(s); };
     let pc = 0, steps = 0;
     const max = io.maxSteps || 50000000;
     try {
@@ -610,13 +885,25 @@
           case 'A': set(addr(x, ins), get(addr(x, ins)) + value(y, ins)); break;
           case 'R': set(addr(x, ins), get(addr(x, ins)) - value(y, ins)); break;
           case 'T': return { steps };
-          case 'I': { const v = io.input ? io.input() : null; set(addr(x, ins), v == null ? 0n : BigInt(v)); break; }
+          case 'I': {
+            const line = io.input ? io.input() : null;
+            if (isText(x)) writeText(addr(x, ins), line == null ? '' : String(line).replace(/\r$/, ''));
+            else { const t = String(line == null ? '' : line).trim(); set(addr(x, ins), /^[+-]?\d+$/.test(t) ? BigInt(t) : 0n); }
+            break;
+          }
           case 'N': set(addr(x, ins), -get(addr(x, ins))); break;
           case 'G': pc = jump(x, ins); break;
-          case 'O': if (io.output) io.output(value(x, ins)); break;
+          case 'O':
+            if (typeof x !== 'string') out(x.str);
+            else if (isText(x)) out(readText(addr(x, ins)));
+            else out(value(x, ins).toString());
+            break;
           case 'E': if (value(x, ins) === 0n) pc = jump(y, ins); break;
-          case 'S': set(addr(x, ins), value(y, ins)); break;
-          default: throw new Error('Zeile ' + ins.line + ': unbekannter Befehl ' + ins.op);
+          case 'S':
+            if (isText(x) && y && typeof y !== 'string') writeText(addr(x, ins), y.str);
+            else set(addr(x, ins), value(y, ins));
+            break;
+          default: throw err(ins, 'unbekannter Befehl ' + ins.op);
         }
       }
       return { steps };

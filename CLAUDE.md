@@ -31,7 +31,7 @@ exportieren sie als C-Code. Zielgruppe: Unterricht in Österreich, daher **Deuts
      (`Number`, `Zahl`, `Text[]` …) akzeptiert (`model.normType`).
    - Die Ergebnisvariable heißt immer `result` (im alten DE-Modus hieß sie `resultat`, war dort aber kaputt).
 3. **Simulation = alle Export-Sprachen** (C, C++, C#, Java, Python, JavaScript, bash, csh, Lua, Rust, x86-DOS, Fortran, COBOL,
-   BASIC, RPG, MARTIN GOES – bei MARTIN GOES nur die Zahlen). Gleiche Eingaben müssen gleiche Ausgaben liefern.
+   BASIC, RPG, MARTIN GOES). Gleiche Eingaben müssen gleiche Ausgaben liefern.
    Das ist durch Tests abgesichert (siehe unten) – nach Änderungen an `interp.js`, `cgen.js` oder
    `pyimport.js` immer die Tests laufen lassen und den C-Code mit gcc übersetzen.
 4. **Bedienbar auf Desktop, Tablet und Handy** (Touch: Antippen fügt ein, langes Drücken zieht).
@@ -166,10 +166,13 @@ Reiter *Code* hat eine Sprachwahl (`settings.codeLang`, Liste `CODE_LANGS` + `CO
   Array-Zugriff rechts werden schrittweise mit Hilfsvariable gebaut.
 - **RPG:** ohne IBM i nicht ausführbar; Ausgabe über `DSPLY` in 52-Zeichen-Stücken, Texte `varchar(256)`, Arrays `dim(1000)`.
   Unsicherheiten stehen im Kopf von rpggen.js.
-- **MARTIN GOES:** Definition in Hilfe und README. Hauptprogramm-Variablen = Zellen 0, 1, …; danach SP, FP, HP, RV, RID und
-  Zwischenzellen. `<` per Zählschleife (signJump), `/` und `%` durch wiederholtes Abziehen, Unterprogramme mit Rahmen ab
-  Zelle 1000000 und Rücksprung über die Nummer in RID (Label `zurueck`). Texte gibt es nicht: `generate(p, {report: true})`
-  liefert `unsupported`; der Test vergleicht nur die Zahlen-Teile der Ausgaben (`mgExpected` in tests/export.cjs).
+- **MARTIN GOES:** Definition in Hilfe und README (mit Text-Erweiterung: `"…"`, `$x`, `I $x`, `O $x`, `S $x "…"`, O ohne Zeilenumbruch).
+  Hauptprogramm-Variablen = Zellen 0, 1, … (mit Texten ab 1, Zelle 0 = leerer Text); danach SP, FP, HP, RV, RID, HR, X1, X2,
+  K-Zellen der Text-Routinen und Zwischenzellen. `<` per Zählschleife (signJump), `/` und `%` durch wiederholtes Abziehen,
+  Unterprogramme mit Rahmen ab Zelle 1000000 und Rücksprung über die Nummer in RID (Label `zurueck`). Texte: unveränderlich
+  auf der Halde, Variable = Adresse; Routinen txt_cat/txt_num/txt_cmp (Aufruf mit X1/X2, Rücksprung-Nr. in HR, gleicher
+  Verteiler `zurueck`). Nicht übersetzbar: Text → Zahl (`generate(p, {report: true}).unsupported`). Der Test vergleicht die
+  komplette Ausgabe wie bei den anderen Sprachen.
 - Alle Generatoren: erst alle Hilfsfunktionen definieren, `run()` am Ende aufrufen (const-Funktionen sind vorher
   nicht initialisiert).
 

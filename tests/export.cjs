@@ -76,43 +76,6 @@ function stripPrompts(stdout, prompts) {
   return s.replace(/\n$/, '').split('\n').filter((l, i, a) => !(a.length === 1 && l === ''));
 }
 
-/**
- * MARTIN GOES kennt nur Zahlen: erwartet werden die Zahlen-Teile jeder Ausgabe, je eine Zeile.
- * Dazu läuft die Simulation mit einem umgebauten Programm (Ausgabe "Summe: " + s → Ausgabe s).
- */
-function mgExpected(c) {
-  const program = BBE.model.programFromBB(JSON.parse(JSON.stringify(c.bb)));
-  let k = 0;
-  for (const fn of program.fns) {
-    const scope = BBE.analyze.scopeOf(fn);
-    const fix = (seq) => {
-      if (!seq) return;
-      for (let i = seq.length - 1; i >= 0; i--) {
-        const n = seq[i];
-        ['then', 'else', 'body'].forEach((f) => fix(n[f]));
-        if (n.cases) n.cases.forEach((cs) => fix(cs.body));
-        if (n.kind !== 'output') continue;
-        const parts = [];
-        const walk = (a) => {
-          const s = BBE.expr.strip(a);
-          if (s.k === 'bin' && s.op === '+' && BBE.analyze.typeOf(s, scope) === 'string') { walk(s.a); walk(s.b); } else parts.push(s);
-        };
-        try { walk(BBE.expr.parseCached(n.expr)); } catch (e) { continue; }
-        const nums = parts.filter((p) => BBE.analyze.typeOf(p, scope) === 'integer');
-        seq.splice(i, 1, ...nums.map((p) => ({ id: 'mg' + (++k), kind: 'output', expr: BBE.analyze.exprText(p), comment: '' })));
-      }
-    };
-    fix(fn.body);
-  }
-  const out = [];
-  const it = new BBE.interp.Interpreter(program, { output: (s) => out.push(s) });
-  const gen = it.run();
-  const queue = c.inputs.slice();
-  let send, r;
-  while (!(r = gen.next(send)).done) { send = undefined; if (r.value.type === 'input') send = queue.shift(); }
-  return out;
-}
-
 // ------------------------------------------------------------------ Simulation + Quelltexte erzeugen
 const csDir = path.join(work, 'cs');
 const dirs = {};
@@ -148,7 +111,6 @@ for (const c of cases) {
   }
   if (BBE.mggen) {
     c.mg = BBE.mggen.generate(program, { t: BBE.i18n.t, report: true });
-    c.mgExpected = mgExpected(c);
   }
 }
 
@@ -290,12 +252,12 @@ if (tools.asm) {
 tools.mg = BBE.mggen && (!process.env.BBE_ONLY || process.env.BBE_ONLY.split(',').includes('mg'));
 if (tools.mg) {
   for (const c of cases) {
-    if (c.mg.unsupported.length) { c.results.push('mg – (Text)'); continue; }
+    if (c.mg.unsupported.length) { c.results.push('mg – (' + c.mg.unsupported.join(' ') + ')'); continue; }
     const queue = c.inputs.slice();
-    const got = [];
-    const r = BBE.mggen.run(c.mg.code, { input: () => (queue.length ? BigInt(Math.trunc(Number(queue.shift()))) : null), output: (v) => got.push(v.toString()) });
+    let stdout = '';
+    const r = BBE.mggen.run(c.mg.code, { input: () => (queue.length ? queue.shift() : null), output: (s) => { stdout += s; } });
     if (r.error) c.results.push('MG-ERROR ' + r.error);
-    else c.results.push(JSON.stringify(got) === JSON.stringify(c.mgExpected) ? 'mg ok' : 'MG-DIFF ' + JSON.stringify(got) + ' vs ' + JSON.stringify(c.mgExpected));
+    else compare(c, 'mg', stdout);
   }
 }
 
