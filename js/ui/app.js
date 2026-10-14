@@ -43,7 +43,9 @@
     { id: 'cobol', label: 'COBOL', ext: '.cob', mime: 'text/x-cobol', group: 'classic', gen: 'cobolgen', exp: 'exp.cob', cmt: '*> ' },
     { id: 'basic', label: 'BASIC', ext: '.bas', mime: 'text/x-basic', group: 'classic', gen: 'basicgen', exp: 'exp.bas', cmt: "' " },
     { id: 'rpg', label: 'RPG IV', ext: '.rpgle', mime: 'text/plain', group: 'classic', gen: 'rpggen', exp: 'exp.rpgle' },
-    { id: 'mg', label: 'MARTIN GOES', ext: '.mg', mime: 'text/plain', group: 'teach', gen: 'mggen', exp: 'exp.mg', cmt: '; ' }
+    { id: 'mg', label: 'MARTIN GOES', ext: '.mg', mime: 'text/plain', group: 'teach', gen: 'mggen', exp: 'exp.mg', cmt: '; ' },
+    { id: 'ws', label: 'Whitespace', ext: '.ws', mime: 'text/plain', group: 'esoteric', gen: 'wsgen', exp: 'exp.ws', cmt: '' },
+    { id: 'bf', label: 'Brainfuck', ext: '.bf', mime: 'text/plain', group: 'esoteric', gen: 'bfgen', exp: 'exp.bf', cmt: '' }
   ].filter((l) => BBE[l.gen]);
 
   const defaults = {
@@ -1626,7 +1628,7 @@
     if (dlNs === undefined) { try { dlNs = await G.claude.use('downloads'); } catch (e) { dlNs = null; } }
     if (!dlNs) return 'none';
     // nur bestimmte Endungen sind im Viewer erlaubt
-    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob|sh|csh|lua|rs|bas|asm|rpgle|mg)$/, '.$1.txt');
+    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob|sh|csh|lua|rs|bas|asm|rpgle|mg|ws|bf)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
   }
 

@@ -47,8 +47,8 @@ der alten Version wiederherstellen* das zuletzt automatisch gesicherte Diagramm 
   `strcmp` für Textvergleiche, `snprintf` für Verkettungen, `scanf(" %254[^\n]")` statt `gets`,
   Zeiger für InOut-Zahlen, Größenvariablen für Arrays, FALLS mit Text als `if`/`else if`
 
-**Export in 16 Sprachen** – C, C++, C#, Java, Python, JavaScript, bash, csh, Lua, Rust, x86-Assembler (MS-DOS), Fortran,
-COBOL, BASIC, RPG IV und MARTIN GOES (Auswahlliste im Reiter *Code*)
+**Export in 18 Sprachen** – C, C++, C#, Java, Python, JavaScript, bash, csh, Lua, Rust, x86-Assembler (MS-DOS), Fortran,
+COBOL, BASIC, RPG IV, MARTIN GOES, Whitespace und Brainfuck (Auswahlliste im Reiter *Code*)
 - bash 4.3+: Funktionen mit `local`, Arrays als Namensreferenz (`local -n`), Rückgabe/InOut über `_ret`
 - csh/tcsh: keine Funktionen – Unterprogramme sind Sprungmarken (`goto`), Rücksprung über eine Liste, Rekursion mit eigenem Stapel
 - Lua 5.3+: Arrays als Tabelle ab Index 0 (Länge in `.n`), InOut als Rückgabewerte, Division wie C
@@ -58,6 +58,11 @@ COBOL, BASIC, RPG IV und MARTIN GOES (Auswahlliste im Reiter *Code*)
 - BASIC im QBasic-Stil (SUB/FUNCTION, SELECT CASE, `\` und `MOD`) – für FreeBASIC `fbc -lang qb` gedacht
 - RPG IV (vollständig freies Format, IBM i 7.3+): Prozeduren, `varchar`, `dim(1000)`, Ein-/Ausgabe über `DSPLY`
 - MARTIN GOES: Zellen, ganze Zahlen, Texte und Sprünge (Definition unten); Text → Zahl lässt sich nicht übersetzen
+- Whitespace (0.3): Stapelmaschine mit Halde, echte Unterprogramme (call/ret), Texte als Länge + Zeichen; vor jedem
+  unsichtbaren Befehl steht ein sichtbares Kürzel (`push_5`, `call:fak`, `jz:wenn3_sonst`), Kommentare mit `·` statt Leerzeichen
+- Brainfuck: Zahlen als zwei Zellen (P − N, nie negativ), Rahmen je Unterprogramm, Rekursion über eine Verteiler-Schleife,
+  Arrays mit variablem Index durch „wandernde“ Zellen, Texte als UTF‑8-Bytes (höchstens 127); Zellen mit mindestens 16 Bit.
+  Arrays von Texten werden nicht übersetzt
 - JavaScript: läuft mit `node datei.js` (oder im Browser über `prompt`), InOut-Werte werden zurückgegeben (`[x, y] = tausche(x, y)`)
 - Fortran 2008: ein Programm mit `contains`, Texte als `character(len=:), allocatable`, Arrays ab Index 0, InOut als `intent(inout)`
 - COBOL (GnuCOBOL 3, freies Format): jedes Unterprogramm ein eigenes `RECURSIVE`-Programm, `CALL … USING BY CONTENT/BY REFERENCE`,
@@ -110,7 +115,8 @@ COBOL, BASIC, RPG IV und MARTIN GOES (Auswahlliste im Reiter *Code*)
 - Übersetzung aus dem Blockbild: „kleiner als“ über eine Zählschleife (E prüft nur auf 0), Division durch wiederholtes Abziehen,
   Unterprogramme mit Rahmen auf einem Stapel ab Zelle 1000000 und Rücksprung über eine Nummer, Arrays und Texte auf einer Halde,
   eingebaute Routinen `txt_cat`, `txt_num`, `txt_cmp` für Verkettung, Zahl → Text und Textvergleich.
-  Ein Interpreter steckt in `js/core/mggen.js` (`BBE.mggen.run`).
+  Der erzeugte Code hat einen Speicherplan im Kopf, Klartext-Kommentare je Zeile (`; t1 := t1 · n`) und Sprungmarken
+  nach Blöcken (`dann3`, `solange5`). Ein Interpreter steckt in `js/core/mggen.js` (`BBE.mggen.run`).
 
 **Python → Blockbild**
 - *Öffnen* nimmt auch `.py`-Dateien: Zuweisungen, `input`/`print`, f-Strings, `if/elif/else`, `while`,

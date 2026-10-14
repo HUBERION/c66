@@ -32,7 +32,7 @@ exportieren sie als C-Code. Zielgruppe: Unterricht in Österreich, daher **Deuts
      (`Number`, `Zahl`, `Text[]` …) akzeptiert (`model.normType`).
    - Die Ergebnisvariable heißt immer `result` (im alten DE-Modus hieß sie `resultat`, war dort aber kaputt).
 3. **Simulation = alle Export-Sprachen** (C, C++, C#, Java, Python, JavaScript, bash, csh, Lua, Rust, x86-DOS, Fortran, COBOL,
-   BASIC, RPG, MARTIN GOES). Gleiche Eingaben müssen gleiche Ausgaben liefern.
+   BASIC, RPG, MARTIN GOES, Whitespace, Brainfuck). Gleiche Eingaben müssen gleiche Ausgaben liefern.
    Das ist durch Tests abgesichert (siehe unten) – nach Änderungen an `interp.js`, `cgen.js` oder
    `pyimport.js` immer die Tests laufen lassen und den C-Code mit gcc übersetzen.
 4. **Bedienbar auf Desktop, Tablet und Handy** (Touch: Antippen fügt ein, langes Drücken zieht).
@@ -65,6 +65,8 @@ js/core/            ohne DOM, auch in Node lauffähig (Tests!)
   basicgen.js       BASIC im QBasic-Stil (für FreeBASIC -lang qb)
   rpggen.js         RPG IV **FREE (IBM i 7.3+, DSPLY) – nicht ausführbar getestet
   mggen.js          MARTIN GOES (Lehrmaschine von Martin) + Interpreter BBE.mggen.run
+  wsgen.js          Whitespace 0.3 + Interpreter BBE.wsgen.run (sichtbare Kürzel vor jedem Befehl)
+  bfgen.js          Brainfuck + Interpreter BBE.bfgen.run
   examples.js       eingebaute Beispiele (im .bb-Format, Texte je Sprache über L(de, en))
   pyimport.js       Python → Blockbild (eigener Tokenizer/Parser für die Schul-Teilmenge)
 js/ui/              Oberfläche
@@ -173,7 +175,22 @@ Reiter *Code* hat eine Sprachwahl (`settings.codeLang`, Liste `CODE_LANGS` + `CO
   Unterprogramme mit Rahmen ab Zelle 1000000 und Rücksprung über die Nummer in RID (Label `zurueck`). Texte: unveränderlich
   auf der Halde, Variable = Adresse; Routinen txt_cat/txt_num/txt_cmp (Aufruf mit X1/X2, Rücksprung-Nr. in HR, gleicher
   Verteiler `zurueck`). Nicht übersetzbar: Text → Zahl (`generate(p, {report: true}).unsupported`). Der Test vergleicht die
-  komplette Ausgabe wie bei den anderen Sprachen.
+  komplette Ausgabe wie bei den anderen Sprachen. Lesbarkeit: `emit()` bildet den Klartext-Kommentar sofort (`explain`),
+  `alias` merkt, welche Hilfszelle gerade auf welche Variable zeigt (`@t1` → `result`); Textkonstanten im Datenbereich
+  (`litPool`, Platzhalter `#§n`), Sprungmarken über `group('then', 'else', 'end')`, unbenutzte Marken fallen weg.
+- **Whitespace:** Halde: 0 = leerer Text, 1 = HP, 2 = FP, ab 3 Variablen des Hauptprogramms und Zellen der Routinen; danach
+  Rahmen der Unterprogramme (FP+Versatz, echtes call/ret, Ergebnis auf dem Stapel), dann die Halde (Texte, Arrays).
+  Routinen txt_pack/cat/num/cmp/out/read/int, int_read, int_div/int_mod (Whitespace-div/mod runden ab → wie C korrigiert),
+  arr_new, txt_init. Lesbarkeit: Kürzel aus Nicht-Leerraum-Zeichen vor jedem Befehl, Kommentarzeilen als nie
+  angesprungene Marken, '·' statt Leerzeichen. Interpreter: BigInt, div/mod wie Haskell.
+- **Brainfuck:** Zahl = zwei Zellen P/N (Wert P − N, Zellen nie negativ → läuft auf 16/32-Bit- und unbegrenzten Zellen).
+  Fester Rahmen je Unterprogramm (Kopf RUN PC T E RET, Zahlen rechts, Arrays/Texte gespiegelt links); mit Aufrufen wird das
+  Programm eine Verteiler-Schleife über Blocknummern (PC), Aufruf = Parameter in den nächsten Rahmen, RET = Fortsetzungsblock.
+  Arrays: 6 Zellen je Element, variabler Index „wandert“. Texte: UTF-8-Bytes, höchstens 127. Nicht übersetzt: Text-Arrays.
+  Kommentare: `safe()` ersetzt die 8 Befehlszeichen durch ähnlich aussehende Unicode-Zeichen. Interpreter: unbegrenzte Zellen,
+  meldet negative Zellen/Zeiger links vom Start als Fehler (prüft die eigenen Regeln mit).
+- Sprachen mit eigenem Interpreter (MARTIN GOES, Whitespace, Brainfuck) laufen im Test über INTERP_LANGS in tests/export.cjs:
+  `generate(p, {report: true})` → `{code, unsupported}`, `run(code, {stdin, output})`.
 - Alle Generatoren: erst alle Hilfsfunktionen definieren, `run()` am Ende aufrufen (const-Funktionen sind vorher
   nicht initialisiert).
 

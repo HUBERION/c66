@@ -11,7 +11,7 @@
   <a href="#h-sub">Unterprogramme</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Ausführen</a>
-  <a href="#h-c">Code (16 Sprachen)</a>
+  <a href="#h-c">Code (18 Sprachen)</a>
   <a href="#h-mg">MARTIN GOES</a>
   <a href="#h-files">Dateien</a>
   <a href="#h-python">Python übernehmen</a>
@@ -92,7 +92,7 @@
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code in 16 Sprachen</h3>
+  <h3>Code in 18 Sprachen</h3>
   <p>Der Reiter <b>Code</b> zeigt das Programm in der Sprache, die in der Auswahlliste gewählt ist; <i>Exportieren</i> und
   der Knopf <i>Herunterladen</i> speichern die Datei.</p>
   <table>
@@ -102,6 +102,7 @@
     <tr><td>Systemnah</td><td>Rust, x86-Assembler für MS-DOS (NASM, .COM-Programm)</td></tr>
     <tr><td>Klassiker</td><td>Fortran, COBOL, BASIC (QBasic-Stil), RPG IV (IBM i)</td></tr>
     <tr><td>Lehrmaschine</td><td>MARTIN GOES (siehe eigenes Kapitel)</td></tr>
+    <tr><td>Esoterisch</td><td>Whitespace (nur Leerzeichen, Tabulator, Zeilenumbruch sind Befehle – alles Sichtbare ist Kommentar), Brainfuck (acht Zeichen <code>+ - &lt; &gt; . , [ ]</code>)</td></tr>
   </table>
   <p>Alle Übersetzungen rechnen wie C mit ganzen Zahlen (<code>7 / 2</code> ergibt 3). Einschränkungen: x86-Assembler rechnet mit
   16 Bit (−32768 … 32767), COBOL und RPG kennen höchstens 1000 Array-Elemente, RPG gibt über <code>DSPLY</code> aus
@@ -183,6 +184,9 @@ ende: O  1          ; ergebnis ausgeben
       T</pre>
   <h4>So übersetzt der Editor</h4>
   <ul>
+    <li><b>Lesehilfe:</b> Der Kopf enthält einen Speicherplan (welche Zelle wofür), jede Zeile einen Kommentar in Klartext
+    (z. B. <code>S 9 2 ; X1 := antwort</code>, <code>M 22 @24 ; t1 := t1 · n</code>). <code>t1</code>, <code>t2</code> … sind Zwischenzellen
+    einer Anweisung, Sprungmarken heißen nach ihrem Block (<code>dann3</code>, <code>sonst3</code>, <code>solange5</code> …).</li>
     <li>Variablen des Hauptprogramms liegen in den Zellen 0, 1, 2, … (der Kopf des Programms zeigt, welche Zelle welche Variable ist).
     Kommen Texte vor, bleibt Zelle 0 frei: sie ist immer 0 und dient als leerer Text.</li>
     <li><b>Vergleiche:</b> <code>E</code> prüft nur auf 0. „Kleiner als“ wird mit einer Schleife nachgebaut: die Differenz d wird
@@ -248,7 +252,7 @@ ende: O  1          ; ergebnis ausgeben
   <a href="#h-sub">Subprograms</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Running</a>
-  <a href="#h-c">Code (16 languages)</a>
+  <a href="#h-c">Code (18 languages)</a>
   <a href="#h-mg">MARTIN GOES</a>
   <a href="#h-files">Files</a>
   <a href="#h-python">Importing Python</a>
@@ -329,7 +333,7 @@ ende: O  1          ; ergebnis ausgeben
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code in 16 languages</h3>
+  <h3>Code in 18 languages</h3>
   <p>The <b>Code</b> tab shows the program in the language chosen in the list; <i>Export</i> and the <i>Download</i>
   button save the file.</p>
   <table>
@@ -339,6 +343,7 @@ ende: O  1          ; ergebnis ausgeben
     <tr><td>Systems</td><td>Rust, x86 assembler for MS-DOS (NASM, .COM program)</td></tr>
     <tr><td>Classics</td><td>Fortran, COBOL, BASIC (QBasic style), RPG IV (IBM i)</td></tr>
     <tr><td>Teaching machine</td><td>MARTIN GOES (see its own chapter)</td></tr>
+    <tr><td>Esoteric</td><td>Whitespace (only space, tab and line feed are commands – everything visible is a comment), Brainfuck (eight characters <code>+ - &lt; &gt; . , [ ]</code>)</td></tr>
   </table>
   <p>All translations compute with whole numbers like C (<code>7 / 2</code> gives 3). Limits: x86 assembler uses 16 bit
   (−32768 … 32767), COBOL and RPG allow at most 1000 array elements, RPG prints via <code>DSPLY</code> (at most 52 characters
@@ -418,6 +423,9 @@ done: O  1          ; output result
       T</pre>
   <h4>How the editor translates</h4>
   <ul>
+    <li><b>Reading aid:</b> the header contains a memory map (which cell is used for what), every line a plain-language comment
+    (e.g. <code>S 9 2 ; X1 := antwort</code>, <code>M 22 @24 ; t1 := t1 · n</code>). <code>t1</code>, <code>t2</code> … are intermediate cells
+    of a statement, labels are named after their block (<code>then3</code>, <code>else3</code>, <code>while5</code> …).</li>
     <li>Variables of the main program live in cells 0, 1, 2, … (the program header lists which cell holds which variable).
     If texts occur, cell 0 stays free: it is always 0 and serves as the empty text.</li>
     <li><b>Comparisons:</b> <code>E</code> only tests for 0. “Less than” is built with a loop: the difference d is counted up and

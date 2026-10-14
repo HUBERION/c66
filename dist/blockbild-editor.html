@@ -1034,7 +1034,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   </style>
 </head>
 <body>
-  <!-- Blockbild-Editor 3.0 · gebaut 2026-10-13 · eine Datei, keine externen Abhängigkeiten -->
+  <!-- Blockbild-Editor 3.0 · gebaut 2026-10-14 · eine Datei, keine externen Abhängigkeiten -->
   <div id="app" class="app">
     <noscript>Der Blockbild-Editor benötigt JavaScript.</noscript>
   </div>
@@ -1246,7 +1246,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     javaHelperNum: 'zahlEinlesen', javaHelperNumDoc: 'Fragt so lange, bis eine ganze Zahl eingegeben wird.',
     javaScanner: 'TASTATUR', javaNeedInt: 'Bitte eine ganze Zahl eingeben.',
     javaBoxNote: 'InOut: Java kennt kein call by reference für int/String – der Wert steht in einem Array mit einem Element ([0]).',
-    'code.lang': 'Sprache', 'code.group.main': 'Verbreitet', 'code.group.script': 'Skriptsprachen', 'code.group.system': 'Systemnah', 'code.group.classic': 'Klassiker', 'code.group.teach': 'Lehrmaschine', 'exp.more': 'Weitere Sprachen … (Reiter Code)', 'exp.java': 'Java-Programm herunterladen (.java)', 'exp.py': 'Python-Programm herunterladen (.py)',
+    'code.lang': 'Sprache', 'code.group.main': 'Verbreitet', 'code.group.script': 'Skriptsprachen', 'code.group.system': 'Systemnah', 'code.group.classic': 'Klassiker', 'code.group.teach': 'Lehrmaschine', 'code.group.esoteric': 'Esoterisch', 'exp.ws': 'Whitespace-Programm herunterladen (.ws)', 'exp.bf': 'Brainfuck-Programm herunterladen (.bf)', 'exp.more': 'Weitere Sprachen … (Reiter Code)', 'exp.java': 'Java-Programm herunterladen (.java)', 'exp.py': 'Python-Programm herunterladen (.py)',
     csHeader1: 'Erzeugt mit dem Blockbild-Editor.', csHeader2: 'Zahl -> int, Text -> string, InOut -> ref.',
     csHelperNum: 'ZahlEinlesen',
     cppHeader1: 'Erzeugt mit dem Blockbild-Editor (C++11 oder neuer).', cppHeader2: 'Zahl -> int, Text -> string, Array -> vector, InOut -> Referenz (&).',
@@ -1273,6 +1273,45 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     mgHeader1: 'Erzeugt mit dem Blockbild-Editor (MARTIN GOES).',
     basHeader2: 'Zahl -> LONG (Division mit \\ ganzzahlig, MOD), Text -> STRING, Arrays ab Index 0, InOut -> by reference.',
     basCond: 'bedingung', basDiscard: 'verworfen',
+    bfHeader1: 'Erzeugt mit dem Blockbild‑Editor (Brainfuck)',
+    bfHeader2: 'Interpreter: Zellen mit mindestens 16 Bit (besser 32 Bit); Zellwerte werden nie negativ und laufen nie über',
+    bfHeader3: 'Eingabe: bei Dateiende muss der Lesebefehl 0 liefern oder die Zelle unverändert lassen; Zeilenende LF (CR wird übersprungen)',
+    bfHeader4: 'Band: mindestens {0} Zellen rechts vom Start (jede Rekursionsebene braucht mehr); der Zeiger geht nie links vom Start',
+    bfHeader5: 'Zahlen: zwei Zellen P und N (Wert P minus N); Texte: Bytes in UTF‑8 (höchstens {0}); Arrays mit variabler Länge: höchstens {1} Elemente',
+    bfHeader6: 'Ganze Zahlen wie in C: Division schneidet ab; was nicht mehr in einen Text passt, wird weggelassen',
+    bfFrame: 'Rahmen {0}: {1} Zellen; Zellen ab dem Rahmenkopf: {2}',
+    bfDispatch: 'Verteiler: führt den Block aus, dessen Nummer in PC steht (Rahmenkopf: Zellen 0 bis 4 = RUN PC T E RET)',
+    bfStart: 'Start: RUN = 1 und PC = erster Block des Hauptprogramms',
+    bfBlock: 'Block {0}',
+    bfCont: 'zurück aus {0}',
+    bfEndSub: 'Ende von {0}: PC = RET',
+    bfNoTextArray: 'Brainfuck: Arrays von Texten werden nicht übersetzt',
+    bfBadArg: 'Brainfuck: ein Arrayparameter braucht eine Arrayvariable als Argument',
+    bfText: 'Text',
+    bfArray: 'Array',
+    wsHeader1: 'Erzeugt mit dem Blockbild-Editor (Whitespace 0.3).',
+    wsHeader2: 'Nur Leerzeichen, Tabulator und Zeilenumbruch sind Befehle – alles Sichtbare ist Kommentar; Leerzeichen erscheinen darin als Mittelpunkt.',
+    wsHeader3: 'Vor jedem Befehl steht sein Kürzel, der unsichtbare Code folgt dahinter: push_5, add, retrieve, store, name: (Marke), call:name, jz:name …',
+    wsMemory: 'Speicher: {0}',
+    wsStackHeap: 'Rahmen der Unterprogramme ab Zelle {0} (FP), Halde für Texte und Arrays ab Zelle {1} (HP)',
+    wsHeap: 'Halde für Texte und Arrays ab Zelle {0} (HP)',
+    wsInit: 'Start: HP und FP setzen, Zellen bis {0} anlegen (0), Textkonstanten anlegen',
+    wsMain: 'Hauptprogramm',
+    wsSub: 'Unterprogramm {0} – Rahmen: {1}',
+    wsConst: 'Text {0} → Zelle {1}',
+    wsLabelWords: 'wenn,dann,sonst,ende,solange,rumpf,wiederhole,zaehle,falls,fall,eingabe,bed,ja,nein',
+    wsHelpPack: 'txt_pack: [Zeichen … n] → [Adresse] – neuer Text aus den n Zeichen auf dem Stapel',
+    wsHelpCat: 'txt_cat: [a b] → [Adresse] – Texte aneinanderhängen',
+    wsHelpNum: 'txt_num: [Zahl] → [Adresse] – Zahl als Text',
+    wsHelpCmp: 'txt_cmp: [a b] → [-1|0|1] – Texte Zeichen für Zeichen vergleichen',
+    wsHelpOut: 'txt_out: [a] → [] – Text ausgeben',
+    wsHelpRead: 'txt_read: [] → [Adresse] – Zeile lesen (bis Zeilenumbruch, CR fällt weg; Ende der Eingabe: eof = 1)',
+    wsHelpInt: 'txt_int: [a] → [Zahl ok] – Text als ganze Zahl (ok = 0: ungültig)',
+    wsHelpReadInt: 'int_read: [] → [Zahl 1] oder [0] – Zahl lesen; keine ganze Zahl: Meldung und 0 (nochmal fragen)',
+    wsHelpDiv: 'int_div: [a b] → [a / b] – schneidet zur 0 hin ab wie C (div in Whitespace rundet ab)',
+    wsHelpMod: 'int_mod: [a b] → [a % b] – Rest mit dem Vorzeichen von a wie C (mod in Whitespace: Vorzeichen von b)',
+    wsHelpArr: 'arr_new: [n] → [Adresse] – neues Array [n, 0, 0, …]',
+    wsHelpConst: 'txt_init: Textkonstanten auf der Halde anlegen (einmal beim Start)',
     cshHeader2: 'csh kennt keine Funktionen: Unterprogramme sind Sprungmarken (goto), der Rücksprung läuft über die Liste bb_ret, Variablen tragen den Namen des Unterprogramms als Vorsilbe.',
     cshSub: 'Unterprogramm {0}', cshCall: 'Aufruf: {0}', cshSave: 'eigene Variablen sichern (Rekursion)', cshRestore: 'eigene Variablen zurückholen',
     cshReturn: 'Rücksprung zur Aufrufstelle',
@@ -1310,7 +1349,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     rpgHelperTextDoc: 'Zeigt die Frage mit DSPLY an und liest eine Antwort (höchstens 52 Zeichen).',
     rpgHelperTextLong: 'lange Fragen: alles bis auf die letzten 52 Zeichen vorher ausgeben', rpgNoNumber: 'keine gültige Zahl - nochmal fragen',
     mgHeader2: 'Ganze Zahlen und Texte (Länge + Zeichencodes); Befehle M A R T I N G O E S – Definition in der Hilfe (Kapitel MARTIN GOES).',
-    mgReturnLabel: 'zurueck', mgEndLabel: 'ende', mgCmtAddr: 'Adresse von {0}',
+    mgReturnLabel: 'zurueck', mgEndLabel: 'ende', mgCmtAddr: '{0} ist InOut: Adresse der Variablen des Aufrufers', mgCmtAddrOf: 'Adresse von {0}{1}', mgCmtParam: 'Platz für Parameter {0} im neuen Rahmen',
     mgNoTextNum: 'Text in Zahl umwandeln geht in MARTIN GOES nicht – diese Stellen fehlen.', mgSkipped: 'nicht übersetzt (Text → Zahl)',
     mgEmptyText: 'leerer Text', mgHelpCells: 'Zellen der Text-Routinen', mgCmtReadText: 'Zeile als Text auf die Halde', mgCmtDigit: '+ "0" → Ziffernzeichen',
     mgHelpCat: 'txt_cat: Texte X1 und X2 aneinanderhängen → neuer Text, Adresse in RV',
@@ -1323,7 +1362,10 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     mgCmtRetId: 'Rücksprung-Nummer', mgCmtSaveFp: 'alten FP merken', mgCmtEnd: 'Programmende', mgSub: 'Unterprogramm {0}({1})',
     mgFrame: 'Rahmen: {0}', mgCmtResult: 'Rückgabewert nach RV', mgCmtPop: 'Rahmen freigeben',
     mgCmtDispatch: 'Rücksprung zur Aufrufstelle (Nummer in RID)', mgCmtStack: 'Stapel ab Zelle 1000000', mgCmtHeap: 'Halde für Arrays und Texte',
-    mgCells: 'Variablen:', mgRegs: 'Hilfszellen:', mgTemps: 'Zwischenergebnisse',
+    mgCells: 'Variablen:', mgTemps: 'Zwischenergebnisse einer Anweisung', mgPlan: 'Speicherplan (Zelle – Bedeutung):',
+    mgRegSP: 'Stapelzeiger (nächster freier Platz)', mgRegFP: 'Rahmenzeiger (Rahmen des laufenden Unterprogramms)', mgRegHP: 'Haldenzeiger (nächste freie Zelle)',
+    mgRegRV: 'Rückgabewert', mgRegRID: 'Rücksprung-Nummer', mgRegHR: 'Rücksprung-Nummer für die Text-Routinen', mgRegX: 'Eingabe der Text-Routinen',
+    mgZeroVars: 'eigene Variablen auf 0 setzen (der Stapel wird wiederverwendet)', mgLitHead: 'Textkonstanten', mgMainHead: 'Hauptprogramm', mgPsText: 'Text', mgPsLine: 'Zeile', mgPsNum: 'Zahl einlesen', mgPsOut: 'ausgeben',
     luaHeader2: 'Zahl -> integer (/ und % wie in C), Text -> string, Arrays -> Tabelle ab Index 0 (Länge in .n), InOut-Parameter werden zurückgegeben: x, y = tausche(x, y)',
     luaHelperText: 'text_eingeben', luaHelperDivDoc: 'Ganzzahl-Division wie in C: das Ergebnis wird Richtung 0 abgeschnitten (Luas // rundet ab).',
     luaHelperArrayDoc: 'Array mit Index 0 bis n - 1; die Länge steht in .n (Luas # zählt Index 0 nicht mit).',
@@ -1549,7 +1591,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     javaHelperNum: 'readNumber', javaHelperNumDoc: 'Asks until a whole number is entered.',
     javaScanner: 'KEYBOARD', javaNeedInt: 'Please enter a whole number.',
     javaBoxNote: 'InOut: Java has no call by reference for int/String – the value is kept in a one-element array ([0]).',
-    'code.lang': 'Language', 'code.group.main': 'Popular', 'code.group.script': 'Scripting', 'code.group.system': 'Systems', 'code.group.classic': 'Classics', 'code.group.teach': 'Teaching machine', 'exp.more': 'More languages … (Code tab)', 'exp.java': 'Download Java program (.java)', 'exp.py': 'Download Python program (.py)',
+    'code.lang': 'Language', 'code.group.main': 'Popular', 'code.group.script': 'Scripting', 'code.group.system': 'Systems', 'code.group.classic': 'Classics', 'code.group.teach': 'Teaching machine', 'code.group.esoteric': 'Esoteric', 'exp.ws': 'Download Whitespace program (.ws)', 'exp.bf': 'Download Brainfuck program (.bf)', 'exp.more': 'More languages … (Code tab)', 'exp.java': 'Download Java program (.java)', 'exp.py': 'Download Python program (.py)',
     csHeader1: 'Generated with the block diagram editor.', csHeader2: 'Number -> int, Text -> string, InOut -> ref.',
     csHelperNum: 'ReadNumber',
     cppHeader1: 'Generated with the block diagram editor (C++11 or newer).', cppHeader2: 'Number -> int, Text -> string, array -> vector, InOut -> reference (&).',
@@ -1576,6 +1618,45 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     mgHeader1: 'Generated with the block diagram editor (MARTIN GOES).',
     basHeader2: 'Number -> LONG (integer division with \\, MOD), Text -> STRING, arrays start at index 0, InOut -> by reference.',
     basCond: 'condition', basDiscard: 'discarded',
+    bfHeader1: 'Generated with the block diagram editor (Brainfuck)',
+    bfHeader2: 'Interpreter: cells of at least 16 bits (32 bits recommended); cell values never become negative and never overflow',
+    bfHeader3: 'Input: at end of input the read command must give 0 or leave the cell unchanged; lines end with LF (CR is skipped)',
+    bfHeader4: 'Tape: at least {0} cells to the right of the start (more for each level of recursion); the pointer never moves left of the start',
+    bfHeader5: 'Numbers: two cells P and N (value P minus N); texts: UTF‑8 bytes (at most {0}); arrays with variable length: at most {1} elements',
+    bfHeader6: 'Whole numbers as in C: division truncates; what does not fit into a text is left out',
+    bfFrame: 'Frame {0}: {1} cells; cells from the frame head: {2}',
+    bfDispatch: 'Dispatcher: runs the block whose number is in PC (frame head: cells 0 to 4 = RUN PC T E RET)',
+    bfStart: 'Start: RUN = 1 and PC = first block of the main program',
+    bfBlock: 'Block {0}',
+    bfCont: 'back from {0}',
+    bfEndSub: 'end of {0}: PC = RET',
+    bfNoTextArray: 'Brainfuck: arrays of texts are not translated',
+    bfBadArg: 'Brainfuck: an array parameter needs an array variable as argument',
+    bfText: 'text',
+    bfArray: 'array',
+    wsHeader1: 'Generated with the block diagram editor (Whitespace 0.3).',
+    wsHeader2: 'Only space, tab and line feed are commands – everything visible is a comment; spaces in it are shown as middle dots.',
+    wsHeader3: 'Each command is preceded by its mnemonic, the invisible code follows it: push_5, add, retrieve, store, name: (label), call:name, jz:name …',
+    wsMemory: 'Memory: {0}',
+    wsStackHeap: 'Subprogram frames from cell {0} (FP), heap for texts and arrays from cell {1} (HP)',
+    wsHeap: 'Heap for texts and arrays from cell {0} (HP)',
+    wsInit: 'Start: set HP and FP, create cells up to {0} (0), create text constants',
+    wsMain: 'Main program',
+    wsSub: 'Subprogram {0} – frame: {1}',
+    wsConst: 'Text {0} → cell {1}',
+    wsLabelWords: 'if,then,else,end,while,body,repeat,for,switch,case,input,cond,yes,no',
+    wsHelpPack: 'txt_pack: [chars … n] → [address] – new text from the n characters on the stack',
+    wsHelpCat: 'txt_cat: [a b] → [address] – join texts',
+    wsHelpNum: 'txt_num: [number] → [address] – number as text',
+    wsHelpCmp: 'txt_cmp: [a b] → [-1|0|1] – compare texts character by character',
+    wsHelpOut: 'txt_out: [a] → [] – print text',
+    wsHelpRead: 'txt_read: [] → [address] – read a line (up to line feed, CR is dropped; end of input: eof = 1)',
+    wsHelpInt: 'txt_int: [a] → [number ok] – text as whole number (ok = 0: invalid)',
+    wsHelpReadInt: 'int_read: [] → [number 1] or [0] – read a number; not a whole number: message and 0 (ask again)',
+    wsHelpDiv: 'int_div: [a b] → [a / b] – truncates toward 0 like C (div in Whitespace rounds down)',
+    wsHelpMod: 'int_mod: [a b] → [a % b] – remainder with the sign of a like C (mod in Whitespace: sign of b)',
+    wsHelpArr: 'arr_new: [n] → [address] – new array [n, 0, 0, …]',
+    wsHelpConst: 'txt_init: create the text constants on the heap (once at start)',
     cshHeader2: 'csh has no functions: subprograms are labels (goto), returns use the list bb_ret, variables carry the subprogram name as a prefix.',
     cshSub: 'Subprogram {0}', cshCall: 'Call: {0}', cshSave: 'save own variables (recursion)', cshRestore: 'restore own variables',
     cshReturn: 'Return to the call site',
@@ -1613,7 +1694,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     rpgHelperTextDoc: 'Shows the prompt with DSPLY and reads an answer (at most 52 characters).',
     rpgHelperTextLong: 'long prompts: print everything except the last 52 characters first', rpgNoNumber: 'not a valid number - ask again',
     mgHeader2: 'Whole numbers and texts (length + character codes); commands M A R T I N G O E S – definition in the help (chapter MARTIN GOES).',
-    mgReturnLabel: 'back', mgEndLabel: 'stop', mgCmtAddr: 'address of {0}',
+    mgReturnLabel: 'back', mgEndLabel: 'stop', mgCmtAddr: '{0} is InOut: address of the caller’s variable', mgCmtAddrOf: 'address of {0}{1}', mgCmtParam: 'place for parameter {0} in the new frame',
     mgNoTextNum: 'Converting text to a number is not possible in MARTIN GOES – these parts are missing.', mgSkipped: 'not translated (text → number)',
     mgEmptyText: 'empty text', mgHelpCells: 'cells of the text routines', mgCmtReadText: 'line as text onto the heap', mgCmtDigit: '+ "0" → digit character',
     mgHelpCat: 'txt_cat: join texts X1 and X2 → new text, address in RV',
@@ -1626,7 +1707,10 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     mgCmtRetId: 'return number', mgCmtSaveFp: 'remember old FP', mgCmtEnd: 'end of program', mgSub: 'subprogram {0}({1})',
     mgFrame: 'frame: {0}', mgCmtResult: 'return value to RV', mgCmtPop: 'release frame',
     mgCmtDispatch: 'return to the call site (number in RID)', mgCmtStack: 'stack from cell 1000000', mgCmtHeap: 'heap for arrays and texts',
-    mgCells: 'variables:', mgRegs: 'helper cells:', mgTemps: 'intermediate results',
+    mgCells: 'variables:', mgTemps: 'intermediate results of a statement', mgPlan: 'Memory map (cell – meaning):',
+    mgRegSP: 'stack pointer (next free place)', mgRegFP: 'frame pointer (frame of the running subprogram)', mgRegHP: 'heap pointer (next free cell)',
+    mgRegRV: 'return value', mgRegRID: 'return number', mgRegHR: 'return number for the text routines', mgRegX: 'input of the text routines',
+    mgZeroVars: 'set own variables to 0 (the stack is reused)', mgLitHead: 'text constants', mgMainHead: 'main program', mgPsText: 'text', mgPsLine: 'line', mgPsNum: 'read number', mgPsOut: 'output',
     luaHeader2: 'Number -> integer (/ and % like in C), Text -> string, arrays -> table from index 0 (length in .n), InOut parameters are returned: x, y = swap(x, y)',
     luaHelperText: 'read_text', luaHelperDivDoc: "Integer division like in C: the result is cut toward 0 (Lua's // rounds down).",
     luaHelperArrayDoc: "Array with index 0 to n - 1; the length is stored in .n (Lua's # does not count index 0).",
@@ -10887,17 +10971,34 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     const tr = opts.t || ((k) => k);
     const unsupported = [];
     const code = [];          // { label, op, args: [], cmt } oder { text } (Kommentarzeile)
-    let labelNo = 0;
-    const newLabel = (hint) => (hint || 'L') + (++labelNo);
     const RET = tr('mgReturnLabel');
     const END = tr('mgEndLabel');
     const HELP = { cat: 'txt_cat', num: 'txt_num', cmp: 'txt_cmp' };
     const fnLabel = new Map();
     for (const f of program.fns.filter((x) => !x.isMain)) {
       let n = labelName(f.name);
-      while ([...fnLabel.values()].includes(n) || /^(L|zu)\d+$/.test(n) || n === RET || n === END || Object.values(HELP).includes(n)) n += '_';
+      while ([...fnLabel.values()].includes(n) || /\d$/.test(n) || n === RET || n === END || Object.values(HELP).includes(n)) n += '_';
       fnLabel.set(f.name, n);
     }
+    // Sprechende Sprungmarken: wenn3/sonst3/ende3, solange4/rumpf4 … (Wörter je nach Sprache)
+    const W = tr('genArgPrompt') === 'frage'
+      ? { then: 'dann', else: 'sonst', end: 'ende', while: 'solange', body: 'rumpf', repeat: 'wdh', for: 'fuer', case: 'fall',
+        other: 'sonstfall', back: 'weiter', and: 'und', or: 'oder', yes: 'ja', no: 'nein', sign: 'vz', div: 'div', loop: 'schleife' }
+      : { then: 'then', else: 'else', end: 'end', while: 'while', body: 'body', repeat: 'repeat', for: 'for', case: 'case',
+        other: 'other', back: 'resume', and: 'and', or: 'or', yes: 'yes', no: 'no', sign: 'sign', div: 'div', loop: 'loop' };
+    let labelNo = 0;
+    const genLabels = new Set();
+    /** Gruppe von Sprungmarken mit gemeinsamer Nummer, z. B. group('then', 'else', 'end') → dann3, sonst3, ende3 */
+    const group = (...hints) => {
+      const fns = new Set(fnLabel.values());
+      let ls;
+      do { const n = ++labelNo; ls = hints.map((h) => (W[h] || h || 'L') + n); } while (ls.some((l) => fns.has(l)));
+      ls.forEach((l) => genLabels.add(l));
+      return ls;
+    };
+    const newLabel = (hint) => group(hint || 'loop')[0];
+    // Textkonstanten stehen einmal in einem Datenbereich nach den Hilfszellen (Adressen werden am Ende eingesetzt)
+    const litPool = [];
 
     // ---- Zellen
     const main = program.fns.find((f) => f.isMain);
@@ -10917,10 +11018,56 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     const usedHelp = new Set();
     const callSites = [];
 
+    // ---- Namen der Zellen für Kopf und Kommentare
+    const cellName = new Map();
+    if (textStored) cellName.set(0, tr('mgEmptyText'));
+    for (const [n, c] of mainCell) cellName.set(c, n);
+    for (const [k, c] of Object.entries(R)) cellName.set(c, k);
+    for (let i = 0; i < KCELLS; i++) cellName.set(K0 + i, 'k' + (i + 1));
+    const nm = (n) => (cellName.has(+n) ? cellName.get(+n) : +n >= TEMP0 ? 't' + (+n - TEMP0 + 1) : n);
+    const textCells = new Set([...mainCell].filter(([n]) => mainScope.get(n).type === 'string').map(([, c]) => String(c)));
+    // Hilfszellen, die gerade die Adresse einer Variablen/eines Elements enthalten: t1 → { name, text }
+    // (dann heißt @t1 im Kommentar einfach „result“ oder „werte[i]“)
+    const alias = new Map();
+    const opnd = (o) => {
+      if (typeof o !== 'string') return String(o);
+      if (o.startsWith('"')) return o;
+      if (isLit(o)) return lit(litPool[+o.slice(2)].v);
+      if (o.startsWith('#')) return o.slice(1);
+      if (o.startsWith('$@')) return tr('mgPsText') + ' ' + (alias.has(o.slice(2)) ? alias.get(o.slice(2)).name : nm(o.slice(2)));
+      if (o.startsWith('$')) return tr('mgPsText') + '(' + opnd(o.slice(1)) + ')';
+      if (o.startsWith('@')) return alias.has(o.slice(1)) ? alias.get(o.slice(1)).name : '@' + nm(o.slice(1));
+      return nm(o);
+    };
+    const isText = (x) => textCells.has(x) || (x.startsWith('@') && alias.has(x.slice(1)) && alias.get(x.slice(1)).text);
+    /** Klartext zu einem Befehl, z. B. „X1 := antwort“ */
+    function explain(op, args) {
+      const [x, y] = args;
+      const X = opnd(x), Y = opnd(y);
+      switch (op) {
+        case 'S':
+          if (x.startsWith('$')) return Y + ' → ' + X;
+          return X + ' := ' + (y === '#0' && isText(x) ? '""' : Y);
+        case 'A': return X + ' := ' + X + ' + ' + Y;
+        case 'R': return X + ' := ' + X + ' − ' + Y;
+        case 'M': return X + ' := ' + X + ' · ' + Y;
+        case 'N': return X + ' := −' + X;
+        case 'E': return X + ' = 0 → ' + y;
+        case 'I': return x.startsWith('$') ? tr('mgPsLine') + ' → ' + X : X + ' := ' + tr('mgPsNum');
+        case 'O': return x.startsWith('"') ? null : tr('mgPsOut') + ' ' + X;
+        default: return null;
+      }
+    }
+
     let pendingLabel = null;
-    function emit(op, args, cmt) {
-      code.push({ label: pendingLabel, op, args: args || [], cmt });
+    /** Befehl ausgeben; der Kommentar wird sofort gebildet (Namen gelten zu diesem Zeitpunkt). */
+    function emit(op, args, cmt, aliasFor) {
+      args = args || [];
+      code.push({ label: pendingLabel, op, args, cmt: cmt || explain(op, args) });
       pendingLabel = null;
+      // eine Hilfszelle bekommt einen neuen Wert → ihr Name gilt nicht mehr
+      if (args[0] && /^\d+$/.test(args[0]) && 'SARMNI'.includes(op)) alias.delete(args[0]);
+      if (aliasFor) alias.set(args[0], aliasFor);
     }
     function label(l) {
       if (pendingLabel) emit('G', [l]); // zwei Labels hintereinander: leerer Sprung (wird später entfernt)
@@ -10950,11 +11097,13 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     function varOperand(ctx, n) {
       if (ctx.fn.isMain) return String(mainCell.get(n) ?? 0);
       const slot = ctx.frame.slot.get(n) ?? 2;
-      const t = temp(ctx);
-      emit('S', [String(t), reg('FP')]);
-      emit('A', [String(t), '#' + slot]);
+      const t = String(temp(ctx));
       const v = ctx.scope.get(n);
-      if (v && v.kind === 'param' && v.byRef && !A.isArrayType(v.type)) emit('S', [String(t), '@' + t], tr('mgCmtAddr', n));
+      const info = { name: n, text: !!v && v.type === 'string' };
+      const byRef = v && v.kind === 'param' && v.byRef && !A.isArrayType(v.type);
+      emit('S', [t, reg('FP')]);
+      emit('A', [t, '#' + slot], tr('mgCmtAddrOf', n, ' (FP+' + slot + ')'), byRef ? null : info);
+      if (byRef) emit('S', [t, '@' + t], tr('mgCmtAddr', n), info);
       return '@' + t;
     }
 
@@ -10969,6 +11118,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
         const o = strip(s.obj);
         const at = A.isArrayType(typeOf(ctx, o)) ? cellOf(ctx, val(ctx, o)) : textAddr(ctx, o);
         if (at === '#0') return '#0';
+        if (isLit(at)) return '#' + litLen(at);   // Länge einer Textkonstante ist bekannt
+        if (+at >= TEMP0) alias.set(at, { name: A.exprText(o) + '.length' });   // @t = Länge
         return '@' + at;   // Länge steht an der Adresse
       }
       if (typeOf(ctx, s) === 'string') return textAddr(ctx, s);
@@ -10986,11 +11137,12 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
 
     /** Element a[i]: Adresse = Basis + i + 1 */
     function elemOperand(ctx, s) {
-      const t = temp(ctx);
-      emit('S', [String(t), val(ctx, s.obj)]);
+      const t = String(temp(ctx));
+      const info = { name: A.exprText(s), text: typeOf(ctx, s) === 'string' };
+      emit('S', [t, val(ctx, s.obj)]);
       const i = strip(s.index);
-      if (i.k === 'num' && Number.isInteger(i.v)) emit('A', [String(t), '#' + (i.v + 1)]);
-      else { emit('A', [String(t), val(ctx, i)]); emit('A', [String(t), '#1']); }
+      if (i.k === 'num' && Number.isInteger(i.v)) emit('A', [t, '#' + (i.v + 1)], tr('mgCmtAddrOf', info.name, ''), info);
+      else { emit('A', [t, val(ctx, i)]); emit('A', [t, '#1'], tr('mgCmtAddrOf', info.name, ''), info); }
       return '@' + t;
     }
 
@@ -11011,7 +11163,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       if (args[0] !== undefined) emit('S', [reg('X1'), args[0]]);
       if (args[1] !== undefined) emit('S', [reg('X2'), args[1]]);
       const id = callSites.length + 1;
-      const back = newLabel('zu');
+      const back = newLabel('back');
       callSites.push(back);
       emit('S', [reg('HR'), '#' + id]);
       emit('G', [HELP[name]]);
@@ -11021,17 +11173,15 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       return t;
     }
 
-    /** Textkonstante auf der Halde ablegen → Zelle mit der Adresse. */
+    /** Textkonstante → Konstante mit ihrer Adresse im Datenbereich (#§n, wird am Ende ersetzt). */
     function textLiteral(ctx, v) {
       if (v === '') return '#0';
-      usesHeap = true;
-      const hp = reg('HP');
-      const t = String(temp(ctx));
-      emit('S', [t, hp]);
-      emit('S', ['$@' + hp, lit(v)]);
-      emit('A', [hp, '#' + ([...v].length + 1)]);
-      return t;
+      let i = litPool.findIndex((x) => x.v === v);
+      if (i < 0) { litPool.push({ v, len: [...v].length }); i = litPool.length - 1; }
+      return '#§' + i;
     }
+    const isLit = (op) => typeof op === 'string' && op.startsWith('#§');
+    const litLen = (op) => litPool[+op.slice(2)].len;
 
     function parts(ctx, ast) {
       const s = strip(ast);
@@ -11049,7 +11199,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
         if (p.k === 'str') x = textLiteral(ctx, p.v);
         else if (t === 'string') x = cellOf(ctx, p.k === 'id' ? varOperand(ctx, p.name) : p.k === 'idx' ? elemOperand(ctx, p) : '#0');
         else if (t === 'bool') {
-          const yes = newLabel(), no = newLabel(), end = newLabel();
+          const [yes, no, end] = group('yes', 'no', 'end');
           x = String(temp(ctx));
           condJump(ctx, p, yes, no);
           label(yes); emit('S', [x, textLiteral(ctx, 'true')]); emit('G', [end]);
@@ -11071,7 +11221,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
           const c = cellOf(ctx, p.k === 'id' ? varOperand(ctx, p.name) : elemOperand(ctx, p));
           if (c !== '#0') emit('O', ['$@' + c]);
         } else if (t === 'bool') {
-          const yes = newLabel(), no = newLabel(), end = newLabel();
+          const [yes, no, end] = group('yes', 'no', 'end');
           condJump(ctx, p, yes, no);
           label(yes); emit('O', ['"true"']); emit('G', [end]);
           label(no); emit('O', ['"false"']);
@@ -11114,7 +11264,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       if (s.k === 'num') { emit('S', [T, '#' + Math.trunc(s.v)]); return t; }
       if (typeOf(ctx, s) === 'string') { unsupported.push(tr('mgNoTextNum')); emit('S', [T, '#0']); return t; }
       // Wahrheitswert → 0/1
-      const yes = newLabel(), no = newLabel();
+      const [yes, no] = group('yes', 'no');
       emit('S', [T, '#0']);
       condJump(ctx, s, yes, no);
       label(yes);
@@ -11135,7 +11285,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     /** Springt nach neg, wenn Zelle x < 0, sonst nach nonneg (x bleibt unverändert). */
     function signJump(ctx, x, neg, nonneg) {
       const p = String(temp(ctx)), q = String(temp(ctx));
-      const loop = newLabel();
+      const loop = newLabel('sign');
       emit('S', [p, x], tr('mgCmtSign'));
       emit('S', [q, x]);
       label(loop);
@@ -11150,7 +11300,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     function divmod(ctx, aCell, d, op, dst) {
       const a = String(aCell);
       const b = String(temp(ctx)), q = String(temp(ctx)), sq = String(temp(ctx)), sr = String(temp(ctx)), diff = String(temp(ctx));
-      const aPos = newLabel(), bChk = newLabel(), bPos = newLabel(), loop = newLabel(), done = newLabel(), aNeg = newLabel(), bNeg = newLabel();
+      const [aPos, bChk, bPos, loop, done, aNeg, bNeg] = group('div', 'div', 'div', 'div', 'div', 'div', 'div').map((l, i) => { const x = l + 'abcdefg'[i]; genLabels.add(x); return x; });
       emit('S', [b, d], op === '/' ? tr('mgCmtDiv') : tr('mgCmtMod'));
       usesEnd = true;
       emit('E', [b, END]);                // Division durch 0 → Programmende
@@ -11184,8 +11334,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     /** Bedingung als Sprünge. */
     function condJump(ctx, a, yes, no) {
       const s = strip(a);
-      if (s.k === 'bin' && s.op === '&&') { const mid = newLabel(); condJump(ctx, s.a, mid, no); label(mid); condJump(ctx, s.b, yes, no); return; }
-      if (s.k === 'bin' && s.op === '||') { const mid = newLabel(); condJump(ctx, s.a, yes, mid); label(mid); condJump(ctx, s.b, yes, no); return; }
+      if (s.k === 'bin' && s.op === '&&') { const mid = newLabel('and'); condJump(ctx, s.a, mid, no); label(mid); condJump(ctx, s.b, yes, no); return; }
+      if (s.k === 'bin' && s.op === '||') { const mid = newLabel('or'); condJump(ctx, s.a, yes, mid); label(mid); condJump(ctx, s.b, yes, no); return; }
       if (s.k === 'un' && s.op === '!') { condJump(ctx, s.a, no, yes); return; }
       if (s.k === 'bin' && ['==', '!=', '<', '<=', '>', '>='].includes(s.op)) {
         if (typeOf(ctx, s.a) === 'string' || typeOf(ctx, s.b) === 'string') { textCond(ctx, s, yes, no); return; }
@@ -11212,6 +11362,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
         // Text als Bedingung: nicht leer
         const c = textAddr(ctx, s);
         if (c === '#0') { emit('G', [no]); return; }
+        if (isLit(c)) { emit('G', [yes]); return; }
         const n = String(temp(ctx));
         emit('S', [n, '@' + c]);
         emit('E', [n, no]);
@@ -11232,6 +11383,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
         const other = isEmpty(s.a) ? s.b : s.a;
         const c = textAddr(ctx, other);
         if (c === '#0') { emit('G', [s.op === '==' ? yes : no]); return; }
+        if (isLit(c)) { emit('G', [s.op === '==' ? no : yes]); return; }
         const n = String(temp(ctx));
         emit('S', [n, '@' + c]);
         emit('E', [n, s.op === '==' ? yes : no]);
@@ -11347,7 +11499,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
         }
         case 'if': {
           head(tr('mgIf', n.cond));
-          const yes = newLabel(), no = newLabel(), end = newLabel();
+          const [yes, no, end] = group('then', 'else', 'end');
           condFrom(ctx, n.cond, yes, no);
           label(yes);
           genSeq(ctx, n.then);
@@ -11357,7 +11509,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
         }
         case 'while': {
           head(tr('mgWhile', n.cond));
-          const top = newLabel(), body = newLabel(), end = newLabel();
+          const [top, body, end] = group('while', 'body', 'end');
           label(top);
           ctx.tmp = 0;
           condFrom(ctx, n.cond, body, end);
@@ -11369,7 +11521,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
         }
         case 'until': {
           head(tr('mgUntil', n.cond));
-          const top = newLabel(), end = newLabel();
+          const [top, end] = group('repeat', 'end');
           label(top);
           genSeq(ctx, n.body);
           ctx.tmp = 0;
@@ -11379,7 +11531,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
         }
         case 'for': {
           head(tr('mgFor', n.counter, n.from, n.to, String(n.step || '1').trim() || '1'));
-          const top = newLabel(), body = newLabel(), end = newLabel();
+          const [top, body, end] = group('for', 'body', 'end');
           store(ctx, n.counter, tryParse(n.from));
           const stepAst = tryParse(n.step) || { k: 'num', v: 1, raw: '1' };
           const lit1 = A.literalValue(stepAst);
@@ -11388,7 +11540,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
           ctx.tmp = 0;
           if (typeof lit1 === 'number') condJump(ctx, { k: 'bin', op: lit1 >= 0 ? '<=' : '>=', a: k, b: to }, body, end);
           else {
-            const pos = newLabel(), neg = newLabel();
+            const [pos, neg] = group('sign', 'sign').map((l, i) => { const x = l + 'pn'[i]; genLabels.add(x); return x; });
             const s = String(temp(ctx));
             emit('S', [s, val(ctx, stepAst)]);
             signJump(ctx, s, neg, pos);
@@ -11412,9 +11564,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
           const sel = tryParse(n.expr);
           if (!sel) return;
           const isText = typeOf(ctx, sel) === 'string';
-          const end = newLabel();
-          const labels = n.cases.map(() => newLabel());
-          const other = newLabel();
+          const [end, other] = group('end', 'other');
+          const labels = n.cases.map(() => newLabel('case'));
           const sv = isText ? textAddr(ctx, sel) : cellOf(ctx, val(ctx, sel));
           n.cases.forEach((c, i) => {
             const v = tryParse(c.value) || { k: isText ? 'str' : 'num', v: isText ? '' : 0, raw: '0' };
@@ -11449,12 +11600,12 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
             const v = A.isArrayType(p.type) ? val(ctx, src) : p.byRef ? addrValue(ctx, src) : p.type === 'string' ? textAddr(ctx, src) : val(ctx, src);
             const a = String(temp(ctx));
             emit('S', [a, SP]);
-            emit('A', [a, '#' + fr.slot.get(p.name)]);
-            emit('S', ['@' + a, v], p.name);
+            emit('A', [a, '#' + fr.slot.get(p.name)], tr('mgCmtParam', p.name), { name: callee.name + '.' + p.name, text: p.type === 'string' });
+            emit('S', ['@' + a, v]);
           });
           ctx.tmp = 0;
           const id = callSites.length + 1;
-          const back = newLabel('zu');
+          const back = newLabel('back');
           callSites.push(back);
           const a = String(temp(ctx));
           emit('S', ['@' + SP, '#' + id], tr('mgCmtRetId'));
@@ -11575,12 +11726,12 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       note('; ' + tr('mgFrame', [...fr.slot].map(([n, k]) => 'FP+' + k + ' ' + n).join(', ')));
       label(fnLabel.get(fn.name));
       // Variablen im Rahmen auf 0 setzen (der Stapel wird wiederverwendet)
-      for (const [n, k] of fr.slot) {
+      if ([...fr.slot.keys()].some((n) => (fr.scope.get(n) || {}).kind !== 'param')) note('; ' + tr('mgZeroVars'));
+      for (const [n] of fr.slot) {
         const v = fr.scope.get(n);
         if (v && v.kind === 'param') continue;
         ctx.tmp = 0;
-        const t = String(temp(ctx));
-        emit('S', [t, reg('FP')]); emit('A', [t, '#' + k]); emit('S', ['@' + t, '#0']);
+        emit('S', [varOperand(ctx, n), '#0']);
       }
       if (fn.returnType !== 'void') { ctx.tmp = 0; store(ctx, 'result', tryParse(fn.resultInit)); }
       genSeq(ctx, fn.body);
@@ -11609,12 +11760,24 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     }
     if (usesEnd) { label(END); emit('T'); }
 
-    // Startwerte für Stapel und Halde vor das Hauptprogramm
-    const heapBase = Math.ceil((TEMP0 + maxTemp + 1) / 100) * 100;
+    // Speicherplan: … Zwischenzellen | Textkonstanten (ab volle Zehn) | Halde (ab volle Hundert)
+    const litBase = Math.ceil((TEMP0 + maxTemp + 1) / 10) * 10;
+    let a = litBase;
+    for (const l of litPool) { l.addr = a; a += l.len + 1; }
+    const heapBase = Math.ceil((a + 1) / 100) * 100;
+    // Startwerte für Stapel und Halde sowie die Textkonstanten vor das Hauptprogramm
     const init = [];
     if (usesStack) init.push({ op: 'S', args: [String(R.SP), '#' + STACK], cmt: tr('mgCmtStack') });
     if (usesHeap || usedHelp.size) { usedReg.add('HP'); init.push({ op: 'S', args: [String(R.HP), '#' + heapBase], cmt: tr('mgCmtHeap') }); }
+    if (litPool.length) {
+      init.push({ text: '; ' + tr('mgLitHead') });
+      for (const l of litPool) init.push({ op: 'S', args: ['$' + l.addr, lit(l.v)] });
+    }
     code.splice(initAt, 0, ...init);
+    if (init.length) code.splice(initAt + init.length, 0, { text: '; ' + tr('mgMainHead') });
+
+    // Adressen der Textkonstanten einsetzen
+    for (const c of code) if (c.args) c.args = c.args.map((o) => (isLit(o) ? '#' + litPool[+o.slice(2)].addr : o));
 
     // Sprünge zum direkt folgenden Label entfernen
     for (let i = 0; i < code.length - 1; i++) {
@@ -11631,25 +11794,32 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       if (c.op === 'G') target.add(c.args[0]);
       if (c.op === 'E') target.add(c.args[1]);
     }
-    for (const c of code) if (c.label && /^(L|zu)\d+$/.test(c.label) && !target.has(c.label)) c.label = null;
+    for (const c of code) if (c.label && genLabels.has(c.label) && !target.has(c.label)) c.label = null;
 
     // Ausgabe
     const out = ['; ' + tr('mgHeader1'), '; ' + tr('mgHeader2'), ';'];
-    const cells = [...mainCell].map(([n, c]) => c + ' = ' + n);
-    if (textStored) cells.unshift('0 = ' + tr('mgEmptyText'));
-    if (cells.length) out.push('; ' + tr('mgCells') + ' ' + cells.join(', '));
-    const regs = Object.entries(R).filter(([k]) => usedReg.has(k)).map(([k, c]) => c + ' = ' + k);
-    const span = (a, b) => (a === b ? String(a) : a + '…' + b);
-    if (maxK) regs.push(span(K0, K0 + maxK - 1) + ' = ' + tr('mgHelpCells'));
-    if (maxTemp) regs.push(span(TEMP0, TEMP0 + maxTemp - 1) + ' = ' + tr('mgTemps'));
+    // Speicherplan im Kopf: eine Zeile je Bereich
+    const span = (p, q) => (p === q ? String(p) : p + '…' + q);
+    const plan = [];
+    const cells = [...mainCell].map(([n, c]) => c + ' ' + n);
+    if (textStored) cells.unshift('0 ' + tr('mgEmptyText'));
+    if (cells.length) plan.push(tr('mgCells') + ' ' + cells.join(', '));
+    const regDoc = { SP: tr('mgRegSP'), FP: tr('mgRegFP'), HP: tr('mgRegHP'), RV: tr('mgRegRV'), RID: tr('mgRegRID'), HR: tr('mgRegHR'), X1: tr('mgRegX'), X2: tr('mgRegX') };
+    for (const [k, c] of Object.entries(R)) if (usedReg.has(k)) plan.push(c + ' ' + k + ' – ' + regDoc[k]);
+    if (maxK) plan.push(span(K0, K0 + maxK - 1) + ' k1… – ' + tr('mgHelpCells'));
+    if (maxTemp) plan.push(span(TEMP0, TEMP0 + maxTemp - 1) + ' t1… – ' + tr('mgTemps'));
+    if (litPool.length) plan.push(span(litBase, a - 1) + ' – ' + tr('mgLitHead'));
+    if (usesHeap || usedHelp.size) plan.push(heapBase + '… – ' + tr('mgCmtHeap'));
+    if (usesStack) plan.push(STACK + '… – ' + tr('mgCmtStack'));
+    if (plan.length) { out.push('; ' + tr('mgPlan')); for (const p of plan) out.push(';   ' + p); }
     const uniq = [...new Set(unsupported)];
     if (uniq.length) out.push(';', '; ⚠ ' + uniq.join(' '));
     out.push('');
     for (const c of code) {
       if (c.text !== undefined) { out.push(c.text); continue; }
-      const lab = c.label ? (c.label + ': ').padEnd(10) : ' '.repeat(10);
+      const lab = c.label ? (c.label + ': ').padEnd(12) : ' '.repeat(12);
       const ins = (c.op + '  ' + c.args.join(' ')).trimEnd();
-      out.push((lab + (c.cmt ? ins.padEnd(18) + '; ' + c.cmt : ins)).trimEnd());
+      out.push((lab + (c.cmt ? ins.padEnd(20) + '; ' + c.cmt : ins)).trimEnd());
     }
     const text = out.join('\n') + '\n';
     return opts.report ? { code: text, unsupported: uniq } : text;
@@ -11732,6 +11902,12 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     };
     const jump = (l, ins) => { if (!labels.has(l)) throw err(ins, 'Label ' + l + ' fehlt'); return labels.get(l); };
     const out = (s) => { if (io.output) io.output(s); };
+    // Eingabe: io.input() liefert eine Zeile, oder io.stdin enthält die ganze Eingabe als Text
+    if (!io.input && io.stdin != null) {
+      const lines = String(io.stdin).split('\n');
+      if (lines.length && lines[lines.length - 1] === '') lines.pop();
+      io = Object.assign({}, io, { input: () => (lines.length ? lines.shift() : null) });
+    }
     let pc = 0, steps = 0;
     const max = io.maxSteps || 50000000;
     try {
@@ -11772,6 +11948,2871 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   }
 
   BBE.mggen = { generate, run };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* js/core/wsgen.js */
+/* Blockbild-Editor – Übersetzung nach Whitespace (+ Interpreter)
+ *
+ *   Whitespace (Edwin Brady & Chris Morris, 2003, Befehlssatz 0.3): nur Leerzeichen (S), Tabulator (T) und
+ *   Zeilenumbruch (L) sind Befehle, jedes andere Zeichen ist Kommentar. Ein Stapelrechner mit beliebig großen
+ *   ganzen Zahlen, einer Halde (Heap) mit Adressen 0, 1, 2, … und einem eigenen Rücksprungstapel für call/ret.
+ *     Stapel   SS n push · SLS dup · STS n copy · SLT swap · SLL discard · STL n slide
+ *     Rechnen  TSSS add · TSST sub · TSSL mul · TSTS div · TSTT mod            (a b → a op b)
+ *     Halde    TTS store (Adresse Wert →) · TTT retrieve (Adresse → Wert)
+ *     Sprünge  LSS l Marke · LST l call · LSL l jump · LTS l jz · LTT l jn · LTL ret · LLL end
+ *     E/A      TLSS Zeichen ausgeben · TLST Zahl ausgeben · TLTS Zeichen lesen · TLTT Zahl lesen (beide → Halde[Adresse])
+ *   Zahl = Vorzeichen (S + / T −), dann Binärziffern (S 0 / T 1), dann L.  Marke = Folge aus S/T, dann L.
+ *
+ *   Lesbarkeit (der Quelltext selbst ist unsichtbar):
+ *   - Jeder Befehl bekommt ein Kürzel als Kommentar: push_5, push_3:summe, add, retrieve, call:fak, jz:wenn1_sonst,
+ *     Marken als „name:“. Kommentare enthalten nie Leerraum: jedes Zeichen, auf das /\s/ passt (auch Tabulator,
+ *     Zeilenumbruch, geschütztes Leerzeichen), wird zu „·“; Zeichen-Konstanten zeigen ein Leerzeichen als '␣'.
+ *   - Das Kürzel steht direkt nach dem ersten L des Befehls, wenn das L nicht das letzte Zeichen ist (Sprünge, dup,
+ *     discard, E/A …), sonst vor dem Befehl. So beginnt jede Zeile mit einem Kürzel; der unsichtbare Code steht
+ *     immer dahinter (nur am Zeilenende oder zwischen zwei Kürzeln, nie als Einrückung).
+ *   - Kommentarzeilen (Kopf, Anweisungen des Blockbilds) brauchen einen echten Zeilenumbruch. Dafür wird eine
+ *     Marke mit eigener, nie angesprungener Nummer gesetzt (LSS l): sie tut nichts, liefert aber zwei L.
+ *     Am Zeilenanfang trägt eine Marke zwei Kommentarzeilen (vor und nach ihrem ersten L), sonst eine.
+ *
+ *   Übersetzung:
+ *   - Halde: 0 = leerer Text (bleibt 0), 1 = HP (nächste freie Zelle der Halde), 2 = FP (Rahmen des laufenden
+ *     Unterprogramms), ab 3 die Variablen des Hauptprogramms, danach die Zellen der eingebauten Routinen.
+ *     Dann (nur mit Unterprogrammen) der Rahmenstapel mit 100000 Zellen, dahinter die Halde: zuerst die
+ *     Textkonstanten (beim Start einmal angelegt), dann alles, was zur Laufzeit entsteht.
+ *   - Unterprogramme: echtes call/ret. Rahmen = [Parameter …, Variablen …, result]. Der Aufrufer schreibt die
+ *     Argumente direkt hinter seinen eigenen Rahmen, erhöht FP um seine Rahmengröße, ruft auf und setzt FP danach
+ *     zurück. Der Rückgabewert liegt nach ret oben auf dem Stapel. Rekursion funktioniert, weil alles über FP läuft.
+ *   - In-Parameter als Wert, InOut als Adresse der Zelle (Variable oder Array-Element), Arrays als Adresse.
+ *   - Texte: [Länge, Zeichencodes …] auf der Halde, unveränderlich; eine Text-Variable enthält die Adresse.
+ *     Arrays: [Länge, Elemente …]. Routinen: txt_pack (Zeichen vom Stapel → Text), txt_cat, txt_num (Zahl → Text),
+ *     txt_cmp (−1/0/1 nach Zeichencodes), txt_out, txt_read (Zeile lesen), txt_int (Text → Zahl), int_read
+ *     (Zahl lesen, fragt nach), int_div / int_mod (schneiden ab wie C), arr_new, txt_init (Textkonstanten beim Start).
+ *     Routinen nehmen ihre Argumente vom Stapel und legen das Ergebnis darauf; jede hat eigene Hilfszellen.
+ *   - Zuweisung, Eingabe, Aufruf mit Ergebnis: erst die Zieladresse auf den Stapel, dann den Wert, dann store.
+ *   - Marken heißen nach dem Blockbild (wenn3_sonst, solange4_ende …, Wörter aus tr('wsLabelWords'));
+ *     kodiert werden sie als fortlaufende Nummern.
+ *   - Whitespace rechnet div/mod wie Haskell (abgerundet, Rest mit dem Vorzeichen des Divisors). Blockbild und
+ *     die anderen Exporte rechnen wie C (zur 0 hin abgeschnitten, Rest mit dem Vorzeichen des Dividenden) –
+ *     deshalb laufen / und % über int_div / int_mod, die das Ergebnis korrigieren.
+ *   - Zahlen werden nicht mit „Zahl lesen“ (TLTT) eingelesen – das bricht im Original bei ungültiger Eingabe ab –,
+ *     sondern als Textzeile, die txt_int prüft (int_read fragt nach, bis eine ganze Zahl kommt).
+ *     Ende der Eingabe: „Zeichen lesen“ liefert hier −1 (Erweiterung; das Original bricht ab) → "" bzw. 0.
+ *   - Speicher wird beim Start bis zur Halde einmal mit 0 beschrieben (für Interpreter, die wie das Original
+ *     die Halde erst beim Schreiben anlegen und beim Lesen unbeschriebener Zellen abbrechen).
+ */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+  const { parseCached, parseTarget, strip } = BBE.expr;
+  const A = BBE.analyze;
+
+  const STACK_CELLS = 100000;
+  const FOLD = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue', 'ß': 'ss' };
+  const tryParse = (src) => { try { return parseCached(String(src || '').trim()); } catch (e) { return null; } };
+  const tryTarget = (src) => { try { return parseTarget(String(src || '').trim()); } catch (e) { return null; } };
+  const ident = (n) => {
+    let s = String(n || '').replace(/[äöüÄÖÜß]/g, (c) => FOLD[c]).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9_]/g, '_');
+    if (!/^[A-Za-z]/.test(s)) s = 'u' + s;
+    return s;
+  };
+
+  // ---------------------------------------------------------------- Kodierung
+  const OPS = {
+    push: 'SS', dup: 'SLS', copy: 'STS', swap: 'SLT', discard: 'SLL', slide: 'STL',
+    add: 'TSSS', sub: 'TSST', mul: 'TSSL', div: 'TSTS', mod: 'TSTT',
+    store: 'TTS', retrieve: 'TTT',
+    mark: 'LSS', call: 'LST', jump: 'LSL', jz: 'LTS', jn: 'LTT', ret: 'LTL', end: 'LLL',
+    outchar: 'TLSS', outnum: 'TLST', readchar: 'TLTS', readnum: 'TLTT'
+  };
+  const NUM_ARG = new Set(['push', 'copy', 'slide']);
+  const LABEL_ARG = new Set(['mark', 'call', 'jump', 'jz', 'jn']);
+  const enc = (code) => code.replace(/S/g, ' ').replace(/T/g, '\t').replace(/L/g, '\n');
+  const bitsOf = (n) => n.toString(2).replace(/0/g, 'S').replace(/1/g, 'T');
+  const numCode = (v) => { const n = BigInt(v); return (n < 0n ? 'T' : 'S') + bitsOf(n < 0n ? -n : n) + 'L'; };
+  /** Marke Nr. k (k ≥ 1) → beginnt immer mit T, daher eindeutig, auch wenn ein Interpreter Marken als Zahlen liest. */
+  const labelCode = (k) => bitsOf(BigInt(k)) + 'L';
+  /** Kommentartext ohne Leerraum. */
+  const clean = (s) => String(s).replace(/\s/g, '·');
+  const charName = (cp) => {
+    if (cp === 32) return "'␣'";
+    if (cp === 10) return "'\\n'";
+    if (cp === 9) return "'\\t'";
+    if (cp === 13) return "'\\r'";
+    const c = String.fromCodePoint(cp);
+    if (cp < 32 || /\s/.test(c)) return '';
+    return "'" + c + "'";
+  };
+
+  const DEFAULT_WORDS = 'if,then,else,end,while,body,repeat,for,switch,case,input,cond,yes,no'.split(',');
+  function labelWords(list) {
+    const w = String(list).split(',').map((x) => ident(x.trim()));
+    const v = w.length === DEFAULT_WORDS.length ? w : DEFAULT_WORDS;
+    const k = ['if', 'then', 'else', 'end', 'while', 'body', 'repeat', 'for', 'switch', 'case', 'input', 'cond', 'yes', 'no'];
+    const o = {};
+    k.forEach((key, i) => { o[key] = v[i]; });
+    return o;
+  }
+
+  // Eingebaute Routinen und ihre Zellen (jede Routine hat eigene Zellen; sie rufen sich nie gegenseitig rekursiv auf)
+  const ROUTINES = ['txt_pack', 'txt_cat', 'txt_num', 'txt_cmp', 'txt_out', 'txt_read', 'txt_int', 'int_read', 'int_div', 'int_mod', 'arr_new'];
+  const HELP_KEY = {
+    txt_pack: 'wsHelpPack', txt_cat: 'wsHelpCat', txt_num: 'wsHelpNum', txt_cmp: 'wsHelpCmp', txt_out: 'wsHelpOut', txt_read: 'wsHelpRead',
+    txt_int: 'wsHelpInt', int_read: 'wsHelpReadInt', int_div: 'wsHelpDiv', int_mod: 'wsHelpMod', arr_new: 'wsHelpArr'
+  };
+
+  function generate(program, opts = {}) {
+    const tr = opts.t || ((k) => k);
+    const unsupported = [];
+    const W = labelWords(tr('wsLabelWords'));
+    const prog = [];             // { op, arg, cmt } oder { note: [Zeilen] }
+    const I = (op, arg, cmt) => { prog.push({ op, arg, cmt }); };
+    const note = (...lines) => { prog.push({ note: lines }); };
+
+    // ---- Marken
+    const reserved = new Set(ROUTINES.concat(['txt_init']));
+    const fnLabel = new Map();
+    const subs = program.fns.filter((f) => !f.isMain);
+    const main = program.fns.find((f) => f.isMain);
+    for (const f of subs) {
+      let n = ident(f.name);
+      while (reserved.has(n)) n += '_';
+      reserved.add(n);
+      fnLabel.set(f.name, n);
+    }
+    const genLabels = new Set();
+    let labelNo = 0;
+    const newLabel = (hint) => {
+      let n = hint + (++labelNo);
+      while (reserved.has(n)) n += '_';
+      reserved.add(n);
+      genLabels.add(n);
+      return n;
+    };
+    const sub = (base, suffix) => {
+      let n = base + '_' + suffix;
+      while (reserved.has(n)) n += '_';
+      reserved.add(n);
+      genLabels.add(n);
+      return n;
+    };
+    const mark = (l) => I('mark', l);
+
+    // ---- Zellen (symbolisch; Adressen werden am Ende vergeben)
+    const cellOrder = [];        // Schlüssel der Zellen ab 3 in der Reihenfolge der Vergabe
+    const cellName = new Map([['empty', '""'], ['HP', 'HP'], ['FP', 'FP']]);
+    const cellAt = new Map([['empty', 0], ['HP', 1], ['FP', 2]]);
+    const useCell = (key, shown) => { if (!cellName.has(key)) { cellName.set(key, shown); cellOrder.push(key); } return key; };
+    const mainScope = A.scopeOf(main);
+    for (const [n] of mainScope) useCell('v:' + n, n);
+    const rc = (r, n) => useCell('r:' + r + '.' + n, r.replace(/^(txt|int|arr)_/, '') + '.' + n);
+    let usesFP = false;
+    const pushCell = (key) => { if (key === 'FP') usesFP = true; I('push', { cell: key }, cellName.get(key)); };
+    const getc = (key) => { pushCell(key); I('retrieve'); };
+    const setc = (key, val) => { pushCell(key); val(); I('store'); };
+    const addc = (key, k) => setc(key, () => { getc(key); I('push', k); I('add'); });
+    const pool = new Map();      // Textkonstante → Versatz ab Beginn der Halde
+    let poolSize = 0;
+    const used = new Set();      // benutzte Routinen
+    const callR = (r) => { used.add(r); I('call', r); };
+    const pushText = (s) => {
+      if (s === '') { I('push', 0, '""'); return; }
+      if (!pool.has(s)) { pool.set(s, poolSize); poolSize += [...s].length + 1; used.add('txt_pack'); }
+      I('push', { konst: s }, '"' + s + '"');
+    };
+
+    // ---- Rahmen der Unterprogramme
+    function frameOf(fn) {
+      const scope = A.scopeOf(fn);
+      const slot = new Map();
+      let k = 0;
+      for (const p of fn.params) if (!slot.has(p.name)) slot.set(p.name, k++);
+      for (const [n] of scope) if (!slot.has(n)) slot.set(n, k++);
+      return { scope, slot, size: k };
+    }
+    const frames = new Map(subs.map((f) => [f, frameOf(f)]));
+
+    const typeOf = (ctx, a) => A.typeOf(a, ctx.scope);
+    const isRef = (ctx, n) => { const v = ctx.scope.get(n); return !!(v && v.kind === 'param' && v.byRef && !A.isArrayType(v.type)); };
+
+    // ------------------------------------------------------------ Adressen und Werte
+
+    /** Adresse der eigenen Zelle einer Variablen auf den Stapel. */
+    function varCell(ctx, n) {
+      if (ctx.fn.isMain) { pushCell(useCell('v:' + n, n)); return; }
+      const k = ctx.frame.slot.get(n);
+      if (k === undefined) { pushCell(useCell('scratch', 'tmp')); return; }
+      getc('FP');
+      if (k) { I('push', k, '+' + n); I('add'); }
+    }
+
+    /** Adresse, an die geschrieben wird (Variable, InOut-Ziel oder Array-Element). */
+    function targetAddr(ctx, tgt) {
+      const t = strip(tgt);
+      if (t && t.k === 'id') {
+        varCell(ctx, t.name);
+        if (isRef(ctx, t.name)) I('retrieve', null, '&' + t.name);
+        return;
+      }
+      if (t && t.k === 'idx') { elemAddr(ctx, t); return; }
+      pushCell(useCell('scratch', 'tmp'));
+    }
+
+    /** Adresse von a[i] = Basis + i + 1 (an der Basis steht die Länge). */
+    function elemAddr(ctx, s) {
+      gen(ctx, s.obj);
+      const i = strip(s.index);
+      if (i.k === 'num' && Number.isInteger(i.v)) { I('push', i.v + 1); I('add'); return; }
+      gen(ctx, i);
+      I('add');
+      I('push', 1);
+      I('add');
+    }
+
+    const isFrac = (s) => s.k === 'num' && !Number.isInteger(s.v);
+    function fraction(raw) {
+      const [i, d = ''] = String(raw).split('.');
+      const p = parseInt(i + d, 10), q = Math.pow(10, d.length);
+      const gcd = (x, y) => (y ? gcd(y, x % y) : x);
+      const g = gcd(Math.abs(p), q);
+      return [p / g, q / g];
+    }
+
+    /** Wert eines Ausdrucks auf den Stapel (Zahl, 0/1 für Wahrheitswerte, Adresse bei Texten und Arrays). */
+    function gen(ctx, a) {
+      const s = strip(a);
+      if (!s) { I('push', 0); return; }
+      const t = typeOf(ctx, s);
+      switch (s.k) {
+        case 'num': I('push', Math.trunc(s.v)); return;
+        case 'str': pushText(s.v); return;
+        case 'id': targetAddr(ctx, s); I('retrieve', null, s.name); return;
+        case 'idx': elemAddr(ctx, s); I('retrieve'); return;
+        case 'len': gen(ctx, s.obj); I('retrieve', null, 'length'); return;
+        case 'un':
+          if (s.op === '-') {
+            const lv = A.literalValue(s);
+            if (typeof lv === 'number') { I('push', Math.trunc(lv)); return; }
+            I('push', 0); num(ctx, s.a); I('sub'); return;
+          }
+          if (s.op === '+') { num(ctx, s.a); return; }
+          break;
+        case 'bin':
+          if (t === 'string') { textExpr(ctx, s); return; }
+          if ('+-*'.includes(s.op)) {
+            const fa = strip(s.a), fb = strip(s.b);
+            if (s.op === '*' && (isFrac(fa) || isFrac(fb))) {
+              // Kommazahl-Faktor: x * 1.25 → x * 5 / 4 (abgeschnitten)
+              const [f, other] = isFrac(fb) ? [fb, s.a] : [fa, s.b];
+              const [p, q] = fraction(f.raw);
+              num(ctx, other); I('push', p); I('mul'); I('push', q); callR('int_div');
+              return;
+            }
+            num(ctx, s.a); num(ctx, s.b); I({ '+': 'add', '-': 'sub', '*': 'mul' }[s.op]);
+            return;
+          }
+          if (s.op === '/' || s.op === '%') { num(ctx, s.a); num(ctx, s.b); callR(s.op === '/' ? 'int_div' : 'int_mod'); return; }
+          break;
+        default: break;
+      }
+      // Wahrheitswert → 0/1
+      const l = newLabel(W.cond), yes = sub(l, W.yes), no = sub(l, W.no), end = sub(l, W.end);
+      condJump(ctx, s, yes, no);
+      mark(yes); I('push', 1); I('jump', end);
+      mark(no); I('push', 0);
+      mark(end);
+    }
+
+    /** Zahlenwert (Texte werden mit txt_int umgewandelt, ungültig → 0). */
+    function num(ctx, a) {
+      if (typeOf(ctx, a) === 'string') { textExpr(ctx, a); callR('txt_int'); I('discard', null, 'ok'); return; }
+      gen(ctx, a);
+    }
+
+    function parts(ctx, ast) {
+      const s = strip(ast);
+      if (s.k === 'bin' && s.op === '+' && typeOf(ctx, s) === 'string') return parts(ctx, s.a).concat(parts(ctx, s.b));
+      return [s];
+    }
+
+    /** Text-Ausdruck → Adresse des Texts auf den Stapel. */
+    function textExpr(ctx, a) {
+      let n = 0;
+      for (const p of parts(ctx, a)) {
+        if (p.k === 'str' && p.v === '') continue;
+        textPart(ctx, p);
+        if (n++) callR('txt_cat');
+      }
+      if (!n) I('push', 0, '""');
+    }
+
+    function textPart(ctx, p) {
+      const t = typeOf(ctx, p);
+      if (p.k === 'str') pushText(p.v);
+      else if (t === 'string' || A.isArrayType(t)) gen(ctx, p);
+      else if (t === 'bool') {
+        const l = newLabel(W.cond), yes = sub(l, W.yes), no = sub(l, W.no), end = sub(l, W.end);
+        condJump(ctx, p, yes, no);
+        mark(yes); pushText('true'); I('jump', end);
+        mark(no); pushText('false');
+        mark(end);
+      } else { gen(ctx, p); callR('txt_num'); }
+    }
+
+    /** Text ausgeben, Stück für Stück (ohne neuen Text zu bauen). */
+    function textOut(ctx, a) {
+      for (const p of parts(ctx, a)) {
+        const t = typeOf(ctx, p);
+        if (p.k === 'str') {
+          if (p.v === '') continue;
+          const cps = [...p.v];
+          if (cps.length === 1) { I('push', cps[0].codePointAt(0), charName(cps[0].codePointAt(0))); I('outchar'); }
+          else { pushText(p.v); callR('txt_out'); }
+        } else if (t === 'string') { gen(ctx, p); callR('txt_out'); }
+        else if (t === 'bool') { textPart(ctx, p); callR('txt_out'); }
+        else { gen(ctx, p); I('outnum'); }
+      }
+    }
+
+    // ------------------------------------------------------------ Bedingungen
+
+    function condJump(ctx, a, yes, no) {
+      const s = strip(a);
+      if (!s) { I('jump', yes); return; }
+      if (s.k === 'bin' && s.op === '&&') { const mid = newLabel(W.cond); condJump(ctx, s.a, mid, no); mark(mid); condJump(ctx, s.b, yes, no); return; }
+      if (s.k === 'bin' && s.op === '||') { const mid = newLabel(W.cond); condJump(ctx, s.a, yes, mid); mark(mid); condJump(ctx, s.b, yes, no); return; }
+      if (s.k === 'un' && s.op === '!') { condJump(ctx, s.a, no, yes); return; }
+      if (s.k === 'bin' && ['==', '!=', '<', '<=', '>', '>='].includes(s.op)) {
+        if (typeOf(ctx, s.a) === 'string' || typeOf(ctx, s.b) === 'string') { textCond(ctx, s, yes, no); return; }
+        const zero = (x) => { const v = A.literalValue(x); return v === 0; };
+        // a op b  →  a − b  (bei > und <= umgedreht: b − a), dann jz / jn
+        const swap = s.op === '>' || s.op === '<=';
+        const [x, y] = swap ? [s.b, s.a] : [s.a, s.b];
+        if (zero(y)) num(ctx, x);
+        else if (zero(x)) { I('push', 0); num(ctx, y); I('sub'); }
+        else { num(ctx, x); num(ctx, y); I('sub'); }
+        branch(s.op, yes, no);
+        return;
+      }
+      if (typeOf(ctx, s) === 'string') {
+        // Text als Bedingung: nicht leer
+        textExpr(ctx, s); I('retrieve', null, 'length');
+        I('jz', no); I('jump', yes);
+        return;
+      }
+      num(ctx, s);
+      I('jz', no);
+      I('jump', yes);
+    }
+
+    /** Oben liegt d = a − b (bzw. b − a bei > und <=). */
+    function branch(op, yes, no) {
+      switch (op) {
+        case '==': I('jz', yes); I('jump', no); return;
+        case '!=': I('jz', no); I('jump', yes); return;
+        case '<': case '>': I('jn', yes); I('jump', no); return;
+        default: I('jn', no); I('jump', yes); return;        // <= und >=
+      }
+    }
+
+    /** Textvergleich über txt_cmp (−1, 0, 1). */
+    function textCond(ctx, s, yes, no) {
+      const isEmpty = (x) => strip(x).k === 'str' && strip(x).v === '';
+      if ((s.op === '==' || s.op === '!=') && (isEmpty(s.a) || isEmpty(s.b))) {
+        textExpr(ctx, isEmpty(s.a) ? s.b : s.a);
+        I('retrieve', null, 'length');
+        branch(s.op, yes, no);
+        return;
+      }
+      textExpr(ctx, s.a); textExpr(ctx, s.b); callR('txt_cmp');
+      if (s.op === '>' || s.op === '<=') { I('push', -1); I('mul'); }   // −r: > wird zu <, <= zu >=
+      branch(s.op, yes, no);
+    }
+
+    // ------------------------------------------------------------ Anweisungen
+
+    /** Wert in eine Variable/ein Element schreiben (ast null → 0 bzw. ""). */
+    function store(ctx, targetSrc, ast) {
+      const tgt = typeof targetSrc === 'string' ? tryTarget(targetSrc) : targetSrc;
+      if (!tgt) return;
+      const tt = typeOf(ctx, tgt);
+      targetAddr(ctx, tgt);
+      if (!ast) I('push', 0, tt === 'string' ? '""' : null);
+      else if (tt === 'string') textExpr(ctx, ast);
+      else if (A.isArrayType(tt)) gen(ctx, ast);
+      else num(ctx, ast);
+      I('store', null, typeof targetSrc === 'string' ? targetSrc.trim() : (tgt.k === 'id' ? tgt.name : null));
+    }
+
+    function genSeq(ctx, seq) { for (const n of seq || []) genStmt(ctx, n); }
+
+    function genStmt(ctx, n) {
+      const head = (txt) => note(txt + (n.comment ? '   (' + n.comment.replace(/\s+/g, ' ') + ')' : ''));
+      switch (n.kind) {
+        case 'comment':
+          note(...String(n.text || '').split('\n').map((l) => '// ' + l));
+          return;
+        case 'decl': {
+          if (A.isArrayType(n.vtype)) {
+            head(n.name + ' = ' + tr('mgNewArray', n.length));
+            targetAddr(ctx, { k: 'id', name: n.name });
+            const len = tryParse(n.length);
+            if (len) num(ctx, len); else I('push', 0);
+            callR('arr_new');
+            I('store', null, n.name);
+            return;
+          }
+          head(n.name + ' = ' + (String(n.init || '').trim() || (n.vtype === 'string' ? '""' : '0')));
+          store(ctx, n.name, tryParse(n.init));
+          return;
+        }
+        case 'assign':
+          head(n.target + ' = ' + n.expr);
+          store(ctx, n.target, tryParse(n.expr));
+          return;
+        case 'input': {
+          const tgt = tryTarget(n.target);
+          head(tr('mgInput', n.target) + (String(n.prompt || '').trim() ? '  ' + n.prompt : ''));
+          if (!tgt) return;
+          const p = tryParse(n.prompt);
+          targetAddr(ctx, tgt);               // Zieladresse zuerst: sie bleibt unter dem gelesenen Wert liegen
+          if (typeOf(ctx, tgt) === 'string') {
+            if (p) textOut(ctx, p);
+            callR('txt_read');
+          } else {
+            const again = newLabel(W.input);
+            mark(again);
+            if (p) textOut(ctx, p);
+            callR('int_read');
+            I('jz', again);                 // 0 = keine ganze Zahl → nochmal fragen
+          }
+          I('store', null, n.target.trim());
+          return;
+        }
+        case 'output': {
+          head(tr('mgOutput', n.expr));
+          const ast = tryParse(n.expr);
+          if (ast) textOut(ctx, ast);
+          I('push', 10, charName(10));
+          I('outchar');
+          return;
+        }
+        case 'if': {
+          head(tr('mgIf', n.cond));
+          const l = newLabel(W.if), yes = sub(l, W.then), no = sub(l, W.else), end = sub(l, W.end);
+          condJump(ctx, tryParse(n.cond), yes, no);
+          mark(yes);
+          genSeq(ctx, n.then);
+          if (n.else && n.else.length) { I('jump', end); mark(no); genSeq(ctx, n.else); mark(end); }
+          else mark(no);
+          return;
+        }
+        case 'while': {
+          head(tr('mgWhile', n.cond));
+          const top = newLabel(W.while), body = sub(top, W.body), end = sub(top, W.end);
+          mark(top);
+          condJump(ctx, tryParse(n.cond), body, end);
+          mark(body);
+          genSeq(ctx, n.body);
+          I('jump', top);
+          mark(end);
+          return;
+        }
+        case 'until': {
+          head(tr('mgUntil', n.cond));
+          const top = newLabel(W.repeat), end = sub(top, W.end);
+          mark(top);
+          genSeq(ctx, n.body);
+          condJump(ctx, tryParse(n.cond), end, top);
+          mark(end);
+          return;
+        }
+        case 'for': {
+          head(tr('mgFor', n.counter, n.from, n.to, String(n.step || '1').trim() || '1'));
+          const top = newLabel(W.for), body = sub(top, W.body), end = sub(top, W.end);
+          const k = tryTarget(n.counter);
+          if (!k) return;
+          store(ctx, k, tryParse(n.from) || { k: 'num', v: 0, raw: '0' });
+          const stepAst = tryParse(n.step) || { k: 'num', v: 1, raw: '1' };
+          const to = tryParse(n.to) || { k: 'num', v: 0, raw: '0' };
+          const lit = A.literalValue(stepAst);
+          mark(top);
+          if (typeof lit === 'number') condJump(ctx, { k: 'bin', op: lit >= 0 ? '<=' : '>=', a: k, b: to }, body, end);
+          else {
+            const neg = sub(top, W.no);
+            num(ctx, stepAst);
+            I('jn', neg);
+            condJump(ctx, { k: 'bin', op: '<=', a: k, b: to }, body, end);
+            mark(neg);
+            condJump(ctx, { k: 'bin', op: '>=', a: k, b: to }, body, end);
+          }
+          mark(body);
+          genSeq(ctx, n.body);
+          store(ctx, k, { k: 'bin', op: '+', a: k, b: stepAst });
+          I('jump', top);
+          mark(end);
+          return;
+        }
+        case 'switch': {
+          head(tr('mgSwitch', n.expr));
+          const sel = tryParse(n.expr);
+          if (!sel) return;
+          const isText = typeOf(ctx, sel) === 'string';
+          const l = newLabel(W.switch), end = sub(l, W.end), other = sub(l, W.else);
+          const labels = n.cases.map((c, i) => sub(l, W.case + (i + 1)));
+          if (isText) textExpr(ctx, sel); else num(ctx, sel);
+          n.cases.forEach((c, i) => {
+            const v = tryParse(c.value) || { k: isText ? 'str' : 'num', v: isText ? '' : 0, raw: '0' };
+            I('dup');
+            if (isText) { textExpr(ctx, v); callR('txt_cmp'); }
+            else { num(ctx, v); I('sub'); }
+            I('jz', labels[i]);
+          });
+          I('jump', other);
+          n.cases.forEach((c, i) => {
+            mark(labels[i]);
+            I('discard', null, n.expr.trim());
+            genSeq(ctx, c.body);
+            I('jump', end);
+          });
+          mark(other);
+          I('discard', null, n.expr.trim());
+          if (n.else) genSeq(ctx, n.else);
+          mark(end);
+          return;
+        }
+        case 'call': {
+          const callee = subs.find((f) => f.name === n.fn);
+          head(tr('mgCall', (n.target && n.target.trim() ? n.target + ' = ' : '') + (n.fn || '?') + '(' + n.args.join(', ') + ')'));
+          if (!callee) return;
+          const fr = frames.get(callee);
+          const own = ctx.fn.isMain ? 0 : ctx.frame.size;
+          const tgt = callee.returnType !== 'void' && n.target && n.target.trim() ? tryTarget(n.target) : null;
+          if (tgt) targetAddr(ctx, tgt);      // Zieladresse zuerst: der Rückgabewert landet darüber
+          // Argumente direkt in den neuen Rahmen (hinter den eigenen) schreiben
+          callee.params.forEach((p, i) => {
+            const src = tryParse(n.args[i] || '') || { k: 'num', v: 0, raw: '0' };
+            const slot = fr.slot.get(p.name);
+            if (ctx.fn.isMain) I('push', { stack: slot }, callee.name + '.' + p.name);
+            else { getc('FP'); I('push', own + slot, '+' + callee.name + '.' + p.name); I('add'); }
+            if (A.isArrayType(p.type)) gen(ctx, src);
+            else if (p.byRef) targetAddr(ctx, src);
+            else if (p.type === 'string') textExpr(ctx, src);
+            else num(ctx, src);
+            I('store');
+          });
+          if (own) addc('FP', own);
+          I('call', fnLabel.get(callee.name));
+          if (own) addc('FP', -own);
+          if (callee.returnType !== 'void') {
+            if (!tgt) { I('discard', null, 'result'); return; }
+            const tt = typeOf(ctx, tgt);
+            if (tt === 'string' && callee.returnType !== 'string') callR('txt_num');
+            else if (tt !== 'string' && callee.returnType === 'string') { callR('txt_int'); I('discard', null, 'ok'); }
+            I('store', null, n.target.trim());
+          }
+          return;
+        }
+        default: return;
+      }
+    }
+
+    // ------------------------------------------------------------ Eingebaute Routinen
+
+    const helpers = {
+      // [c1 … cn n] → [Adresse]: legt einen Text mit den n Zeichen vom Stapel an (cn liegt oben)
+      txt_pack() {
+        const N = rc('txt_pack', 'n'), Ad = rc('txt_pack', 'a'), P = rc('txt_pack', 'p');
+        const loop = sub('txt_pack', 'loop'), done = sub('txt_pack', 'done');
+        setc(N, () => I('swap'));
+        setc(Ad, () => getc('HP'));
+        getc(Ad); getc(N); I('store', null, 'length');
+        setc(P, () => { getc(Ad); getc(N); I('add'); });
+        setc('HP', () => { getc(P); I('push', 1); I('add'); });
+        mark(loop);
+        getc(P); getc(Ad); I('sub'); I('jz', done);
+        getc(P); I('swap'); I('store');
+        addc(P, -1);
+        I('jump', loop);
+        mark(done);
+        getc(Ad);
+        I('ret');
+      },
+      // [a b] → [Adresse von a+b]; ist ein Teil leer, wird der andere zurückgegeben (Texte sind unveränderlich)
+      txt_cat() {
+        const X = rc('txt_cat', 'a'), B = rc('txt_cat', 'b'), R = rc('txt_cat', 'r'), D = rc('txt_cat', 'd'), S = rc('txt_cat', 's'), N = rc('txt_cat', 'n');
+        const retA = sub('txt_cat', 'a'), retB = sub('txt_cat', 'b');
+        setc(B, () => I('swap'));
+        setc(X, () => I('swap'));
+        getc(X); I('retrieve', null, 'length'); I('jz', retB);
+        getc(B); I('retrieve', null, 'length'); I('jz', retA);
+        setc(R, () => getc('HP'));
+        getc(R); getc(X); I('retrieve'); getc(B); I('retrieve'); I('add'); I('store', null, 'length');
+        setc(D, () => getc(R));
+        for (const src of [X, B]) {
+          const loop = sub('txt_cat', 'copy'), next = sub('txt_cat', 'next');
+          setc(S, () => getc(src));
+          setc(N, () => { getc(src); I('retrieve'); });
+          mark(loop);
+          getc(N); I('jz', next);
+          addc(S, 1); addc(D, 1);
+          getc(D); getc(S); I('retrieve'); I('store');
+          addc(N, -1);
+          I('jump', loop);
+          mark(next);
+        }
+        setc('HP', () => { getc(D); I('push', 1); I('add'); });
+        getc(R); I('ret');
+        mark(retA); getc(X); I('ret');
+        mark(retB); getc(B); I('ret');
+      },
+      // [n] → [Adresse]: Zahl als Text (Ziffern von hinten mit mod 10 / div 10 – n ist dann ≥ 0)
+      txt_num() {
+        const N = rc('txt_num', 'n'), L = rc('txt_num', 'len'), T = rc('txt_num', 't'), Ad = rc('txt_num', 'a'), P = rc('txt_num', 'p');
+        const neg = sub('txt_num', 'neg'), count = sub('txt_num', 'count'), cl = sub('txt_num', 'cl'), alloc = sub('txt_num', 'alloc'),
+          digit = sub('txt_num', 'digit'), sign = sub('txt_num', 'sign'), done = sub('txt_num', 'done');
+        setc(N, () => I('swap'));
+        setc(L, () => I('push', 1));
+        getc(N); I('jn', neg);
+        I('jump', count);
+        mark(neg);
+        setc(L, () => I('push', 2));
+        setc(N, () => { I('push', 0); getc(N); I('sub'); });
+        mark(count);
+        setc(T, () => { getc(N); I('push', 10); I('div'); });
+        mark(cl);
+        getc(T); I('jz', alloc);
+        addc(L, 1);
+        setc(T, () => { getc(T); I('push', 10); I('div'); });
+        I('jump', cl);
+        mark(alloc);
+        setc(Ad, () => getc('HP'));
+        getc(Ad); getc(L); I('store', null, 'length');
+        setc(P, () => { getc(Ad); getc(L); I('add'); });
+        setc('HP', () => { getc(P); I('push', 1); I('add'); });
+        mark(digit);
+        getc(P); getc(N); I('push', 10); I('mod'); I('push', 48, "'0'"); I('add'); I('store');
+        setc(N, () => { getc(N); I('push', 10); I('div'); });
+        addc(P, -1);
+        getc(N); I('jz', sign);
+        I('jump', digit);
+        mark(sign);
+        getc(P); getc(Ad); I('sub'); I('jz', done);
+        getc(P); I('push', 45, "'-'"); I('store');
+        mark(done);
+        getc(Ad);
+        I('ret');
+      },
+      // [a b] → [−1 | 0 | 1]: Zeichen für Zeichen nach Zeichencode
+      txt_cmp() {
+        const X = rc('txt_cmp', 'a'), B = rc('txt_cmp', 'b'), LA = rc('txt_cmp', 'la'), LB = rc('txt_cmp', 'lb');
+        const loop = sub('txt_cmp', 'loop'), same = sub('txt_cmp', 'same'), aEnd = sub('txt_cmp', 'aend'),
+          lt = sub('txt_cmp', 'lt'), gt = sub('txt_cmp', 'gt');
+        setc(B, () => I('swap'));
+        setc(X, () => I('swap'));
+        setc(LA, () => { getc(X); I('retrieve'); });
+        setc(LB, () => { getc(B); I('retrieve'); });
+        mark(loop);
+        getc(LA); I('jz', aEnd);
+        getc(LB); I('jz', gt);
+        addc(X, 1); addc(B, 1);
+        getc(X); I('retrieve'); getc(B); I('retrieve'); I('sub');
+        I('dup'); I('jz', same);
+        I('jn', lt);
+        I('jump', gt);
+        mark(same);
+        I('discard');
+        addc(LA, -1); addc(LB, -1);
+        I('jump', loop);
+        mark(aEnd);
+        const eq = sub('txt_cmp', 'eq');
+        getc(LB); I('jz', eq);
+        mark(lt); I('push', -1); I('ret');
+        mark(gt); I('push', 1); I('ret');
+        mark(eq); I('push', 0); I('ret');
+      },
+      // [a] → []: Text ausgeben
+      txt_out() {
+        const P = rc('txt_out', 'p'), N = rc('txt_out', 'n');
+        const loop = sub('txt_out', 'loop'), done = sub('txt_out', 'done');
+        setc(P, () => I('swap'));
+        setc(N, () => { getc(P); I('retrieve'); });
+        mark(loop);
+        getc(N); I('jz', done);
+        addc(P, 1);
+        getc(P); I('retrieve'); I('outchar');
+        addc(N, -1);
+        I('jump', loop);
+        mark(done);
+        I('ret');
+      },
+      // [] → [Adresse]: eine Zeile lesen (bis LF, CR wird verworfen); Ende der Eingabe (−1) → eof = 1
+      txt_read() {
+        const Ad = rc('txt_read', 'a'), P = rc('txt_read', 'p'), EOF = rc('txt_read', 'eof');
+        const loop = sub('txt_read', 'loop'), cr = sub('txt_read', 'cr'), eof = sub('txt_read', 'eof'), lf = sub('txt_read', 'lf'), fin = sub('txt_read', 'fin');
+        setc(Ad, () => getc('HP'));
+        setc(P, () => getc(Ad));
+        setc(EOF, () => I('push', 0));
+        mark(loop);
+        addc(P, 1);
+        getc(P); I('readchar');
+        getc(P); I('retrieve');
+        I('dup'); I('jn', eof);
+        I('dup'); I('push', 10, charName(10)); I('sub'); I('jz', lf);
+        I('push', 13, charName(13)); I('sub'); I('jz', cr);
+        I('jump', loop);
+        mark(cr);
+        addc(P, -1);
+        I('jump', loop);
+        mark(eof);
+        setc(EOF, () => I('push', 1));
+        mark(lf);
+        I('discard');
+        mark(fin);
+        getc(P); I('push', 0); I('store');                      // Endezeichen löschen: ab HP ist alles 0
+        getc(Ad); getc(P); getc(Ad); I('sub'); I('push', 1); I('sub'); I('store', null, 'length');
+        setc('HP', () => getc(P));
+        getc(Ad);
+        I('ret');
+      },
+      // [a] → [Wert ok]: ganze Zahl (Leerzeichen/Tabulatoren davor und danach erlaubt, Vorzeichen + oder −); ungültig → [0 0]
+      txt_int() {
+        const P = rc('txt_int', 'p'), N = rc('txt_int', 'n'), V = rc('txt_int', 'v'), S = rc('txt_int', 's'), D = rc('txt_int', 'd'), C = rc('txt_int', 'c');
+        const lab = (x) => sub('txt_int', x);
+        const lead = lab('lead'), skip = lab('skip'), signs = lab('sign'), minus = lab('minus'), plus = lab('plus'), digits = lab('digits'),
+          trail = lab('trail'), tskip = lab('tskip'), fin = lab('fin'), bad = lab('bad');
+        const next = () => { addc(P, 1); addc(N, -1); };
+        const char = () => setc(C, () => { getc(P); I('push', 1); I('add'); I('retrieve'); });
+        const isC = (code, l) => { getc(C); I('push', code, charName(code)); I('sub'); I('jz', l); };
+        setc(P, () => I('swap'));
+        setc(N, () => { getc(P); I('retrieve'); });
+        setc(V, () => I('push', 0));
+        setc(S, () => I('push', 1));
+        setc(D, () => I('push', 0));
+        mark(lead);
+        getc(N); I('jz', fin);
+        char();
+        isC(32, skip); isC(9, skip);
+        I('jump', signs);
+        mark(skip); next(); I('jump', lead);
+        mark(signs);
+        isC(45, minus); isC(43, plus);
+        I('jump', digits);
+        mark(minus); setc(S, () => I('push', -1));
+        mark(plus); next();
+        mark(digits);
+        getc(N); I('jz', fin);
+        char();
+        getc(C); I('push', 48, "'0'"); I('sub'); I('jn', trail);          // < '0'
+        I('push', 57, "'9'"); getc(C); I('sub'); I('jn', trail);          // > '9'
+        setc(V, () => { getc(V); I('push', 10); I('mul'); getc(C); I('push', 48, "'0'"); I('sub'); I('add'); });
+        addc(D, 1);
+        next();
+        I('jump', digits);
+        mark(trail);
+        getc(N); I('jz', fin);
+        char();
+        isC(32, tskip); isC(9, tskip);
+        I('jump', bad);
+        mark(tskip); next(); I('jump', trail);
+        mark(fin);
+        getc(D); I('jz', bad);
+        getc(V); getc(S); I('mul'); I('push', 1, 'ok'); I('ret');
+        mark(bad);
+        I('push', 0); I('push', 0, 'ok'); I('ret');
+      },
+      // [] → [Wert 1] oder [0] (keine ganze Zahl: Meldung ausgegeben); Ende der Eingabe → [0 1]
+      int_read() {
+        const parse = sub('int_read', 'parse'), bad = sub('int_read', 'bad'), empty = sub('int_read', 'empty');
+        callR('txt_read');
+        I('dup'); I('retrieve', null, 'length'); I('jz', empty);
+        mark(parse);
+        callR('txt_int');
+        I('jz', bad);
+        I('push', 1, 'ok'); I('ret');
+        mark(bad);
+        I('discard');
+        pushText(tr('javaNeedInt')); callR('txt_out');
+        I('push', 10, charName(10)); I('outchar');
+        I('push', 0); I('ret');
+        mark(empty);
+        getc(rc('txt_read', 'eof')); I('jz', parse);
+        I('discard'); I('push', 0); I('push', 1, 'ok'); I('ret');
+      },
+      // [a b] → [a / b] wie in C: div rundet ab; ist der Rest ≠ 0 und haben a und b verschiedene Vorzeichen, +1
+      int_div() {
+        const X = rc('int_div', 'a'), B = rc('int_div', 'b');
+        const fix = sub('int_div', 'fix'), done = sub('int_div', 'done');
+        setc(B, () => I('swap'));
+        setc(X, () => I('swap'));
+        getc(X); getc(B); I('div');
+        getc(X); getc(B); I('mod'); I('jz', done);
+        getc(X); getc(B); I('mul'); I('jn', fix);
+        mark(done); I('ret');
+        mark(fix); I('push', 1); I('add'); I('ret');
+      },
+      // [a b] → [a % b] wie in C (Vorzeichen von a): mod hat das Vorzeichen von b; ist es ≠ 0 und a, b verschieden, − b
+      int_mod() {
+        const X = rc('int_div', 'a'), B = rc('int_div', 'b');
+        const fix = sub('int_mod', 'fix'), done = sub('int_mod', 'done');
+        setc(B, () => I('swap'));
+        setc(X, () => I('swap'));
+        getc(X); getc(B); I('mod');
+        I('dup'); I('jz', done);
+        getc(X); getc(B); I('mul'); I('jn', fix);
+        mark(done); I('ret');
+        mark(fix); getc(B); I('sub'); I('ret');
+      },
+      // [n] → [Adresse]: Array mit n Elementen (alle 0) auf der Halde
+      arr_new() {
+        const N = rc('arr_new', 'n'), Ad = rc('arr_new', 'a');
+        setc(N, () => I('swap'));
+        setc(Ad, () => getc('HP'));
+        getc(Ad); getc(N); I('add'); I('push', 0); I('store');        // letzte Zelle anlegen (die Zellen ab HP sind 0)
+        getc(Ad); getc(N); I('store', null, 'length');
+        setc('HP', () => { getc(Ad); getc(N); I('add'); I('push', 1); I('add'); });
+        getc(Ad);
+        I('ret');
+      }
+    };
+
+    // ------------------------------------------------------------ Zusammenbau
+
+    const mctx = { fn: main, scope: mainScope, frame: null };
+    const startAt = prog.length;
+    genSeq(mctx, main.body);
+    I('end', null, tr('mgCmtEnd'));
+
+    for (const fn of subs) {
+      const fr = frames.get(fn);
+      const ctx = { fn, scope: fr.scope, frame: fr };
+      note('', tr('wsSub', fn.name + '(' + fn.params.map((p) => (p.byRef ? '&' : '') + p.name).join(', ') + ')',
+        [...fr.slot].map(([n, k]) => 'FP+' + k + ' ' + n).join(', ')));
+      mark(fnLabel.get(fn.name));
+      // Variablen im Rahmen auf 0 setzen (der Stapel wird wiederverwendet)
+      for (const [n, k] of fr.slot) {
+        const v = fr.scope.get(n);
+        if (v && (v.kind === 'param' || (v.kind === 'result' && fn.returnType !== 'void'))) continue;   // result: gleich danach
+        varCell(ctx, n); I('push', 0); I('store', null, n);
+      }
+      if (fn.returnType !== 'void') store(ctx, 'result', tryParse(fn.resultInit));
+      genSeq(ctx, fn.body);
+      if (fn.returnType !== 'void') gen(ctx, { k: 'id', name: 'result' });
+      I('ret');
+    }
+
+    // Routinen (auch solche, die erst von anderen Routinen gebraucht werden)
+    const done = new Set();
+    for (;;) {
+      const r = ROUTINES.find((x) => used.has(x) && !done.has(x));
+      if (!r) break;
+      done.add(r);
+      note('', tr(HELP_KEY[r]));
+      mark(r);
+      helpers[r]();
+    }
+
+    // Speicher verteilen
+    let next = 3;
+    for (const k of cellOrder) cellAt.set(k, next++);
+    const round = (x) => Math.ceil(x / 100) * 100;
+    const STACK = round(next);
+    const HEAP = subs.length ? STACK + STACK_CELLS : round(next);
+
+    // Textkonstanten: Routine txt_init legt sie beim Start in der Reihenfolge des Pools an (Adresse = HEAP + Versatz)
+    if (pool.size) {
+      note('', tr('wsHelpConst'));
+      mark('txt_init');
+      for (const [s, off] of pool) {
+        note(tr('wsConst', '"' + s + '"', HEAP + off));
+        const cps = [...s].map((c) => c.codePointAt(0));
+        for (const cp of cps) I('push', cp, charName(cp));
+        I('push', cps.length, 'length');
+        I('call', 'txt_pack');
+        I('discard');
+      }
+      I('ret');
+    }
+
+    // Startcode: HP und FP setzen, Speicher bis zur Halde anlegen, Textkonstanten anlegen
+    const init = [];
+    const J = (op, arg, cmt) => init.push({ op, arg, cmt });
+    init.push({ note: [tr('wsInit', HEAP - 1)] });
+    J('push', { cell: 'HP' }, 'HP'); J('push', HEAP); J('store');
+    if (subs.length) { J('push', { cell: 'FP' }, 'FP'); J('push', STACK); J('store'); usesFP = true; }
+    J('push', HEAP - 1); J('push', 0); J('store');
+    if (pool.size) J('call', 'txt_init');
+    init.push({ note: ['', tr('wsMain')] });
+    prog.splice(startAt, 0, ...init);
+
+    // Sprünge zur direkt folgenden Marke entfernen
+    for (let i = 0; i < prog.length; i++) {
+      const c = prog[i];
+      if (c.op !== 'jump') continue;
+      let j = i + 1, hit = false;
+      while (j < prog.length && (prog[j].note || prog[j].op === 'mark')) { if (prog[j].arg === c.arg) hit = true; j++; }
+      if (hit) { prog.splice(i, 1); i--; }
+    }
+    // Marken, zu denen nie gesprungen wird, weglassen
+    const targets = new Set(prog.filter((c) => c.op && LABEL_ARG.has(c.op) && c.op !== 'mark').map((c) => c.arg));
+    for (let i = prog.length - 1; i >= 0; i--) if (prog[i].op === 'mark' && genLabels.has(prog[i].arg) && !targets.has(prog[i].arg)) prog.splice(i, 1);
+
+    // ---- Ausgabe
+    const labelNum = new Map();
+    let nextLabel = 0;
+    const lab = (name) => { if (!labelNum.has(name)) labelNum.set(name, ++nextLabel); return labelCode(labelNum.get(name)); };
+    const out = [];
+    let atStart = true;
+    let nextNoteNo = 0;
+    const put = (code, cmt) => {
+      const i = code.indexOf('L');
+      out.push(i >= 0 && i < code.length - 1 ? enc(code.slice(0, i + 1)) + cmt + enc(code.slice(i + 1)) : cmt + enc(code));
+      atStart = code.endsWith('L');
+    };
+    const noteLine = (s) => (s === '' ? '' : ';·' + clean(s));
+    const putNotes = (lines) => {
+      let k = 0;
+      while (k < lines.length) {
+        const code = enc('SS' + lab('#note' + (++nextNoteNo)));
+        if (atStart && k + 1 < lines.length) { out.push(noteLine(lines[k]) + '\n' + noteLine(lines[k + 1]) + code); k += 2; }
+        else { out.push('\n' + noteLine(lines[k]) + code); k++; }
+        atStart = true;
+      }
+    };
+    const resolve = (a) => {
+      if (a && typeof a === 'object') {
+        if ('cell' in a) return cellAt.get(a.cell);
+        if ('konst' in a) return HEAP + pool.get(a.konst);
+        if ('stack' in a) return STACK + a.stack;
+      }
+      return a;
+    };
+
+    // Kopf
+    const cells = [['empty', 0], ['HP', 1]].concat(usesFP ? [['FP', 2]] : []).concat(cellOrder.map((k) => [k, cellAt.get(k)]))
+      .map(([k, a]) => a + '=' + cellName.get(k));
+    const head = [tr('wsHeader1'), tr('wsHeader2'), tr('wsHeader3'), tr('wsMemory', cells.join(', ')),
+      subs.length ? tr('wsStackHeap', STACK, HEAP) : tr('wsHeap', HEAP)];
+    if (unsupported.length) head.push('⚠ ' + [...new Set(unsupported)].join(' '));
+    if (head.length % 2) head.push('');
+    putNotes(head);
+
+    for (const c of prog) {
+      if (c.note) { putNotes(c.note); continue; }
+      let code = OPS[c.op];
+      let m;
+      if (NUM_ARG.has(c.op)) {
+        const v = resolve(c.arg);
+        code += numCode(v);
+        m = c.op + '_' + v + (c.cmt ? ':' + c.cmt : '');
+      } else if (LABEL_ARG.has(c.op)) {
+        code += lab(c.arg);
+        m = c.op === 'mark' ? c.arg + ':' : c.op + ':' + c.arg;
+      } else m = c.op + (c.cmt ? ':' + c.cmt : '');
+      put(code, clean(m));
+    }
+    const text = out.join('') + (atStart ? '' : '\n');
+    const uniq = [...new Set(unsupported)];
+    return opts.report ? { code: text, unsupported: uniq } : text;
+  }
+
+  // ------------------------------------------------------------ Interpreter
+
+  const floorDiv = (a, b) => { const q = a / b; return (a % b !== 0n && ((a < 0n) !== (b < 0n))) ? q - 1n : q; };
+  const floorMod = (a, b) => { const r = a % b; return (r !== 0n && ((r < 0n) !== (b < 0n))) ? r + b : r; };
+
+  /** Quelltext → { prog: [{ op, n?, label? , at }], labels: Map } (alle Zeichen außer Leerzeichen, Tab, LF sind Kommentar). */
+  function parse(src) {
+    const code = [];
+    const pos = [];
+    let line = 1;
+    for (const ch of String(src)) {
+      if (ch === ' ') { code.push('S'); pos.push(line); }
+      else if (ch === '\t') { code.push('T'); pos.push(line); }
+      else if (ch === '\n') { code.push('L'); pos.push(line); line++; }
+    }
+    let i = 0;
+    const where = (k) => 'Zeile ' + (pos[k] || line);
+    const need = () => { if (i >= code.length) throw new Error(where(i) + ': unvollständiger Befehl am Ende'); return code[i++]; };
+    const readNum = () => {
+      const s = need();
+      if (s === 'L') return 0n;
+      let v = 0n;
+      for (;;) { const c = need(); if (c === 'L') break; v = v * 2n + (c === 'T' ? 1n : 0n); }
+      return s === 'T' ? -v : v;
+    };
+    const readLabel = () => { let s = ''; for (;;) { const c = need(); if (c === 'L') return s; s += c; } };
+    const prog = [];
+    const labels = new Map();
+    while (i < code.length) {
+      const at = i;
+      const bad = () => new Error(where(at) + ': unbekannter Befehl ' + code.slice(at, i).join(''));
+      const a = need();
+      let op = null;
+      const ins = { at: where(at) };
+      if (a === 'S') {
+        const b = need();
+        if (b === 'S') { op = 'push'; ins.n = readNum(); }
+        else if (b === 'L') op = { S: 'dup', T: 'swap', L: 'discard' }[need()];
+        else { const c = need(); if (c === 'S') { op = 'copy'; ins.n = readNum(); } else if (c === 'L') { op = 'slide'; ins.n = readNum(); } }
+      } else if (a === 'T') {
+        const b = need();
+        if (b === 'S') op = { SS: 'add', ST: 'sub', SL: 'mul', TS: 'div', TT: 'mod' }[need() + need()];
+        else if (b === 'T') op = { S: 'store', T: 'retrieve' }[need()];
+        else op = { SS: 'outchar', ST: 'outnum', TS: 'readchar', TT: 'readnum' }[need() + need()];
+      } else {
+        op = { SS: 'mark', ST: 'call', SL: 'jump', TS: 'jz', TT: 'jn', TL: 'ret', LL: 'end' }[need() + need()];
+        if (op && LABEL_ARG.has(op)) ins.label = readLabel();
+      }
+      if (!op) throw bad();
+      ins.op = op;
+      if (op === 'mark') {
+        if (labels.has(ins.label)) throw new Error(ins.at + ': Marke doppelt');
+        labels.set(ins.label, prog.length);
+        continue;
+      }
+      prog.push(ins);
+    }
+    return { prog, labels };
+  }
+
+  /**
+   * Führt ein Whitespace-Programm aus.
+   *   Zahlen: BigInt. div/mod wie Haskell (div rundet ab, mod hat das Vorzeichen des Divisors). Division durch 0 → Fehler.
+   *   Halde: unbeschriebene Zellen lesen sich als 0 (das Original bricht ab, wenn die Zelle hinter dem bisher
+   *   beschriebenen Bereich liegt); negative Adressen → Fehler.
+   *   Zeichen lesen: ein Unicode-Zeichen (Codepoint); am Ende der Eingabe −1 (das Original bricht ab).
+   *   Zahl lesen: eine Zeile (bis LF, CR am Ende wird entfernt), Leerraum davor/danach erlaubt, optional „-“,
+   *   dann Ziffern; sonst Fehler (wie read im Original). Am Ende der Eingabe → Fehler.
+   *   Zeichen ausgeben: Codepoint → Text (in JS als String, also UTF-16; beim Schreiben in eine Datei UTF-8).
+   *   Ende: nur über „end“; läuft das Programm über das letzte Zeichen hinaus, ist das ein Fehler.
+   * @param src  Quelltext
+   * @param io   { stdin: string (ganze Eingabe) | input(): string|null (eine Zeile), output(text), maxSteps }
+   * @returns    { steps, error }
+   */
+  function run(src, io = {}) {
+    let steps = 0;
+    let buf = '';
+    const flush = () => { if (buf && io.output) io.output(buf); buf = ''; };
+    try {
+      const { prog, labels } = parse(src);
+      // Eingabe als Folge von Codepoints
+      let inp = io.stdin != null ? [...String(io.stdin)] : [];
+      let ip = 0;
+      const more = () => {
+        if (ip < inp.length) return true;
+        if (io.stdin == null && io.input) {
+          const l = io.input();
+          if (l == null) return false;
+          inp = [...(String(l) + '\n')]; ip = 0;
+          return inp.length > 0;
+        }
+        return false;
+      };
+      const stack = [], calls = [], heap = new Map();
+      const pop = (ins) => { if (!stack.length) throw new Error(ins.at + ' (' + ins.op + '): Stapel leer'); return stack.pop(); };
+      const adr = (a, ins) => { if (a < 0n) throw new Error(ins.at + ' (' + ins.op + '): negative Adresse ' + a); return a; };
+      const jump = (ins) => { if (!labels.has(ins.label)) throw new Error(ins.at + ': Marke fehlt'); return labels.get(ins.label); };
+      const max = io.maxSteps || 50000000;
+      let pc = 0;
+      for (;;) {
+        if (pc >= prog.length) throw new Error('Programm endet ohne end');
+        if (++steps > max) { flush(); return { steps, error: 'Schrittgrenze erreicht' }; }
+        const ins = prog[pc++];
+        switch (ins.op) {
+          case 'push': stack.push(ins.n); break;
+          case 'dup': { const v = pop(ins); stack.push(v, v); break; }
+          case 'copy': {
+            const k = Number(ins.n);
+            if (k < 0 || k >= stack.length) throw new Error(ins.at + ' (copy): kein Element ' + k);
+            stack.push(stack[stack.length - 1 - k]);
+            break;
+          }
+          case 'swap': { const b = pop(ins), a = pop(ins); stack.push(b, a); break; }
+          case 'discard': pop(ins); break;
+          case 'slide': {
+            const top = pop(ins);
+            const k = Number(ins.n);
+            if (k < 0) throw new Error(ins.at + ' (slide): negativ');
+            stack.length = Math.max(0, stack.length - k);
+            stack.push(top);
+            break;
+          }
+          case 'add': case 'sub': case 'mul': case 'div': case 'mod': {
+            const b = pop(ins), a = pop(ins);
+            if ((ins.op === 'div' || ins.op === 'mod') && b === 0n) throw new Error(ins.at + ' (' + ins.op + '): Division durch 0');
+            stack.push(ins.op === 'add' ? a + b : ins.op === 'sub' ? a - b : ins.op === 'mul' ? a * b : ins.op === 'div' ? floorDiv(a, b) : floorMod(a, b));
+            break;
+          }
+          case 'store': { const v = pop(ins), a = adr(pop(ins), ins); heap.set(a, v); break; }
+          case 'retrieve': { const a = adr(pop(ins), ins); stack.push(heap.has(a) ? heap.get(a) : 0n); break; }
+          case 'call': calls.push(pc); pc = jump(ins); break;
+          case 'jump': pc = jump(ins); break;
+          case 'jz': if (pop(ins) === 0n) pc = jump(ins); break;
+          case 'jn': if (pop(ins) < 0n) pc = jump(ins); break;
+          case 'ret': if (!calls.length) throw new Error(ins.at + ' (ret): kein Rücksprung offen'); pc = calls.pop(); break;
+          case 'end': flush(); return { steps };
+          case 'outchar': {
+            const v = pop(ins);
+            if (v < 0n || v > 0x10FFFFn) throw new Error(ins.at + ' (outchar): kein Zeichen ' + v);
+            buf += String.fromCodePoint(Number(v));
+            if (buf.length > 4096) flush();
+            break;
+          }
+          case 'outnum': buf += pop(ins).toString(); if (buf.length > 4096) flush(); break;
+          case 'readchar': {
+            flush();
+            const a = adr(pop(ins), ins);
+            heap.set(a, more() ? BigInt(inp[ip++].codePointAt(0)) : -1n);
+            break;
+          }
+          case 'readnum': {
+            flush();
+            const a = adr(pop(ins), ins);
+            if (!more()) throw new Error(ins.at + ' (readnum): Ende der Eingabe');
+            let l = '';
+            while (more()) { const c = inp[ip++]; if (c === '\n') break; l += c; }
+            l = l.replace(/\r$/, '').trim();
+            if (!/^-?\d+$/.test(l)) throw new Error(ins.at + ' (readnum): keine ganze Zahl: ' + l);
+            heap.set(a, BigInt(l));
+            break;
+          }
+          default: throw new Error(ins.at + ': ' + ins.op);
+        }
+      }
+    } catch (e) {
+      flush();
+      return { steps, error: e.message };
+    }
+  }
+
+  BBE.wsgen = { generate, run };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* js/core/bfgen.js */
+/* Blockbild-Editor – Übersetzung nach Brainfuck (+ Interpreter)
+ *
+ *   Brainfuck: ein Band aus Zellen, ein Zeiger, acht Befehle  > < + - . , [ ]
+ *   Alles andere im Quelltext ist Kommentar (darum stehen in Kommentaren nie diese acht Zeichen;
+ *   safe() ersetzt sie durch breite Unicode-Zeichen).
+ *
+ *   Zellmodell (steht auch im Kopf jedes erzeugten Programms, run() setzt genau das um):
+ *   - Zellen mit mindestens 16 Bit (32 Bit empfohlen). Das Programm erzeugt NIE negative Zellwerte und
+ *     verlässt sich nicht auf Überlauf – es läuft mit vorzeichenlosen und mit vorzeichenbehafteten,
+ *     umlaufenden oder unbegrenzten Zellen. 8-Bit-Zellen gehen nur, solange alle Zahlen unter 256 bleiben.
+ *   - ',' bei Dateiende: 0 oder Zelle unverändert (vor jedem ',' steht die Zelle auf 0).
+ *   - Band nur rechts vom Start; Länge steht im Kopf (Rekursion braucht je Ebene einen Rahmen mehr).
+ *
+ *   Übersetzung:
+ *   - Zahl = zwei Zellen (P, N), Wert = P − N; gespeicherte Zahlen sind normalisiert (höchstens eine ≠ 0).
+ *     + und − sind reines Verschieben; * / % rechnen mit Beträgen und Vorzeichen-Merkern
+ *     (schneidet ab wie C, der Rest hat das Vorzeichen des Dividenden). Kommazahlen: x * 1.25 → x * 5 / 4.
+ *   - Rahmen je Unterprogramm, feste Größe. Rechts vom Kopf (RUN PC T E RET): Zahlen, Hilfszellen,
+ *     Ziffernstapel. Links vom Kopf, gespiegelt: Texte (verschränkt, Einheit j aller Texte nebeneinander,
+ *     Einheit 0 direkt am Kopf) und Arrays (ebenso). Gleiche Schrittweite in allen Rahmen, damit
+ *     Kopieren zwischen Rahmen mit festem Abstand geht.
+ *   - Unterprogramme: das Programm ist eine Schleife über Blöcke (Verteiler mit PC). Der Zeiger steht im
+ *     Rahmen des laufenden Unterprogramms; ein Aufruf schreibt die Parameter in den nächsten Rahmen
+ *     (fester Abstand), setzt dort RUN = 1, RET = Fortsetzungsblock, PC = erster Block und rückt vor.
+ *     Am Ende setzt das Unterprogramm PC = RET; der Fortsetzungsblock (läuft noch im fremden Rahmen) holt
+ *     Ergebnis, InOut-Werte und Arrays zurück, löscht den Rahmen und rückt zurück. So geht auch Rekursion.
+ *   - InOut-Parameter und Arrays: Kopie hinein, beim Rücksprung Kopie zurück (copy-in/copy-out).
+ *   - Arrays: Einheiten zu 6 Zellen (Spur, Zähler, 2 Träger, 2 Zellen Element). Variabler Index: Zähler und
+ *     Wert wandern Einheit für Einheit, die Spur führt zurück. Länge im Kopf-Element.
+ *   - Texte: Bytes (UTF-8) in Einheiten zu 3 Zellen (Zähler, Träger, Byte), hinter dem Text nur Nullen;
+ *     Länge in der Einheit 0. Ausgeben/Anhängen/Löschen mit Suchschleifen über die Bytes.
+ *   - Ganze Zahl lesen: Zeile Zeichen für Zeichen, bis eine ganze Zahl kommt (sonst javaNeedInt);
+ *     Dateiende → 0 bzw. leerer Text.
+ */
+(function (G) {
+  'use strict';
+  const BBE = G.BBE = G.BBE || {};
+  const { parseCached, parseTarget, strip } = BBE.expr;
+  const A = BBE.analyze;
+
+  const TEXT_CAP = 127;      // höchstens so viele Bytes je Text (was nicht mehr passt, wird weggelassen)
+  const ARRAY_CAP = 127;     // Arrays mit variabler Länge: höchstens so viele Elemente
+  const TU = 3;              // Text-Einheit: c (Zähler/Spur), v (Träger), ch (Byte)
+  const AU = 6;              // Array-Einheit: t (Spur), c (Zähler), vp, vn (Träger), ep, en (Element)
+  const IU = 8;              // Ziffern-Einheit: D, F, n, d, r, q, z1, z2
+  const H = { RUN: 0, PC: 1, T: 2, E: 3, RET: 4 };
+  const HEAD = 5;
+  const WRAP = 72;
+
+  const tryParse = (src) => { try { const s = String(src == null ? '' : src).trim(); return s ? parseCached(s) : null; } catch (e) { return null; } };
+  const tryTarget = (src) => { try { return parseTarget(String(src || '').trim()); } catch (e) { return null; } };
+  const utf8 = (s) => {
+    if (typeof TextEncoder !== 'undefined') return Array.from(new TextEncoder().encode(String(s)));
+    return Array.from(unescape(encodeURIComponent(String(s)))).map((c) => c.charCodeAt(0));
+  };
+  const rep = (c, n) => (n > 0 ? c.repeat(n) : '');
+  const R = (n) => rep('>', n);
+  const Lf = (n) => rep('<', n);
+  const mv = (d) => (d > 0 ? R(d) : Lf(-d));
+  const SAFE = { '+': '＋', '-': '－', '<': '＜', '>': '＞', '[': '［', ']': '］', '.': '．', ',': '，', '!': '！', '#': '＃' };
+  /** Kommentartext ohne Brainfuck-Befehlszeichen */
+  const safe = (s) => String(s).replace(/[+\-<>[\].,!#]/g, (c) => SAFE[c]).replace(/\s+/g, ' ').trim();
+
+  /** Nebeneinanderliegende Zeigerbewegungen bzw. +/− zusammenfassen */
+  const peep = (s) => s.replace(/[<>]{2,}/g, (r) => { let d = 0; for (const c of r) d += c === '>' ? 1 : -1; return mv(d); })
+    .replace(/[+-]{2,}/g, (r) => { let d = 0; for (const c of r) d += c === '+' ? 1 : -1; return d > 0 ? rep('+', d) : rep('-', -d); });
+
+  /** Code, der in der aktuellen Zelle k addiert; Hilfszelle (0) im Abstand o. */
+  function constCode(k, o) {
+    if (k <= 16) return rep('+', k);
+    let best = null;
+    for (let a = 2; a * a <= k * 2 && a <= 64; a++) {
+      const b = Math.floor(k / a), c = k - a * b;
+      const cost = a + b + c + 2 * Math.abs(o) + 6;
+      if (!best || cost < best.cost) best = { a, b, c, cost };
+    }
+    if (!best || best.cost >= k) return rep('+', k);
+    return mv(o) + rep('+', best.a) + '[-' + mv(-o) + rep('+', best.b) + mv(o) + ']' + mv(-o) + rep('+', best.c);
+  }
+
+  // Divmod (n d 0 0 0 0 → 0 d−n%d n%d n/d 0 0), für d ≥ 2, Zeiger auf n
+  const DIVMOD = '[->-[>+>>]>[+[-<+>]>+>>]<<<<<]';
+
+  // Ersatztexte (englisch), falls die Übersetzungen (i18n) fehlen
+  const FALLBACK = {
+    bfHeader1: 'Generated with the block diagram editor (Brainfuck)',
+    bfHeader2: 'Interpreter: cells of at least 16 bits (32 bits recommended); cell values never become negative and never overflow',
+    bfHeader3: 'Input: at end of input the read command must give 0 or leave the cell unchanged; lines end with LF (CR is skipped)',
+    bfHeader4: 'Tape: at least {0} cells to the right of the start (more for each level of recursion); the pointer never moves left of the start',
+    bfHeader5: 'Numbers: two cells P and N (value P minus N); texts: UTF‑8 bytes (at most {0}); arrays with variable length: at most {1} elements',
+    bfHeader6: 'Whole numbers as in C: division truncates; what does not fit into a text is left out',
+    bfFrame: 'Frame {0}: {1} cells; cells from the frame head: {2}',
+    bfDispatch: 'Dispatcher: runs the block whose number is in PC (frame head: cells 0 to 4 = RUN PC T E RET)',
+    bfStart: 'Start: RUN = 1 and PC = first block of the main program',
+    bfBlock: 'Block {0}',
+    bfCont: 'back from {0}',
+    bfEndSub: 'end of {0}: PC = RET',
+    bfNoTextArray: 'Brainfuck: arrays of texts are not translated',
+    bfBadArg: 'Brainfuck: an array parameter needs an array variable as argument',
+    bfText: 'text', bfArray: 'array'
+  };
+
+  function generate(program, opts = {}) {
+    const t0 = opts.t || ((k) => k);
+    const tr = (k, ...a) => {
+      let s = t0(k, ...a);
+      if (s === k && FALLBACK[k]) s = FALLBACK[k].replace(/\{(\d)\}/g, (m, i) => (a[i] !== undefined ? a[i] : m));
+      return s;
+    };
+    let hints = null, res = null;
+    for (let pass = 0; pass < 4; pass++) {
+      res = compile(program, tr, hints);
+      const same = hints && JSON.stringify(hints) === JSON.stringify(res.hints);
+      hints = res.hints;
+      if (same) break;
+    }
+    return opts.report ? { code: res.code, unsupported: res.unsupported } : res.code;
+  }
+
+  // ======================================================================= Übersetzer
+
+  function compile(program, tr, hints) {
+    const unsupported = [];
+    const unsup = (k) => { if (!unsupported.includes(tr(k))) unsupported.push(tr(k)); };
+    const fns = program.fns;
+    const main = fns.find((f) => f.isMain) || fns[0];
+    const subs = fns.filter((f) => f !== main);
+    const fnByName = new Map(subs.map((f) => [f.name, f]));
+    const kids = (n) => [n.then, n.else, n.body, ...(n.cases || []).map((c) => c.body)].filter(Array.isArray);
+    const hasCall = (n) => (n.kind === 'call' && fnByName.has(n.fn)) || kids(n).some((s) => s.some(hasCall));
+    const dispatch = fns.some((f) => f.body.some(hasCall));
+
+    // ---- Array-Kapazitäten
+    const declCap = (n) => {
+      const a = tryParse(n.length);
+      const v = a ? A.literalValue(a) : undefined;
+      return typeof v === 'number' && Number.isInteger(v) && v >= 0 ? Math.max(1, v) : ARRAY_CAP;
+    };
+    // eine gemeinsame Kapazität für alle Arrays (Arrays werden zwischen Rahmen kopiert)
+    let maxCap = 1;
+    for (const f of fns) BBE.model.walkSeq(f.body, (n) => { if (n.kind === 'decl' && A.isArrayType(n.vtype)) maxCap = Math.max(maxCap, declCap(n)); });
+
+    // ---- Rahmen
+    // Rechts vom Kopf (RUN PC T E RET): Zahlen, Längen, Hilfszellen, Ziffernstapel.
+    // Links vom Kopf, gespiegelt (Einheit 0 nahe am Kopf, weitere Einheiten nach links): alle Arrays
+    // des Rahmens verschränkt (Einheit j aller Arrays nebeneinander), links davon ebenso alle Texte.
+    // Gleiche Schrittweite in allen Rahmen → Kopieren zwischen Rahmen mit festem Abstand.
+    const layouts = new Map();
+    const scopes = fns.map((fn) => A.scopeOf(fn));
+    const fnHint = (fi) => (hints ? hints.fns[fi] : { maxTemp: 0, maxTb: 0 });
+    const countOf = (fi, type) => [...scopes[fi].values()].filter((v) => v.type === type).length;
+    const textSlots = fns.map((fn, fi) => countOf(fi, 'string') + fnHint(fi).maxTb);
+    const arrSlots = fns.map((fn, fi) => countOf(fi, 'integer[]'));
+    const ST = TU * Math.max(1, ...textSlots);
+    const SA = AU * Math.max(1, ...arrSlots);
+    fns.forEach((fn, fi) => {
+      const scope = scopes[fi];
+      const h = fnHint(fi);
+      const L = { fn, scope, vars: new Map() };
+      const RT = textSlots[fi] ? (TEXT_CAP + 2) * ST : 0;
+      const RA = arrSlots[fi] ? (maxCap + 3) * SA : 0;
+      const aBase = -1, tBase = -1 - RA;
+      let off = HEAD, kt = 0, ka = 0;
+      for (const [name, sv] of scope) {
+        const t = sv.type;
+        if (t === 'string') { const b = tBase - TU * kt++; L.vars.set(name, { kind: 'text', len: b - 1, sv, base: b, st: ST }); }
+        else if (t === 'integer[]') { const b = aBase - AU * ka++; L.vars.set(name, { kind: 'arr', len: b - SA - 4, sv, base: b, sa: SA, cap: maxCap }); }
+        else if (t === 'string[]') L.vars.set(name, { kind: 'none', sv });
+        else { L.vars.set(name, { kind: 'num', p: off, n: off + 1, sv }); off += 2; }
+      }
+      L.tbufs = [];
+      for (let i = 0; i < h.maxTb; i++) L.tbufs.push(tBase - TU * kt++);
+      L.tempBase = off;
+      off += h.maxTemp;
+      L.itoa = off;
+      off += 2 * IU;            // der Ziffernstapel darf über das Rahmenende hinaus wachsen (dort ist alles 0)
+      L.size = off;
+      L.bufs = RT + RA;
+      layouts.set(fn, L);
+    });
+
+    // ---- Ausgabe-Puffer (Kommentarzeilen + Codezeilen)
+    let B = null;      // aktueller Baustein: { ptr, items, buf, ind }
+    let C = null;      // aktueller Kontext: { fn, L, tmpTop, maxTemp, tbTop, maxTb }
+    const newBuilder = (ptr, ind) => ({ ptr, items: [], buf: '', ind: ind || 0 });
+    const code = (s) => { B.buf += s; };
+    const flush = () => { if (B.buf) { const c = peep(B.buf); if (c) B.items.push({ ind: B.ind, code: c }); B.buf = ''; } };
+    const note = (t) => { flush(); B.items.push({ ind: B.ind, cmt: safe(t) }); };
+
+    // ---- Grundbefehle (Zellen relativ zum Rahmen des laufenden Unterprogramms)
+    const go = (o) => { code(mv(o - B.ptr)); B.ptr = o; };
+    const inc = (o, k = 1) => { if (!k) return; go(o); code(rep(k > 0 ? '+' : '-', Math.abs(k))); };
+    const clr = (o) => { go(o); code('[-]'); };
+    const loop = (o, body) => { go(o); code('['); body(); go(o); code(']'); };
+    const moveTo = (src, dsts) => loop(src, () => { inc(src, -1); for (const d of dsts) inc(d, 1); });
+    const tmp = () => { const o = C.L.tempBase + C.tmpTop++; if (C.tmpTop > C.maxTemp) C.maxTemp = C.tmpTop; return o; };
+    const mark = () => C.tmpTop;
+    const release = (m) => { C.tmpTop = m; };
+    const copyVia = (src, dsts, t) => { moveTo(src, [...dsts, t]); moveTo(t, [src]); };
+    const copyTo = (src, dsts) => { const m = mark(); const t = tmp(); moveTo(src, [...dsts, t]); moveTo(t, [src]); release(m); };
+    const addConstWith = (o, k, t) => { if (k <= 0) return; go(o); code(constCode(k, t - o)); };
+    const addConst = (o, k) => { if (k <= 16) { inc(o, k); return; } const m = mark(); const t = tmp(); addConstWith(o, k, t); release(m); };
+    const tmpPair = () => ({ p: tmp(), n: tmp() });
+    const swap = (d) => ({ p: d.n, n: d.p });
+
+    /** Wenn x ≠ 0: x−1, sonst u+1 */
+    function decOrFlag(x, u) {
+      const m = mark();
+      const e = tmp(), t = tmp();
+      inc(e);
+      loop(x, () => { inc(x, -1); moveTo(x, [t]); inc(e, -1); });
+      moveTo(t, [x]);
+      loop(e, () => { inc(e, -1); inc(u); });
+      release(m);
+    }
+    /** x := max(x − k, 0); u ≠ 0, wenn x < k war */
+    function subSat(x, k, u) {
+      const m = mark();
+      const c = tmp();
+      addConst(c, k);
+      loop(c, () => { inc(c, -1); decOrFlag(x, u); });
+      release(m);
+    }
+    /** Merker (neue Hilfszelle): 1, wenn Zelle x = 0 */
+    function isZero(x) {
+      const f = tmp();
+      const m = mark();
+      const t = tmp();
+      inc(f);
+      copyTo(x, [t]);
+      loop(t, () => { clr(t); inc(f, -1); });
+      release(m);
+      return f;
+    }
+    /** Merker: 1, wenn Zelle x = k */
+    function eqConst(x, k) {
+      const f = tmp();
+      const m = mark();
+      const t = tmp(), u = tmp();
+      copyTo(x, [t]);
+      subSat(t, k, u);
+      inc(f);
+      loop(t, () => { clr(t); clr(f); });
+      loop(u, () => { clr(u); clr(f); });
+      release(m);
+      return f;
+    }
+    function ifElse(f, yes, no) {
+      const m = mark();
+      const e = tmp();
+      inc(e);
+      loop(f, () => { clr(f); inc(e, -1); yes(); });
+      loop(e, () => { inc(e, -1); if (no) no(); });
+      release(m);
+    }
+    /** Zahl (P, N) normalisieren: höchstens eine Zelle ≠ 0 */
+    function normalize(d) {
+      // solange P ≠ 0 und N ≠ 0: beide um 1 verringern (Schritte = kleinerer Wert)
+      const m = mark();
+      const f = tmp(), g = tmp(), t = tmp();
+      inc(f);
+      loop(f, () => {
+        clr(f);
+        copyTo(d.p, [t]);
+        loop(t, () => { clr(t); copyTo(d.n, [t]); loop(t, () => { clr(t); inc(g); }); });
+        loop(g, () => { clr(g); inc(d.p, -1); inc(d.n, -1); inc(f); });
+      });
+      release(m);
+    }
+    /** Ausdruck liefert sicher eine normalisierte Zahl (Variable, Konstante, Element, Länge, Wahrheitswert) */
+    function simple(a) {
+      const s = strip(a);
+      if (!s) return true;
+      if (s.k === 'un' && (s.op === '-' || s.op === '+')) return simple(s.a);
+      if (s.k === 'bin') return !['+', '-'].includes(s.op);
+      return true;
+    }
+    const evalNorm = (a, d) => { if (a) evalAdd(a, d); if (!simple(a)) normalize(d); };
+    /** d += a · b (a, b bleiben erhalten) */
+    function mul(a, b, d) {
+      const m = mark();
+      const t = tmp(), u = tmp();
+      copyTo(a, [t]);
+      loop(t, () => { inc(t, -1); moveTo(b, [d, u]); moveTo(u, [b]); });
+      release(m);
+    }
+    /** q += a / b, r += a % b (a wird gelöscht, b bleibt; b = 0 → nichts) */
+    function divmod(a, b, q, r) {
+      const m = mark();
+      // b = 0: nichts; b = 1: q = a; sonst klassisches Divmod auf 6 aufeinanderfolgenden Zellen
+      const w = [tmp(), tmp(), tmp(), tmp(), tmp(), tmp()];
+      const c = tmp();
+      copyTo(b, [c]);
+      const f0 = isZero(c);
+      loop(f0, () => { clr(f0); clr(a); });
+      const u = tmp();
+      decOrFlag(c, u);
+      clr(u);
+      const f1 = isZero(c);
+      loop(f1, () => { clr(f1); moveTo(a, [q]); });
+      moveTo(a, [w[0]]);
+      clr(c);
+      copyTo(b, [w[1]]);
+      go(w[0]);
+      code(DIVMOD);
+      clr(w[1]);
+      moveTo(w[2], [r]);
+      moveTo(w[3], [q]);
+      release(m);
+    }
+
+    // ---- Werte und Typen
+    const typeOf = (a) => A.typeOf(a, C.L.scope);
+    const varOf = (name) => C.L.vars.get(name);
+    const isFrac = (s) => s && s.k === 'num' && !Number.isInteger(s.v);
+    function fraction(raw) {
+      const [i, d = ''] = String(raw).split('.');
+      const p = parseInt(i + d, 10), q = Math.pow(10, d.length);
+      const gcd = (x, y) => (y ? gcd(y, x % y) : x);
+      const g = gcd(Math.abs(p), q);
+      return [p / g, q / g];
+    }
+    const num = (v) => ({ k: 'num', v, raw: String(v) });
+    const mentions = (ast, name) => { let f = false; BBE.expr.walk(ast, (x) => { if (x.k === 'id' && x.name === name) f = true; }); return f; };
+
+    // ---- Puffer: gespiegelt links vom Kopf. Die Bausteine unten sind "logisch" geschrieben
+    // (Einheit j+1 rechts von Einheit j); mcode() tauscht < und >.
+    const mcode = (s) => code(s.replace(/[<>]/g, (c) => (c === '<' ? '>' : '<')));
+
+    // ---- Arrays: Einheit −1 = Leer-Einheit (Ende der Spur), 0 = Kopf, Element i = Einheit i+1.
+    // Bahnen: 0 t (Spur), 1 c (Zähler), 2 vp, 3 vn (Träger), 4 ep, 5 en (Element)
+    const aAt = (arr, j, x) => arr.base - (j + 1) * arr.sa - x;
+    /** Element arr[idx] (idx = Zelle, ≥ 0) nach vp/vn der Kopf-Einheit */
+    function arrFetch(arr, idx) {
+      const sa = arr.sa, c0 = aAt(arr, 0, 1);
+      copyTo(idx, [c0]);
+      inc(c0);
+      go(c0);
+      mcode('[-[-' + R(sa) + '+' + Lf(sa) + ']<+' + R(sa + 1) + ']');
+      mcode('>>>[-<<+<+>>>]<<<[->>>+<<<]>>>>[-<<+<<+>>>>]<<<<[->>>>+<<<<]');
+      mcode(Lf(sa + 1) + '[-' + R(sa + 2) + '[-' + Lf(sa) + '+' + R(sa) + ']>[-' + Lf(sa) + '+' + R(sa) + ']' + Lf(2 * sa + 3) + ']');
+      B.ptr = aAt(arr, -1, 0);
+    }
+    /** arr[idx] := Wert in vp/vn der Kopf-Einheit */
+    function arrStore(arr, idx) {
+      const sa = arr.sa, c0 = aAt(arr, 0, 1);
+      copyTo(idx, [c0]);
+      inc(c0);
+      go(c0);
+      mcode('[-[-' + R(sa) + '+' + Lf(sa) + ']>[-' + R(sa) + '+' + Lf(sa) + ']>[-' + R(sa) + '+' + Lf(sa) + ']<<<+' + R(sa + 1) + ']');
+      mcode('>>>[-]>[-]<<<[->>+<<]>[->>+<<]');
+      mcode(Lf(sa + 3) + '[-' + Lf(sa) + ']');
+      B.ptr = aAt(arr, -1, 0);
+    }
+    /** für jedes Element 0 … len−1: body = logischer Code relativ zum Zähler c der Einheit (zurück auf c) */
+    function arrEach(arr, lenCell, body) {
+      const sa = arr.sa, c1 = aAt(arr, 1, 1);
+      copyVia(lenCell, [c1], aAt(arr, 0, 5));
+      go(c1);
+      mcode('[-[-' + R(sa) + '+' + Lf(sa) + ']<+>' + body + R(sa) + ']');
+      mcode(Lf(sa + 1) + '[-' + Lf(sa) + ']');
+      B.ptr = aAt(arr, 0, 0);
+    }
+    // D = logischer Abstand zum Ziel-Array
+    const bodyCopy = (D) => '>>>[-' + mv(D) + '+' + mv(-D) + '<<+>>]<<[->>+<<]<' + '>>>>[-' + mv(D) + '+' + mv(-D) + '<<+>>]<<[->>+<<]<<';
+    const bodyClearMove = (D) => '>>>' + mv(D) + '[-]>[-]<' + mv(-D) + '[-' + mv(D) + '+' + mv(-D) + ']>[-' + mv(D) + '+' + mv(-D) + ']<<<<';
+    const bodyClear = '>>>[-]>[-]<<<<';
+    function arrClear(arr) { arrEach(arr, arr.len, bodyClear); clr(arr.len); }
+
+    function arrayVarOf(a) {
+      const s = strip(a);
+      if (!s || s.k !== 'id') return null;
+      const v = varOf(s.name);
+      return v && v.kind === 'arr' ? v : null;
+    }
+    function fetchElem(s, dst) {
+      const arr = arrayVarOf(s.obj);
+      if (!arr) { if (typeOf(s) === 'string') unsup('bfNoTextArray'); return; }
+      const i = strip(s.index);
+      if (i && i.k === 'num' && Number.isInteger(i.v) && i.v >= 0 && i.v < arr.cap) {
+        copyTo(aAt(arr, i.v + 1, 4), [dst.p]);
+        copyTo(aAt(arr, i.v + 1, 5), [dst.n]);
+        return;
+      }
+      const m = mark();
+      const ip = tmpPair();
+      evalNorm(s.index, ip);
+      clr(ip.n);
+      arrFetch(arr, ip.p);
+      clr(ip.p);
+      moveTo(aAt(arr, 0, 2), [dst.p]);
+      moveTo(aAt(arr, 0, 3), [dst.n]);
+      release(m);
+    }
+    /** arr[index] := Zahl d (normalisiert, wird geleert) */
+    function storeElem(tgt, d) {
+      const arr = arrayVarOf(tgt.obj);
+      if (!arr) { unsup('bfNoTextArray'); clr(d.p); clr(d.n); return; }
+      const i = strip(tgt.index);
+      if (i && i.k === 'num' && Number.isInteger(i.v) && i.v >= 0 && i.v < arr.cap) {
+        const ep = aAt(arr, i.v + 1, 4), en = aAt(arr, i.v + 1, 5);
+        clr(ep); clr(en);
+        moveTo(d.p, [ep]);
+        moveTo(d.n, [en]);
+        return;
+      }
+      const m = mark();
+      const ip = tmpPair();
+      evalNorm(tgt.index, ip);
+      clr(ip.n);
+      moveTo(d.p, [aAt(arr, 0, 2)]);
+      moveTo(d.n, [aAt(arr, 0, 3)]);
+      arrStore(arr, ip.p);
+      clr(ip.p);
+      release(m);
+    }
+
+    // ---- Texte: Einheit 0 bleibt leer (Ende der Suchschleifen), Bytes ab Einheit 1, dahinter nur Nullen.
+    // Bahnen: 0 c (Zähler/Spur), 1 v (Träger), 2 ch (Byte)
+    const tAt = (T, j, x) => T.base - j * T.st - x;
+    function textOut(T) {
+      const st = T.st;
+      go(tAt(T, 1, 2));
+      mcode('[.' + R(st) + ']' + Lf(st) + '[' + Lf(st) + ']');
+      B.ptr = tAt(T, 0, 2);
+    }
+    function textClear(T) {
+      const st = T.st;
+      go(tAt(T, 1, 2));
+      mcode('[[-]<<+>>' + R(st) + ']' + Lf(st + 2) + '[-' + Lf(st) + ']');
+      B.ptr = tAt(T, 0, 0);
+      clr(T.len);
+    }
+    /** Bytes an einen Text anhängen, der sicher leer ist (feste Zellen) */
+    function appendLitStatic(T, bytes) {
+      const bs = bytes.slice(0, TEXT_CAP);
+      bs.forEach((b, i) => addConstWith(tAt(T, i + 1, 2), b, tAt(T, i + 1, 1)));
+      inc(T.len, bs.length);
+    }
+    /** Merker (neue Hilfszelle): Text T hat noch Platz für n Bytes */
+    function fits(T, n) {
+      const f = tmp();
+      if (n > TEXT_CAP) return f;
+      const m = mark();
+      const d = tmpPair();
+      addConst(d.p, TEXT_CAP - n);
+      copyTo(T.len, [d.n]);
+      normalize(d);
+      clr(d.p);
+      inc(f);
+      loop(d.n, () => { clr(d.n); clr(f); });
+      release(m);
+      return f;
+    }
+    /** Bytes ans Ende hängen, wenn sie noch Platz haben */
+    function appendLit(T, bytes) {
+      if (!bytes.length) return;
+      const m = mark();
+      const f = fits(T, bytes.length);
+      loop(f, () => { clr(f); appendLitRaw(T, bytes); });
+      release(m);
+    }
+    /** Byte aus Zelle x ans Ende hängen, wenn Platz ist (x wird geleert) */
+    function appendByteG(T, x) {
+      const m = mark();
+      const f = fits(T, 1);
+      ifElse(f, () => appendByte(T, x), () => clr(x));
+      release(m);
+    }
+    /** Bytes ans Ende eines Texts hängen (Suchschleife bis zum Ende) */
+    function appendLitRaw(T, bytes) {
+      if (!bytes.length) return;
+      const st = T.st;
+      go(tAt(T, 1, 2));
+      mcode('[' + R(st) + ']');
+      bytes.forEach((b, i) => { mcode(constCode(b, -1)); if (i < bytes.length - 1) mcode(R(st)); });
+      mcode('[' + Lf(st) + ']');
+      B.ptr = tAt(T, 0, 2);
+      inc(T.len, bytes.length);
+    }
+    /** Byte aus Zelle x (≠ 0, wird geleert) ans Ende hängen */
+    function appendByte(T, x) {
+      const st = T.st;
+      moveTo(x, [tAt(T, 1, 1)]);
+      go(tAt(T, 1, 2));
+      mcode('[<[-' + R(st) + '+' + Lf(st) + ']' + R(st + 1) + ']<[->+<]>[' + Lf(st) + ']');
+      B.ptr = tAt(T, 0, 2);
+      inc(T.len);
+    }
+    /** x += Byte Nr. idx (Zelle, idx < Länge) */
+    function textFetch(T, idx, x) {
+      const st = T.st, c0 = tAt(T, 0, 0);
+      copyTo(idx, [c0]);
+      inc(c0);
+      go(c0);
+      mcode('[-[-' + R(st) + '+' + Lf(st) + ']' + R(st) + ']>>[-<+<+>>]<<[->>+<<]' + Lf(st - 2));
+      mcode('[' + R(st - 1) + '[-' + Lf(st) + '+' + R(st) + ']' + Lf(2 * st - 1) + ']');
+      B.ptr = tAt(T, 0, 2);
+      moveTo(tAt(T, 1, 1), [x]);
+    }
+    /** Text S in den leeren Text T kopieren (fester Abstand) */
+    function copyBuf(S, T) {
+      const st = S.st, D = S.base - T.base;
+      go(tAt(S, 1, 2));
+      mcode('[[-' + mv(D) + '+' + mv(-D) + '<+>]<[->+<]>' + R(st) + ']' + Lf(st) + '[' + Lf(st) + ']');
+      B.ptr = tAt(S, 0, 2);
+      copyTo(S.len, [T.len]);
+    }
+    /** Text S in den leeren Text T verschieben (S wird leer) */
+    function moveBuf(S, T) {
+      const st = S.st, D = S.base - T.base;
+      go(tAt(S, 1, 2));
+      mcode('[[-' + mv(D) + '+' + mv(-D) + ']' + R(st) + ']' + mv(D) + Lf(st) + '[' + Lf(st) + ']');
+      B.ptr = tAt(T, 0, 2);
+      moveTo(S.len, [T.len]);
+    }
+    /** Text S ans Ende von T hängen (Byte für Byte) */
+    function appendBuf(S, T) {
+      const m = mark();
+      const i = tmp(), k = tmp();
+      copyTo(S.len, [k]);
+      loop(k, () => {
+        inc(k, -1);
+        const m2 = mark();
+        const x = tmp();
+        textFetch(S, i, x);
+        appendByteG(T, x);
+        inc(i);
+        release(m2);
+      });
+      clr(i);
+      release(m);
+    }
+    /** Länge in Zeichen (Bytes außer UTF-8-Folgebytes 128…191) zu Zelle d addieren */
+    function textChars(T, d) {
+      const m = mark();
+      const i = tmp(), k = tmp();
+      copyTo(T.len, [k]);
+      loop(k, () => {
+        inc(k, -1);
+        const m2 = mark();
+        const x = tmp(), u = tmp(), c = tmp();
+        textFetch(T, i, x);
+        subSat(x, 128, u);
+        const z = isZero(u);
+        loop(z, () => { clr(z); const m3 = mark(); const u2 = tmp(); subSat(x, 64, u2); loop(u2, () => { clr(u2); inc(c); }); release(m3); });
+        clr(u); clr(x);
+        inc(d);
+        loop(c, () => { clr(c); inc(d, -1); });
+        inc(i);
+        release(m2);
+      });
+      clr(i);
+      release(m);
+    }
+    /** Hilfstext aus dem Vorrat (Länge in einer Hilfszelle) */
+    function tempText() {
+      const i = C.tbTop++;
+      if (C.tbTop > C.maxTb) C.maxTb = C.tbTop;
+      const base = C.L.tbufs[i] !== undefined ? C.L.tbufs[i] : -1 - TU * (C.L.vars.size + i);
+      return { len: base - 1, base, st: ST, temp: true };
+    }
+    function freeTempText(T) { textClear(T); C.tbTop--; }
+
+    // ---- Zahl → Ziffern (Ziffernstapel am Rahmenende)
+    const dD = (j) => C.L.itoa + (j + 1) * IU;
+    /** Betrag in n der Einheit 0 → Ziffern+1 in D der Einheiten 0 …; Zeiger danach auf D(−1) */
+    function digits() {
+      inc(dD(0) + 1);
+      go(dD(0) + 1);
+      code('[[-]>>' + rep('+', 10) + '<' + DIVMOD + '>[-]<>>[-<<<<+>>>>]<<<<+' + R(5) + '[-' + R(4) + '+>+' + Lf(5) + ']' + R(4) + ']');
+      code(Lf(1 + IU));
+    }
+    /** Zahl d (normalisiert, wird geleert) ausgeben */
+    function printNum(d) {
+      const n0 = dD(0) + 2;
+      loop(d.n, () => { printLit([45]); moveTo(d.n, [n0]); });
+      moveTo(d.p, [n0]);
+      digits();
+      code('[' + rep('+', 47) + '.[-]' + Lf(IU) + ']');
+      B.ptr = C.L.itoa;
+    }
+    /** Zahl d (normalisiert, wird geleert) an Text T hängen */
+    function appendNum(T, d) {
+      const n0 = dD(0) + 2;
+      loop(d.n, () => { appendLit(T, [45]); moveTo(d.n, [n0]); });
+      moveTo(d.p, [n0]);
+      digits();
+      code('[' + Lf(IU) + ']');
+      B.ptr = C.L.itoa;
+      const f0 = dD(0) + 1;
+      loop(dD(0), () => {
+        go(dD(0));
+        code('[' + R(IU) + ']' + Lf(IU) + '[->+<]' + Lf(IU) + '[' + R(IU + 1) + '[-' + Lf(IU) + '+' + R(IU) + ']' + Lf(2 * IU + 1) + ']');
+        B.ptr = C.L.itoa;
+        inc(f0, 47);
+        appendByteG(T, f0);
+      });
+    }
+
+    /** Bytes ausgeben (eine Hilfszelle, von Zeichen zu Zeichen nur die Differenz) */
+    function printLit(bytes) {
+      if (!bytes.length) return;
+      const m = mark();
+      const w = tmp(), t = tmp();
+      let cur = 0;
+      for (const b of bytes) {
+        const dlt = b - cur;
+        if (Math.abs(dlt) <= 12) inc(w, dlt);
+        else { if (cur) clr(w); addConstWith(w, b, t); }
+        go(w);
+        code('.');
+        cur = b;
+      }
+      if (cur) clr(w);
+      release(m);
+    }
+
+    // ---- Ausdrücke: Zahl
+    /** dst (Paar) += Wert des Ausdrucks */
+    function evalAdd(a, dst) {
+      const s = strip(a);
+      if (!s) return;
+      const ty = typeOf(s);
+      switch (s.k) {
+        case 'num': {
+          const k = Math.trunc(s.v);
+          if (k > 0) addConst(dst.p, k); else if (k < 0) addConst(dst.n, -k);
+          return;
+        }
+        case 'str': {
+          // Textkonstante als Zahl (wie die Simulation: Leerzeichen am Rand zählen nicht)
+          const t = s.v.trim(), v = Number(t);
+          if (t !== '' && Number.isInteger(v)) { if (v > 0) addConst(dst.p, v); else addConst(dst.n, -v); }
+          return;
+        }
+        case 'id': {
+          const v = varOf(s.name);
+          if (!v) return;
+          if (v.kind === 'num') { copyTo(v.p, [dst.p]); copyTo(v.n, [dst.n]); return; }
+          if (v.kind === 'text') { textToNum(v, dst); return; }
+          unsup('bfNoTextArray');
+          return;
+        }
+        case 'un':
+          if (s.op === '-') { evalAdd(s.a, swap(dst)); return; }
+          if (s.op === '+') { evalAdd(s.a, dst); return; }
+          break;
+        case 'idx': fetchElem(s, dst); return;
+        case 'len': lengthAdd(s.obj, dst.p); return;
+        case 'bin':
+          if (s.op === '+' && ty !== 'string') { evalAdd(s.a, dst); evalAdd(s.b, dst); return; }
+          if (s.op === '-') { evalAdd(s.a, dst); evalAdd(s.b, swap(dst)); return; }
+          if (s.op === '*') { mulAdd(s, dst); return; }
+          if (s.op === '/' || s.op === '%') { divAdd(s, dst); return; }
+          break;
+        default: break;
+      }
+      if (ty === 'string') {
+        const m = mark();
+        const T = textOperand(s);
+        if (T) { textToNum(T, dst); if (T.temp) freeTempText(T); }
+        release(m);
+        return;
+      }
+      const m = mark();
+      const f = cond(s);
+      moveTo(f, [dst.p]);
+      release(m);
+    }
+    function lengthAdd(obj, cell) {
+      const o = strip(obj);
+      if (o && o.k === 'id') {
+        const v = varOf(o.name);
+        if (v && v.kind === 'arr') { copyTo(v.len, [cell]); return; }
+        if (v && v.kind === 'text') { textChars(v, cell); return; }
+      }
+      if (o && o.k === 'str') { addConst(cell, [...o.v].length); return; }
+      if (o && typeOf(o) === 'string') {
+        const m = mark();
+        const TB = tempText();
+        buildText(TB, o, null, true);
+        textChars(TB, cell);
+        freeTempText(TB);
+        release(m);
+        return;
+      }
+      unsup('bfNoTextArray');
+    }
+    function mulAdd(s, dst) {
+      const fa = strip(s.a), fb = strip(s.b);
+      if (isFrac(fa) || isFrac(fb)) {
+        const [f, other] = isFrac(fb) ? [fb, s.a] : [fa, s.b];
+        const [p, q] = fraction(f.raw);
+        evalAdd({ k: 'bin', op: '/', a: { k: 'bin', op: '*', a: other, b: num(p) }, b: num(q) }, dst);
+        return;
+      }
+      const m = mark();
+      const x = tmpPair(), y = tmpPair(), sa = tmp(), sb = tmp(), pr = tmp();
+      evalNorm(s.a, x);
+      evalNorm(s.b, y);
+      // Beträge und Vorzeichen
+      loop(x.n, () => { moveTo(x.n, [x.p]); inc(sa); });
+      loop(y.n, () => { moveTo(y.n, [y.p]); inc(sb); });
+      // über den kleineren Faktor zählen
+      const d = tmpPair();
+      copyTo(x.p, [d.p]);
+      copyTo(y.p, [d.n]);
+      normalize(d);
+      clr(d.n);
+      ifElse(d.p, () => mul(y.p, x.p, pr), () => mul(x.p, y.p, pr));
+      clr(x.p); clr(y.p);
+      loop(sb, () => {
+        clr(sb);
+        const m2 = mark();
+        const e = tmp();
+        inc(e);
+        loop(sa, () => { clr(sa); inc(e, -1); });
+        moveTo(e, [sa]);
+        release(m2);
+      });
+      ifElse(sa, () => moveTo(pr, [dst.n]), () => moveTo(pr, [dst.p]));
+      release(m);
+    }
+    function divAdd(s, dst) {
+      const m = mark();
+      const x = tmpPair(), y = tmpPair(), sa = tmp(), sb = tmp(), q = tmp(), r = tmp();
+      evalNorm(s.a, x);
+      evalNorm(s.b, y);
+      loop(x.n, () => { moveTo(x.n, [x.p]); inc(sa); });
+      loop(y.n, () => { moveTo(y.n, [y.p]); inc(sb); });
+      divmod(x.p, y.p, q, r);
+      clr(y.p);
+      if (s.op === '/') {
+        clr(r);
+        // Vorzeichen: sa xor sb
+        loop(sb, () => {
+          clr(sb);
+          const m2 = mark();
+          const e = tmp();
+          inc(e);
+          loop(sa, () => { clr(sa); inc(e, -1); });
+          moveTo(e, [sa]);
+          release(m2);
+        });
+        ifElse(sa, () => moveTo(q, [dst.n]), () => moveTo(q, [dst.p]));
+      } else {
+        clr(q); clr(sb);
+        ifElse(sa, () => moveTo(r, [dst.n]), () => moveTo(r, [dst.p]));
+      }
+      release(m);
+    }
+
+    // ---- Bedingungen → Merker (neue Hilfszelle, 0/1)
+    function cond(a) {
+      const s = strip(a);
+      const f = tmp();
+      const m = mark();
+      if (!s) { inc(f); return f; }
+      if (s.k === 'bin' && s.op === '&&') {
+        const f1 = cond(s.a);
+        loop(f1, () => { clr(f1); const m2 = mark(); const f2 = cond(s.b); moveTo(f2, [f]); release(m2); });
+      } else if (s.k === 'bin' && s.op === '||') {
+        const f1 = cond(s.a);
+        const e = tmp();
+        inc(e);
+        loop(f1, () => { clr(f1); inc(f); inc(e, -1); });
+        loop(e, () => { inc(e, -1); const m2 = mark(); const f2 = cond(s.b); moveTo(f2, [f]); release(m2); });
+      } else if (s.k === 'un' && s.op === '!') {
+        const f1 = cond(s.a);
+        inc(f);
+        loop(f1, () => { clr(f1); inc(f, -1); });
+      } else if (s.k === 'bin' && ['==', '!=', '<', '<=', '>', '>='].includes(s.op)) {
+        if (typeOf(s.a) === 'string' && typeOf(s.b) === 'string') textCond(s, f);
+        else {
+          const d = tmpPair();
+          evalAdd(s.a, d);
+          evalAdd(s.b, swap(d));
+          normalize(d);
+          switch (s.op) {
+            case '==': inc(f); loop(d.p, () => { clr(d.p); clr(f); }); loop(d.n, () => { clr(d.n); clr(f); }); break;
+            case '!=': loop(d.p, () => { clr(d.p); inc(f); }); loop(d.n, () => { clr(d.n); inc(f); }); break;
+            case '<': loop(d.n, () => { clr(d.n); inc(f); }); clr(d.p); break;
+            case '>': loop(d.p, () => { clr(d.p); inc(f); }); clr(d.n); break;
+            case '<=': inc(f); loop(d.p, () => { clr(d.p); clr(f); }); clr(d.n); break;
+            default: inc(f); loop(d.n, () => { clr(d.n); clr(f); }); clr(d.p); break;
+          }
+        }
+      } else if (typeOf(s) === 'string') {
+        // Text als Bedingung: nicht leer
+        if (s.k === 'str') { if (s.v !== '') inc(f); }
+        else {
+          const T = textOperand(s);
+          if (T) {
+            const t = tmp();
+            copyTo(T.len, [t]);
+            loop(t, () => { clr(t); inc(f); });
+            if (T.temp) freeTempText(T);
+          }
+        }
+      } else {
+        const d = tmpPair();
+        evalNorm(s, d);
+        loop(d.p, () => { clr(d.p); inc(f); });
+        loop(d.n, () => { clr(d.n); inc(f); });
+      }
+      release(m);
+      return f;
+    }
+    /** Text-Operand als Puffer: Variable oder neuer Hilfstext */
+    function textOperand(a) {
+      const s = strip(a);
+      if (s.k === 'id') { const v = varOf(s.name); if (v && v.kind === 'text') return v; }
+      if (s.k === 'idx') { unsup('bfNoTextArray'); return null; }
+      const TB = tempText();
+      buildText(TB, s, null, true);
+      return TB;
+    }
+    /** Textvergleich → Merker f */
+    function textCond(s, f) {
+      const X = textOperand(s.a);
+      const Y = textOperand(s.b);
+      if (!X || !Y) return;
+      const lt = tmp(), gt = tmp();
+      textCmp(X, Y, lt, gt);
+      if (Y.temp) freeTempText(Y);
+      if (X.temp) freeTempText(X);
+      switch (s.op) {
+        case '==': inc(f); loop(lt, () => { clr(lt); clr(f); }); loop(gt, () => { clr(gt); clr(f); }); break;
+        case '!=': loop(lt, () => { clr(lt); inc(f); }); loop(gt, () => { clr(gt); inc(f); }); break;
+        case '<': moveTo(lt, [f]); clr(gt); break;
+        case '>': moveTo(gt, [f]); clr(lt); break;
+        case '<=': inc(f); loop(gt, () => { clr(gt); clr(f); }); clr(lt); break;
+        default: inc(f); loop(lt, () => { clr(lt); clr(f); }); clr(gt); break;
+      }
+    }
+    /** Byte für Byte vergleichen: lt / gt = 1, wenn X < Y bzw. X > Y */
+    function textCmp(X, Y, lt, gt) {
+      const m = mark();
+      const i = tmp(), run = tmp();
+      inc(run);
+      loop(run, () => {
+        clr(run);
+        const m2 = mark();
+        const a = tmp(), b = tmp();
+        for (const [T, x] of [[X, a], [Y, b]]) {
+          const d = tmpPair();
+          copyTo(T.len, [d.p]);
+          copyTo(i, [d.n]);
+          normalize(d);
+          clr(d.n);
+          loop(d.p, () => { clr(d.p); textFetch(T, i, x); });
+        }
+        const d = tmpPair();
+        copyTo(a, [d.p]);
+        copyTo(b, [d.n]);
+        normalize(d);
+        const cont = tmp();
+        loop(a, () => { clr(a); inc(cont); });
+        clr(b);
+        loop(d.p, () => { clr(d.p); inc(gt); clr(cont); });
+        loop(d.n, () => { clr(d.n); inc(lt); clr(cont); });
+        moveTo(cont, [run]);
+        inc(i);
+        release(m2);
+      });
+      clr(i);
+      release(m);
+    }
+
+    // ---- Texte bauen
+    function parts(ast) {
+      const s = strip(ast);
+      if (s && s.k === 'bin' && s.op === '+' && typeOf(s) === 'string') return parts(s.a).concat(parts(s.b));
+      return s ? [s] : [];
+    }
+    /** Text T := Ausdruck. selfName = Name von T (falls Variable), empty = T ist sicher leer */
+    function buildText(T, ast, selfName, empty) {
+      const ps = ast ? parts(ast) : [];
+      const isSelf = (p) => selfName && p.k === 'id' && p.name === selfName;
+      if (selfName && ps.length && isSelf(ps[0]) && !ps.slice(1).some((p) => mentions(p, selfName))) {
+        for (const p of ps.slice(1)) appendPart(T, p, false);
+        return;
+      }
+      if (selfName && ps.some((p) => mentions(p, selfName))) {
+        const m = mark();
+        const TB = tempText();
+        let e = true;
+        for (const p of ps) e = appendPart(TB, p, e);
+        textClear(T);
+        moveBuf(TB, T);
+        C.tbTop--;
+        release(m);
+        return;
+      }
+      if (!empty) textClear(T);
+      let e = true;
+      for (const p of ps) e = appendPart(T, p, e);
+    }
+    /** ein Stück an T hängen; liefert, ob T danach noch sicher leer ist */
+    function appendPart(T, p, empty) {
+      const s = strip(p);
+      const ty = typeOf(s);
+      if (s.k === 'str') {
+        const b = utf8(s.v);
+        if (!b.length) return empty;
+        if (empty) appendLitStatic(T, b); else appendLit(T, b);
+        return false;
+      }
+      if (ty === 'string') {
+        if (s.k === 'id') {
+          const v = varOf(s.name);
+          if (!v || v.kind !== 'text') return empty;
+          if (empty) copyBuf(v, T); else appendBuf(v, T);
+          return false;
+        }
+        unsup('bfNoTextArray');
+        return empty;
+      }
+      const m = mark();
+      if (ty === 'bool') {
+        const f = cond(s);
+        ifElse(f, () => appendLit(T, utf8('true')), () => appendLit(T, utf8('false')));
+      } else {
+        const d = tmpPair();
+        evalNorm(s, d);
+        appendNum(T, d);
+      }
+      release(m);
+      return false;
+    }
+
+    // ---- Ausgabe
+    function outputParts(ast) {
+      for (const p of parts(ast)) {
+        const s = strip(p);
+        const ty = typeOf(s);
+        const m = mark();
+        if (s.k === 'str') printLit(utf8(s.v));
+        else if (ty === 'string') {
+          const T = textOperand(s);
+          if (T) { textOut(T); if (T.temp) freeTempText(T); }
+        } else if (ty === 'bool') {
+          const f = cond(s);
+          ifElse(f, () => printLit(utf8('true')), () => printLit(utf8('false')));
+        } else {
+          const d = tmpPair();
+          evalNorm(s, d);
+          printNum(d);
+        }
+        release(m);
+      }
+    }
+
+    // ---- Eingabe
+    /** Zustand beim Zerlegen einer Zahl: Vorzeichen, Betrag, Ziffern, Fehler, am Anfang */
+    function numState() {
+      const st = { sign: tmp(), mag: tmp(), digs: tmp(), bad: tmp(), first: tmp() };
+      inc(st.first);
+      return st;
+    }
+    /** ein Zeichen x (≠ 0) einer Zahl verarbeiten: Ziffer, Vorzeichen am Anfang, Leerzeichen, sonst Fehler */
+    function numChar(x, st) {
+      const { sign, mag, digs, bad, first } = st;
+      const m4 = mark();
+      const t = tmp(), u = tmp();
+      copyTo(x, [t]);
+      subSat(t, 48, u);
+      ifElse(u, () => {
+        const m5 = mark();
+        const fm = eqConst(x, 45), fp = eqConst(x, 43), fs = eqConst(x, 32);
+        const ok = tmp();
+        loop(fs, () => { clr(fs); inc(ok); });
+        const g = tmp();
+        copyTo(first, [g]);
+        loop(g, () => {
+          clr(g);
+          loop(fm, () => { clr(fm); inc(sign); inc(ok); });
+          loop(fp, () => { clr(fp); inc(ok); });
+        });
+        clr(fm); clr(fp);
+        const nok = isZero(ok);
+        clr(ok);
+        moveTo(nok, [bad]);
+        release(m5);
+      }, () => {
+        const m5 = mark();
+        const t2 = tmp(), u2 = tmp();
+        copyTo(t, [t2]);
+        subSat(t2, 10, u2);
+        clr(t2);
+        ifElse(u2, () => {
+          const m6 = mark();
+          const w = tmp();
+          moveTo(mag, [w]);
+          loop(w, () => { inc(w, -1); inc(mag, 10); });
+          moveTo(t, [mag]);
+          inc(digs);
+          release(m6);
+        }, () => inc(bad));
+        release(m5);
+      });
+      clr(t);
+      clr(first);
+      release(m4);
+    }
+    /** Text T als ganze Zahl lesen → d += Wert (ungültig → 0) */
+    function textToNum(T, d) {
+      const m = mark();
+      const st = numState();
+      const i = tmp(), k = tmp();
+      copyTo(T.len, [k]);
+      loop(k, () => {
+        inc(k, -1);
+        const m2 = mark();
+        const x = tmp();
+        textFetch(T, i, x);
+        numChar(x, st);
+        clr(x);
+        inc(i);
+        release(m2);
+      });
+      clr(i);
+      const inv = isZero(st.digs);
+      loop(st.bad, () => { clr(st.bad); clr(inv); inc(inv); });
+      loop(inv, () => { clr(inv); clr(st.mag); clr(st.sign); });
+      clr(st.digs); clr(st.first);
+      ifElse(st.sign, () => moveTo(st.mag, [d.n]), () => moveTo(st.mag, [d.p]));
+      release(m);
+    }
+    /** Zeile lesen, bis eine ganze Zahl kommt → Paar d (bei Dateiende 0) */
+    function readNum(d, prompt) {
+      const m = mark();
+      const again = tmp();
+      inc(again);
+      loop(again, () => {
+        inc(again, -1);
+        if (prompt) outputParts(prompt);
+        const m2 = mark();
+        const st = numState();
+        const eof = tmp(), run = tmp();
+        const { sign, mag, digs, bad, first } = st;
+        inc(run);
+        loop(run, () => {
+          const m3 = mark();
+          const x = tmp();
+          go(x); code(',');
+          const e0 = isZero(x), e10 = eqConst(x, 10), e13 = eqConst(x, 13);
+          const other = tmp();
+          inc(other);
+          loop(e0, () => { clr(e0); clr(other); clr(run); copyTo(first, [eof]); });
+          loop(e10, () => { clr(e10); clr(other); clr(run); });
+          loop(e13, () => { clr(e13); clr(other); });
+          loop(other, () => { clr(other); numChar(x, st); });
+          clr(x);
+          release(m3);
+        });
+        // ungültig: keine Ziffer oder falsches Zeichen (außer bei Dateiende am Zeilenanfang)
+        const inv = isZero(digs);
+        loop(bad, () => { clr(bad); clr(inv); inc(inv); });
+        loop(eof, () => { clr(eof); clr(inv); clr(mag); clr(sign); });
+        loop(inv, () => { clr(inv); printLit(utf8(tr('javaNeedInt') + '\n')); inc(again); clr(mag); clr(sign); });
+        clr(digs); clr(first);
+        ifElse(sign, () => moveTo(mag, [d.n]), () => moveTo(mag, [d.p]));
+        release(m2);
+      });
+      release(m);
+    }
+    /** Zeile in Text T lesen (CR wird übersprungen) */
+    function readText(T) {
+      textClear(T);
+      const m = mark();
+      const run = tmp();
+      inc(run);
+      loop(run, () => {
+        const m2 = mark();
+        const x = tmp();
+        go(x); code(',');
+        const e0 = isZero(x), e10 = eqConst(x, 10), e13 = eqConst(x, 13);
+        const other = tmp();
+        inc(other);
+        loop(e0, () => { clr(e0); clr(other); clr(run); });
+        loop(e10, () => { clr(e10); clr(other); clr(run); });
+        loop(e13, () => { clr(e13); clr(other); });
+        loop(other, () => { clr(other); appendByteG(T, x); });
+        clr(x);
+        release(m2);
+      });
+      release(m);
+    }
+
+    // ---- Zuweisen
+    /** Zahl d (wird geleert) in Ziel schreiben */
+    function storeNum(tgt, d) {
+      if (tgt.k === 'idx') { storeElem(tgt, d); return; }
+      const v = varOf(tgt.name);
+      if (v && v.kind === 'num') { clr(v.p); clr(v.n); moveTo(d.p, [v.p]); moveTo(d.n, [v.n]); return; }
+      if (v && v.kind === 'text') { textClear(v); appendNum(v, d); return; }
+      clr(d.p); clr(d.n);
+    }
+    function assign(targetSrc, ast) {
+      const tgt = tryTarget(targetSrc);
+      if (!tgt) return;
+      const tt = typeOf(tgt);
+      if (tt === 'string') {
+        if (tgt.k !== 'id') { unsup('bfNoTextArray'); return; }
+        const v = varOf(tgt.name);
+        if (v && v.kind === 'text') buildText(v, ast, tgt.name, false);
+        return;
+      }
+      if (A.isArrayType(tt)) return;
+      const m = mark();
+      const d = tmpPair();
+      evalNorm(ast, d);
+      storeNum(tgt, d);
+      release(m);
+    }
+
+    // ---- Blöcke (nur mit Unterprogramm-Aufrufen)
+    const blocks = [];
+    const nBlocks = hints ? hints.nBlocks : 0;
+    const newBlock = (title) => { const b = { idx: blocks.length, title, B: null }; blocks.push(b); return b; };
+    const blockId = (b) => (hints ? nBlocks - 1 - b.idx : b.idx);
+    const startBlock = (b, ptr) => { B = newBuilder(ptr === undefined ? H.E : ptr, 1); b.B = B; note(tr('bfBlock', blockId(b)) + (b.title ? ': ' + b.title : '')); };
+    /** PC des eigenen Rahmens setzen (T dient als Hilfszelle) */
+    const setPC = (b) => addConstWith(H.PC, blockId(b), H.T);
+    const endGoto = (b) => { setPC(b); go(H.E); flush(); };
+    const endBranch = (f, yes, no) => {
+      ifElse(f, () => setPC(yes), () => setPC(no));
+      go(H.E);
+      flush();
+    };
+    const entryOf = new Map();
+
+    // ---- Anweisungen
+    function genSeq(seq) { for (const n of seq) genStmt(n); }
+
+    function head(n, txt) { note(txt + (n.comment ? '   (' + n.comment + ')' : '')); }
+
+    function genStmt(n) {
+      const m = mark();
+      if (dispatch && hasCall(n)) genSplit(n);
+      else genSimple(n);
+      release(m);
+    }
+
+    function genSimple(n) {
+      switch (n.kind) {
+        case 'comment':
+          for (const l of String(n.text || '').split('\n')) note(l);
+          return;
+        case 'decl': {
+          const v = varOf(n.name);
+          if (A.isArrayType(n.vtype)) {
+            head(n, n.name + ' = ' + tr('mgNewArray', n.length));
+            if (!v || v.kind !== 'arr') { unsup('bfNoTextArray'); return; }
+            arrClear(v);
+            const len = tryParse(n.length);
+            const d = tmpPair();
+            evalNorm(len, d);
+            clr(d.n);
+            moveTo(d.p, [v.len]);
+            // höchstens Kapazität
+            const e = tmpPair();
+            copyTo(v.len, [e.p]);
+            addConst(e.n, v.cap);
+            normalize(e);
+            clr(e.n);
+            loop(e.p, () => { clr(e.p); clr(v.len); addConst(v.len, v.cap); });
+            return;
+          }
+          head(n, n.name + ' = ' + (String(n.init || '').trim() || (n.vtype === 'string' ? '""' : '0')));
+          assign(n.name, tryParse(n.init));
+          return;
+        }
+        case 'assign':
+          head(n, n.target + ' = ' + n.expr);
+          assign(n.target, tryParse(n.expr));
+          return;
+        case 'input': {
+          head(n, tr('mgInput', n.target) + (String(n.prompt || '').trim() ? '  ' + n.prompt : ''));
+          const tgt = tryTarget(n.target);
+          if (!tgt) return;
+          const p = tryParse(n.prompt);
+          const tt = typeOf(tgt);
+          if (tt === 'string') {
+            if (p) outputParts(p);
+            const v = tgt.k === 'id' ? varOf(tgt.name) : null;
+            if (!v || v.kind !== 'text') { unsup('bfNoTextArray'); return; }
+            readText(v);
+            return;
+          }
+          const d = tmpPair();
+          readNum(d, p);
+          storeNum(tgt, d);
+          return;
+        }
+        case 'output': {
+          head(n, tr('mgOutput', n.expr));
+          const ast = tryParse(n.expr);
+          if (ast) outputParts(ast);
+          printLit([10]);
+          return;
+        }
+        case 'if': {
+          head(n, tr('mgIf', n.cond));
+          const f = cond(tryParse(n.cond));
+          B.ind++;
+          ifElse(f, () => genSeq(n.then), n.else && n.else.length ? () => { B.ind--; note(tr('kw.else')); B.ind++; genSeq(n.else); } : null);
+          B.ind--;
+          return;
+        }
+        case 'while': {
+          head(n, tr('mgWhile', n.cond));
+          const c = tryParse(n.cond);
+          const f = cond(c);
+          B.ind++;
+          loop(f, () => {
+            clr(f);
+            genSeq(n.body);
+            const m = mark(); const g = cond(c); moveTo(g, [f]); release(m);
+          });
+          B.ind--;
+          return;
+        }
+        case 'until': {
+          head(n, tr('mgUntil', n.cond));
+          const c = tryParse(n.cond);
+          const f = tmp();
+          inc(f);
+          B.ind++;
+          loop(f, () => {
+            clr(f);
+            genSeq(n.body);
+            const m = mark(); const g = cond({ k: 'un', op: '!', a: c || num(1) }); moveTo(g, [f]); release(m);
+          });
+          B.ind--;
+          return;
+        }
+        case 'for': {
+          head(n, tr('mgFor', n.counter, n.from, n.to, String(n.step || '1').trim() || '1'));
+          const fc = forParts(n);
+          if (!fc) return;
+          assign(n.counter, fc.from);
+          const f = cond(fc.test);
+          B.ind++;
+          loop(f, () => {
+            clr(f);
+            genSeq(n.body);
+            assign(n.counter, fc.next);
+            const m = mark(); const g = cond(fc.test); moveTo(g, [f]); release(m);
+          });
+          B.ind--;
+          return;
+        }
+        case 'switch': {
+          head(n, tr('mgSwitch', n.expr));
+          const sel = tryParse(n.expr);
+          if (!sel) return;
+          const done = tmp();
+          B.ind++;
+          for (const c of n.cases) {
+            note(tr('mgSwitch', n.expr) + ' = ' + c.value);
+            const m = mark();
+            const f = caseMatch(sel, c, done);
+            loop(f, () => { clr(f); inc(done); genSeq(c.body); });
+            release(m);
+          }
+          if (n.else) {
+            note(tr('kw.else'));
+            const m = mark();
+            const f = isZero(done);
+            loop(f, () => { clr(f); genSeq(n.else); });
+            release(m);
+          }
+          clr(done);
+          B.ind--;
+          return;
+        }
+        default: return;
+      }
+    }
+
+    /** FÜR: Startwert, Bedingung und Weiterzählen als Ausdrücke (Bedingung wie in C jedes Mal neu) */
+    function forParts(n) {
+      const k = tryTarget(n.counter);
+      if (!k) return null;
+      const from = tryParse(n.from) || num(0);
+      const to = tryParse(n.to) || num(0);
+      const step = tryParse(n.step) || num(1);
+      const lit = A.literalValue(step);
+      let test;
+      if (typeof lit === 'number') test = { k: 'bin', op: lit >= 0 ? '<=' : '>=', a: k, b: to };
+      else {
+        test = {
+          k: 'bin', op: '||',
+          a: { k: 'bin', op: '&&', a: { k: 'bin', op: '>=', a: step, b: num(0) }, b: { k: 'bin', op: '<=', a: k, b: to } },
+          b: { k: 'bin', op: '&&', a: { k: 'bin', op: '<', a: step, b: num(0) }, b: { k: 'bin', op: '>=', a: k, b: to } }
+        };
+      }
+      return { from, test, next: { k: 'bin', op: '+', a: k, b: step } };
+    }
+    /** Merker: Fall passt und noch kein Fall ausgeführt */
+    function caseMatch(sel, c, done) {
+      const isText = typeOf(sel) === 'string';
+      const v = tryParse(c.value) || (isText ? { k: 'str', v: '' } : num(0));
+      const f = cond({ k: 'bin', op: '==', a: sel, b: v });
+      const nd = isZero(done);
+      const r = tmp();
+      loop(f, () => { clr(f); moveTo(nd, [r]); });
+      clr(nd);
+      return r;
+    }
+
+    // ---- Anweisungen mit Aufrufen: in Blöcke zerlegt
+    function genSplit(n) {
+      switch (n.kind) {
+        case 'call': genCall(n); return;
+        case 'if': {
+          head(n, tr('mgIf', n.cond));
+          const hasElse = n.else && n.else.length;
+          const bt = newBlock(tr('mgIf', n.cond)), be = hasElse ? newBlock(tr('kw.else')) : null, bj = newBlock('');
+          const f = cond(tryParse(n.cond));
+          endBranch(f, bt, be || bj);
+          startBlock(bt); genSeq(n.then); endGoto(bj);
+          if (be) { startBlock(be); genSeq(n.else); endGoto(bj); }
+          startBlock(bj);
+          return;
+        }
+        case 'while': {
+          head(n, tr('mgWhile', n.cond));
+          const bh = newBlock(tr('mgWhile', n.cond)), bb = newBlock(''), bx = newBlock('');
+          endGoto(bh);
+          startBlock(bh);
+          const f = cond(tryParse(n.cond));
+          endBranch(f, bb, bx);
+          startBlock(bb); genSeq(n.body); endGoto(bh);
+          startBlock(bx);
+          return;
+        }
+        case 'until': {
+          head(n, tr('mgUntil', n.cond));
+          const bb = newBlock(tr('mgUntil', n.cond)), bx = newBlock('');
+          endGoto(bb);
+          startBlock(bb);
+          genSeq(n.body);
+          const f = cond(tryParse(n.cond) || num(1));
+          endBranch(f, bx, bb);
+          startBlock(bx);
+          return;
+        }
+        case 'for': {
+          head(n, tr('mgFor', n.counter, n.from, n.to, String(n.step || '1').trim() || '1'));
+          const fc = forParts(n);
+          if (!fc) return;
+          assign(n.counter, fc.from);
+          const bh = newBlock(tr('mgFor', n.counter, n.from, n.to, String(n.step || '1').trim() || '1')), bb = newBlock(''), bx = newBlock('');
+          endGoto(bh);
+          startBlock(bh);
+          const f = cond(fc.test);
+          endBranch(f, bb, bx);
+          startBlock(bb);
+          genSeq(n.body);
+          assign(n.counter, fc.next);
+          endGoto(bh);
+          startBlock(bx);
+          return;
+        }
+        case 'switch': {
+          head(n, tr('mgSwitch', n.expr));
+          const sel = tryParse(n.expr);
+          if (!sel) return;
+          const bc = n.cases.map((c) => newBlock(tr('mgSwitch', n.expr) + ' = ' + c.value));
+          const be = n.else ? newBlock(tr('kw.else')) : null;
+          const bj = newBlock('');
+          const done = tmp();
+          n.cases.forEach((c, i) => {
+            const m = mark();
+            const f = caseMatch(sel, c, done);
+            loop(f, () => { clr(f); inc(done); setPC(bc[i]); });
+            release(m);
+          });
+          const f = isZero(done);
+          loop(f, () => { clr(f); setPC(be || bj); });
+          clr(done);
+          go(H.E);
+          flush();
+          n.cases.forEach((c, i) => { startBlock(bc[i]); genSeq(c.body); endGoto(bj); });
+          if (be) { startBlock(be); genSeq(n.else); endGoto(bj); }
+          startBlock(bj);
+          return;
+        }
+        default: genSimple(n);
+      }
+    }
+
+    /** Aufruf: Parameter in den neuen Rahmen, Sprung; Fortsetzungsblock holt die Ergebnisse */
+    function genCall(n) {
+      const callee = fnByName.get(n.fn);
+      const label = (n.target && n.target.trim() ? n.target + ' = ' : '') + (n.fn || '?') + '(' + n.args.join(', ') + ')';
+      head(n, tr('mgCall', label));
+      const gL = layouts.get(callee);
+      const base = C.L.size + gL.bufs;
+      const cv = (name) => gL.vars.get(name);
+      const sh = (v) => Object.assign({}, v, { len: base + v.len, base: base + v.base });
+      // Parameter
+      callee.params.forEach((p, i) => {
+        const v = cv(p.name);
+        if (!v) return;
+        const src = tryParse(n.args[i] || '');
+        const m = mark();
+        if (v.kind === 'arr') {
+          const arr = src ? arrayVarOf(src) : null;
+          if (!arr) { unsup('bfBadArg'); return; }
+          const dst = sh(v);
+          arrEach(arr, arr.len, bodyCopy(arr.base - dst.base));
+          copyTo(arr.len, [dst.len]);
+        } else if (v.kind === 'text') {
+          buildText(sh(v), src, null, true);
+        } else if (v.kind === 'num') {
+          // erst in Hilfszellen rechnen, dann mit je einer Schleife in den neuen Rahmen
+          const d = tmpPair();
+          if (src) {
+            evalNorm(src, d);
+          }
+          moveTo(d.p, [base + v.p]);
+          moveTo(d.n, [base + v.n]);
+        } else unsup('bfNoTextArray');
+        release(m);
+      });
+      const cont = newBlock(tr('bfCont', n.fn));
+      inc(base + H.RUN);
+      addConstWith(base + H.RET, blockId(cont), base + H.T);
+      addConstWith(base + H.PC, blockId(entryOf.get(callee)), base + H.T);
+      go(base + H.E);
+      flush();
+      // Fortsetzung: Zeiger steht noch im Rahmen des Unterprogramms
+      startBlock(cont, base + H.E);
+      const later = [];
+      // zuerst InOut-Parameter und Arrays, dann das Ergebnis (wie in der Simulation gewinnt das Ergebnis)
+      callee.params.forEach((p, i) => {
+        const v = cv(p.name);
+        if (!v) return;
+        const src = tryParse(n.args[i] || '');
+        if (v.kind === 'arr') {
+          const arr = src ? arrayVarOf(src) : null;
+          const cs = sh(v);
+          if (arr) arrEach(cs, cs.len, bodyClearMove(cs.base - arr.base));
+          else arrEach(cs, cs.len, bodyClear);
+          clr(cs.len);
+        } else if (v.kind === 'text') {
+          const cs = sh(v);
+          const tgt = p.byRef && src ? strip(src) : null;
+          const tv2 = tgt && tgt.k === 'id' ? varOf(tgt.name) : null;
+          if (tv2 && tv2.kind === 'text') { textClear(tv2); moveBuf(cs, tv2); }
+          else textClear(cs);
+        } else if (v.kind === 'num') {
+          const s = src ? strip(src) : null;
+          if (p.byRef && s && (s.k === 'id' || s.k === 'idx')) { const d = tmpPair(); moveTo(base + v.p, [d.p]); moveTo(base + v.n, [d.n]); later.push([s, d]); }
+          else { clr(base + v.p); clr(base + v.n); }
+        }
+      });
+      if (callee.returnType !== 'void') {
+        const rv = cv('result');
+        const tgt = n.target && n.target.trim() ? tryTarget(n.target) : null;
+        const tt = tgt ? typeOf(tgt) : null;
+        if (rv && rv.kind === 'num') {
+          if (tgt && tt !== 'string' && !A.isArrayType(tt)) { const d = tmpPair(); moveTo(base + rv.p, [d.p]); moveTo(base + rv.n, [d.n]); later.push([tgt, d]); }
+          else if (tgt && tt === 'string' && tgt.k === 'id' && varOf(tgt.name) && varOf(tgt.name).kind === 'text') { const d = tmpPair(); moveTo(base + rv.p, [d.p]); moveTo(base + rv.n, [d.n]); later.push([tgt, d]); }
+          else { clr(base + rv.p); clr(base + rv.n); }
+        } else if (rv && rv.kind === 'text') {
+          const src = sh(rv);
+          const tv2 = tgt && tgt.k === 'id' ? varOf(tgt.name) : null;
+          if (tv2 && tv2.kind === 'text') { textClear(tv2); moveBuf(src, tv2); }
+          else if (tgt && tt !== 'string' && !A.isArrayType(tt)) { const d = tmpPair(); textToNum(src, d); textClear(src); later.push([tgt, d]); }
+          else { if (tgt) unsup('bfNoTextArray'); textClear(src); }
+        }
+      }
+      clr(base + H.RUN);
+      go(H.E);
+      for (const [tgt, d] of later) storeNum(tgt, d);
+    }
+
+    // ---- Unterprogramm-Ende: alles außer Ergebnis, InOut und Arrays löschen, PC = RET
+    function epilogue(fn) {
+      note(tr('bfEndSub', fn.name));
+      for (const v of C.L.vars.values()) {
+        const sv = v.sv;
+        if (sv.kind === 'result' || (sv.kind === 'param' && (sv.byRef || v.kind === 'arr'))) continue;
+        if (v.kind === 'num') { clr(v.p); clr(v.n); }
+        else if (v.kind === 'text') textClear(v);
+        else if (v.kind === 'arr') arrClear(v);
+      }
+      moveTo(H.RET, [H.PC]);
+      go(H.E);
+      flush();
+    }
+
+    // ---- Zusammenbau
+    const ctxs = new Map();
+    const newCtx = (fn) => { const c = { fn, L: layouts.get(fn), tmpTop: 0, maxTemp: 0, tbTop: 0, maxTb: 0 }; ctxs.set(fn, c); return c; };
+    let mainItems = [];
+    if (dispatch) {
+      for (const f of [main, ...subs]) entryOf.set(f, newBlock(f === main ? tr('mgMainHead') : tr('mgSub', f.name, f.params.map((p) => p.name).join(', '))));
+      C = newCtx(main);
+      startBlock(entryOf.get(main));
+      genSeq(main.body);
+      note(tr('mgCmtEnd'));
+      clr(H.RUN);
+      go(H.E);
+      flush();
+      for (const f of subs) {
+        C = newCtx(f);
+        startBlock(entryOf.get(f));
+        if (f.returnType !== 'void' && String(f.resultInit || '').trim()) {
+          note('result = ' + f.resultInit);
+          assign('result', tryParse(f.resultInit));
+        }
+        genSeq(f.body);
+        epilogue(f);
+      }
+    } else {
+      C = newCtx(main);
+      B = newBuilder(-layouts.get(main).bufs, 0);
+      genSeq(main.body);
+      flush();
+      mainItems = B.items;
+      for (const f of subs) newCtx(f);
+    }
+
+    // ---- Text zusammensetzen
+    const lines = [];
+    const put = (items) => {
+      for (const it of items) {
+        const ind = '  '.repeat(it.ind);
+        if (it.cmt !== undefined) { lines.push(ind + it.cmt); continue; }
+        const w = Math.max(20, WRAP - ind.length);
+        for (let i = 0; i < it.code.length; i += w) lines.push(ind + it.code.slice(i, i + w));
+      }
+    };
+    const mainL = layouts.get(main);
+    // Bandbedarf: Rahmen entlang der tiefsten Aufrufkette (Rekursion einmal gezählt)
+    const need = (f, seen) => {
+      if (seen.has(f)) return 0;
+      const s2 = new Set(seen); s2.add(f);
+      let mx = 0;
+      BBE.model.walkSeq(f.body, (n) => { if (n.kind === 'call' && fnByName.has(n.fn)) mx = Math.max(mx, need(fnByName.get(n.fn), s2)); });
+      return layouts.get(f).bufs + layouts.get(f).size + mx;
+    };
+    const head0 = [tr('bfHeader1'), tr('bfHeader2'), tr('bfHeader3'), tr('bfHeader4', need(main, new Set()) + 12 * IU), tr('bfHeader5', TEXT_CAP, ARRAY_CAP), tr('bfHeader6')];
+    for (const h of head0) lines.push(safe(h));
+    for (const f of [main, ...subs]) {
+      const L = layouts.get(f);
+      const vs = [...L.vars].filter(([, v]) => v.kind !== 'none').map(([nm, v]) =>
+        v.kind === 'num' ? v.p + '/' + v.n + ' ' + nm : v.len + ' ' + nm + ' (' + tr(v.kind === 'text' ? 'bfText' : 'bfArray') + ')');
+      lines.push(safe(tr('bfFrame', f.isMain ? tr('mgMainHead') : f.name, L.bufs + L.size, vs.join('; ') || '–')));
+    }
+    if (unsupported.length) lines.push(safe('⚠ ' + unsupported.join(' ')));
+    lines.push('');
+    if (!dispatch) put(mainItems);
+    else {
+      const N = blocks.length;
+      const ids = blocks.map((b) => ({ id: blockId(b), b })).sort((x, y) => y.id - x.id);
+      B = newBuilder(-mainL.bufs, 0);
+      C = ctxs.get(main);
+      note(tr('bfStart'));
+      inc(H.RUN);
+      addConstWith(H.PC, blockId(entryOf.get(main)), H.T);
+      go(H.RUN);
+      note(tr('bfDispatch'));
+      code('[>[->+<]>>+<');
+      code(rep('[-', N - 1));
+      flush();
+      put(B.items);
+      for (const { id, b } of ids) {
+        lines.push('>[-');
+        put(b.B ? b.B.items : []);
+        lines.push(']<' + (id > 0 ? ']' : '<<]'));
+      }
+      if (!N) lines.push('<<]');
+    }
+    const text = lines.join('\n') + '\n';
+    const fnHints = fns.map((f) => { const c = ctxs.get(f); return { maxTemp: c ? c.maxTemp : 0, maxTb: c ? c.maxTb : 0 }; });
+    return { code: text, unsupported, hints: { fns: fnHints, nBlocks: blocks.length } };
+  }
+
+  // ======================================================================= Interpreter
+
+  /**
+   * Führt ein Brainfuck-Programm aus (Zellmodell wie im Kopf der erzeugten Programme):
+   * Zellen ≥ 0 ohne Obergrenze (ein negativer Wert ist ein Fehler), Band ab Zelle 0 nach rechts,
+   * ',' liefert Bytes der UTF-8-codierten Eingabe, bei Dateiende 0.
+   * @param src  Quelltext
+   * @param io   { stdin: string | input(): string|null (eine Zeile), output(text), maxSteps }
+   * @returns    { steps, error }
+   */
+  function run(src, io = {}) {
+    const text = String(src);
+    const ops = [];
+    const stack = [];
+    let line = 1;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '\n') { line++; continue; }
+      if (c === '+' || c === '-') {
+        const d = c === '+' ? 1 : -1;
+        const last = ops[ops.length - 1];
+        if (last && last.t === 0 && !last.fixed) last.k += d; else ops.push({ t: 0, k: d, line });
+      } else if (c === '>' || c === '<') {
+        const d = c === '>' ? 1 : -1;
+        const last = ops[ops.length - 1];
+        if (last && last.t === 1 && !last.fixed) last.k += d; else ops.push({ t: 1, k: d, line });
+      } else if (c === '.') ops.push({ t: 2, line });
+      else if (c === ',') ops.push({ t: 3, line });
+      else if (c === '[') { stack.push(ops.length); ops.push({ t: 4, line }); }
+      else if (c === ']') {
+        if (!stack.length) return { steps: 0, error: 'Zeile ' + line + ': ] ohne [' };
+        const open = stack.pop();
+        const ol = ops[open].line;
+        const body = ops.slice(open + 1);
+        if (body.length && body.every((o) => o.t === 0 || o.t === 1)) {
+          let p = 0;
+          const delta = new Map();
+          for (const o of body) { if (o.t === 1) p += o.k; else delta.set(p, (delta.get(p) || 0) + o.k); }
+          if (p === 0 && delta.get(0) === -1) {
+            ops.length = open;
+            const terms = [...delta].filter(([o, k]) => o !== 0 && k !== 0);
+            ops.push(terms.length ? { t: 6, terms, fixed: true, line: ol } : { t: 5, fixed: true, line: ol });
+            continue;
+          }
+          if (body.length === 1 && body[0].t === 1) { ops.length = open; ops.push({ t: 7, k: body[0].k, fixed: true, line: ol }); continue; }
+        }
+        ops.push({ t: 8, to: open, fixed: true, line });
+        ops[open].to = ops.length - 1;
+      }
+    }
+    if (stack.length) return { steps: 0, error: 'Zeile ' + ops[stack[stack.length - 1]].line + ': [ ohne ]' };
+
+    let mem = new Float64Array(1 << 16);
+    const LIMIT = 1 << 24;
+    const grow = (q) => {
+      if (q >= LIMIT) throw new Error('Band zu lang');
+      let n = mem.length;
+      while (n <= q) n *= 2;
+      const m2 = new Float64Array(n);
+      m2.set(mem);
+      mem = m2;
+    };
+    // Eingabe
+    let inBytes;
+    if (io.stdin != null) inBytes = utf8(String(io.stdin));
+    else inBytes = [];
+    let inPos = 0;
+    const readByte = () => {
+      if (inPos < inBytes.length) return inBytes[inPos++];
+      if (io.stdin == null && io.input) {
+        const l = io.input();
+        if (l != null) { inBytes = utf8(String(l) + '\n'); inPos = 0; return inBytes[inPos++]; }
+      }
+      return 0;
+    };
+    // Ausgabe (UTF-8 → Text, zeilenweise weitergeben)
+    const outBytes = [];
+    const dec = typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8') : null;
+    const flush = (final) => {
+      if (!outBytes.length && !final) return;
+      let s;
+      if (dec) s = dec.decode(new Uint8Array(outBytes), { stream: !final });
+      else { try { s = decodeURIComponent(escape(String.fromCharCode(...outBytes))); } catch (e) { s = String.fromCharCode(...outBytes); } }
+      outBytes.length = 0;
+      if (s && io.output) io.output(s);
+    };
+    const max = io.maxSteps || 1e9;
+    let p = 0, pc = 0, steps = 0;
+    const n = ops.length;
+    const neg = (q) => new Error('Zelle ' + q + ' würde negativ');
+    try {
+      while (pc < n) {
+        if (++steps > max) { flush(true); return { steps, error: 'Schrittgrenze erreicht' }; }
+        const o = ops[pc];
+        switch (o.t) {
+          case 0: { const v = mem[p] + o.k; if (v < 0) throw neg(p); mem[p] = v; break; }
+          case 1: p += o.k; if (p < 0) throw new Error('Zeiger links von Zelle 0'); if (p >= mem.length) grow(p + 64); break;
+          case 2: outBytes.push(mem[p] % 256); if (mem[p] === 10) flush(false); break;
+          case 3: mem[p] = readByte(); break;
+          case 4: if (mem[p] === 0) pc = o.to; break;
+          case 8: if (mem[p] !== 0) pc = o.to; break;
+          case 5: mem[p] = 0; break;
+          case 6: {
+            const v = mem[p];
+            if (v !== 0) {
+              const terms = o.terms;
+              for (let k = 0; k < terms.length; k++) {
+                const q = p + terms[k][0];
+                if (q < 0) throw new Error('Zeiger links von Zelle 0');
+                if (q >= mem.length) grow(q + 64);
+                const r = mem[q] + terms[k][1] * v;
+                if (r < 0) throw neg(q);
+                mem[q] = r;
+              }
+              mem[p] = 0;
+            }
+            break;
+          }
+          case 7: {
+            const k = o.k;
+            while (mem[p] !== 0) { p += k; if (p < 0) throw new Error('Zeiger links von Zelle 0'); if (p >= mem.length) grow(p + 64); }
+            break;
+          }
+          default: break;
+        }
+        pc++;
+      }
+      flush(true);
+      return { steps };
+    } catch (e) {
+      flush(true);
+      return { steps, error: (ops[pc] ? 'Zeile ' + ops[pc].line + ': ' : '') + e.message };
+    }
+  }
+
+  BBE.bfgen = { generate, run };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 ;
@@ -14859,8 +17900,11 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     mg: {
       kw: words('M A R T I N G O E S'),
       types: words(''),
-      line: ';', block: false, pp: false, quotes: '', word: /^[A-Za-z_]\w*:?/
-    }
+      line: ';', block: false, pp: false, quotes: '"', word: /^[A-Za-z_]\w*:?/
+    },
+    // Esoterische Sprachen: nur einzelne Zeichen sind Befehle, alles andere ist Kommentar
+    bf: { chars: '+-<>.,[]' },
+    ws: { chars: '' }
   };
 
   function highlight(pre, code, lang) {
@@ -14872,6 +17916,22 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
       let i = 0;
       const push = (cls, text) => { if (!text) return; el.appendChild(cls ? h('span.' + cls, null, text) : document.createTextNode(text)); };
       if (L.pp && !inBlock && (L.pp instanceof RegExp ? L.pp : /^\s*#/).test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
+      if (L.chars !== undefined) {
+        // Brainfuck/Whitespace: Befehlszeichen hervorheben, alles andere (sichtbare) ist Kommentar
+        for (const run of line.match(/(\s+|[^\s]+)/g) || []) {
+          if (/^\s/.test(run)) { push(null, run); continue; }
+          let part = '';
+          for (const ch of run) {
+            const isCmd = L.chars.includes(ch);
+            if (part && isCmd !== L.chars.includes(part[0])) { push(L.chars.includes(part[0]) ? 'tok-kw' : 'tok-cmt', part); part = ''; }
+            part += ch;
+          }
+          if (part) push(L.chars.includes(part[0]) ? 'tok-kw' : 'tok-cmt', part);
+        }
+        if (!el.childNodes.length) el.appendChild(document.createTextNode(' '));
+        pre.appendChild(el);
+        continue;
+      }
       let buf = '';
       const flush = () => { push(null, buf); buf = ''; };
       while (i < line.length) {
@@ -15185,7 +18245,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   <a href="#h-sub">Unterprogramme</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Ausführen</a>
-  <a href="#h-c">Code (16 Sprachen)</a>
+  <a href="#h-c">Code (18 Sprachen)</a>
   <a href="#h-mg">MARTIN GOES</a>
   <a href="#h-files">Dateien</a>
   <a href="#h-python">Python übernehmen</a>
@@ -15266,7 +18326,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code in 16 Sprachen</h3>
+  <h3>Code in 18 Sprachen</h3>
   <p>Der Reiter <b>Code</b> zeigt das Programm in der Sprache, die in der Auswahlliste gewählt ist; <i>Exportieren</i> und
   der Knopf <i>Herunterladen</i> speichern die Datei.</p>
   <table>
@@ -15276,6 +18336,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     <tr><td>Systemnah</td><td>Rust, x86-Assembler für MS-DOS (NASM, .COM-Programm)</td></tr>
     <tr><td>Klassiker</td><td>Fortran, COBOL, BASIC (QBasic-Stil), RPG IV (IBM i)</td></tr>
     <tr><td>Lehrmaschine</td><td>MARTIN GOES (siehe eigenes Kapitel)</td></tr>
+    <tr><td>Esoterisch</td><td>Whitespace (nur Leerzeichen, Tabulator, Zeilenumbruch sind Befehle – alles Sichtbare ist Kommentar), Brainfuck (acht Zeichen <code>+ - &lt; &gt; . , [ ]</code>)</td></tr>
   </table>
   <p>Alle Übersetzungen rechnen wie C mit ganzen Zahlen (<code>7 / 2</code> ergibt 3). Einschränkungen: x86-Assembler rechnet mit
   16 Bit (−32768 … 32767), COBOL und RPG kennen höchstens 1000 Array-Elemente, RPG gibt über <code>DSPLY</code> aus
@@ -15357,6 +18418,9 @@ ende: O  1          ; ergebnis ausgeben
       T</pre>
   <h4>So übersetzt der Editor</h4>
   <ul>
+    <li><b>Lesehilfe:</b> Der Kopf enthält einen Speicherplan (welche Zelle wofür), jede Zeile einen Kommentar in Klartext
+    (z. B. <code>S 9 2 ; X1 := antwort</code>, <code>M 22 @24 ; t1 := t1 · n</code>). <code>t1</code>, <code>t2</code> … sind Zwischenzellen
+    einer Anweisung, Sprungmarken heißen nach ihrem Block (<code>dann3</code>, <code>sonst3</code>, <code>solange5</code> …).</li>
     <li>Variablen des Hauptprogramms liegen in den Zellen 0, 1, 2, … (der Kopf des Programms zeigt, welche Zelle welche Variable ist).
     Kommen Texte vor, bleibt Zelle 0 frei: sie ist immer 0 und dient als leerer Text.</li>
     <li><b>Vergleiche:</b> <code>E</code> prüft nur auf 0. „Kleiner als“ wird mit einer Schleife nachgebaut: die Differenz d wird
@@ -15422,7 +18486,7 @@ ende: O  1          ; ergebnis ausgeben
   <a href="#h-sub">Subprograms</a>
   <a href="#h-arrays">Arrays</a>
   <a href="#h-run">Running</a>
-  <a href="#h-c">Code (16 languages)</a>
+  <a href="#h-c">Code (18 languages)</a>
   <a href="#h-mg">MARTIN GOES</a>
   <a href="#h-files">Files</a>
   <a href="#h-python">Importing Python</a>
@@ -15503,7 +18567,7 @@ ende: O  1          ; ergebnis ausgeben
   </ul>
 </section>
 <section id="h-c">
-  <h3>Code in 16 languages</h3>
+  <h3>Code in 18 languages</h3>
   <p>The <b>Code</b> tab shows the program in the language chosen in the list; <i>Export</i> and the <i>Download</i>
   button save the file.</p>
   <table>
@@ -15513,6 +18577,7 @@ ende: O  1          ; ergebnis ausgeben
     <tr><td>Systems</td><td>Rust, x86 assembler for MS-DOS (NASM, .COM program)</td></tr>
     <tr><td>Classics</td><td>Fortran, COBOL, BASIC (QBasic style), RPG IV (IBM i)</td></tr>
     <tr><td>Teaching machine</td><td>MARTIN GOES (see its own chapter)</td></tr>
+    <tr><td>Esoteric</td><td>Whitespace (only space, tab and line feed are commands – everything visible is a comment), Brainfuck (eight characters <code>+ - &lt; &gt; . , [ ]</code>)</td></tr>
   </table>
   <p>All translations compute with whole numbers like C (<code>7 / 2</code> gives 3). Limits: x86 assembler uses 16 bit
   (−32768 … 32767), COBOL and RPG allow at most 1000 array elements, RPG prints via <code>DSPLY</code> (at most 52 characters
@@ -15592,6 +18657,9 @@ done: O  1          ; output result
       T</pre>
   <h4>How the editor translates</h4>
   <ul>
+    <li><b>Reading aid:</b> the header contains a memory map (which cell is used for what), every line a plain-language comment
+    (e.g. <code>S 9 2 ; X1 := antwort</code>, <code>M 22 @24 ; t1 := t1 · n</code>). <code>t1</code>, <code>t2</code> … are intermediate cells
+    of a statement, labels are named after their block (<code>then3</code>, <code>else3</code>, <code>while5</code> …).</li>
     <li>Variables of the main program live in cells 0, 1, 2, … (the program header lists which cell holds which variable).
     If texts occur, cell 0 stays free: it is always 0 and serves as the empty text.</li>
     <li><b>Comparisons:</b> <code>E</code> only tests for 0. “Less than” is built with a loop: the difference d is counted up and
@@ -15699,7 +18767,9 @@ done: O  1          ; output result
     { id: 'cobol', label: 'COBOL', ext: '.cob', mime: 'text/x-cobol', group: 'classic', gen: 'cobolgen', exp: 'exp.cob', cmt: '*> ' },
     { id: 'basic', label: 'BASIC', ext: '.bas', mime: 'text/x-basic', group: 'classic', gen: 'basicgen', exp: 'exp.bas', cmt: "' " },
     { id: 'rpg', label: 'RPG IV', ext: '.rpgle', mime: 'text/plain', group: 'classic', gen: 'rpggen', exp: 'exp.rpgle' },
-    { id: 'mg', label: 'MARTIN GOES', ext: '.mg', mime: 'text/plain', group: 'teach', gen: 'mggen', exp: 'exp.mg', cmt: '; ' }
+    { id: 'mg', label: 'MARTIN GOES', ext: '.mg', mime: 'text/plain', group: 'teach', gen: 'mggen', exp: 'exp.mg', cmt: '; ' },
+    { id: 'ws', label: 'Whitespace', ext: '.ws', mime: 'text/plain', group: 'esoteric', gen: 'wsgen', exp: 'exp.ws', cmt: '' },
+    { id: 'bf', label: 'Brainfuck', ext: '.bf', mime: 'text/plain', group: 'esoteric', gen: 'bfgen', exp: 'exp.bf', cmt: '' }
   ].filter((l) => BBE[l.gen]);
 
   const defaults = {
@@ -17282,7 +20352,7 @@ done: O  1          ; output result
     if (dlNs === undefined) { try { dlNs = await G.claude.use('downloads'); } catch (e) { dlNs = null; } }
     if (!dlNs) return 'none';
     // nur bestimmte Endungen sind im Viewer erlaubt
-    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob|sh|csh|lua|rs|bas|asm|rpgle|mg)$/, '.$1.txt');
+    const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob|sh|csh|lua|rs|bas|asm|rpgle|mg|ws|bf)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
   }
 

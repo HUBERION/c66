@@ -240,8 +240,11 @@
     mg: {
       kw: words('M A R T I N G O E S'),
       types: words(''),
-      line: ';', block: false, pp: false, quotes: '', word: /^[A-Za-z_]\w*:?/
-    }
+      line: ';', block: false, pp: false, quotes: '"', word: /^[A-Za-z_]\w*:?/
+    },
+    // Esoterische Sprachen: nur einzelne Zeichen sind Befehle, alles andere ist Kommentar
+    bf: { chars: '+-<>.,[]' },
+    ws: { chars: '' }
   };
 
   function highlight(pre, code, lang) {
@@ -253,6 +256,22 @@
       let i = 0;
       const push = (cls, text) => { if (!text) return; el.appendChild(cls ? h('span.' + cls, null, text) : document.createTextNode(text)); };
       if (L.pp && !inBlock && (L.pp instanceof RegExp ? L.pp : /^\s*#/).test(line)) { push('tok-pp', line); pre.appendChild(el); continue; }
+      if (L.chars !== undefined) {
+        // Brainfuck/Whitespace: Befehlszeichen hervorheben, alles andere (sichtbare) ist Kommentar
+        for (const run of line.match(/(\s+|[^\s]+)/g) || []) {
+          if (/^\s/.test(run)) { push(null, run); continue; }
+          let part = '';
+          for (const ch of run) {
+            const isCmd = L.chars.includes(ch);
+            if (part && isCmd !== L.chars.includes(part[0])) { push(L.chars.includes(part[0]) ? 'tok-kw' : 'tok-cmt', part); part = ''; }
+            part += ch;
+          }
+          if (part) push(L.chars.includes(part[0]) ? 'tok-kw' : 'tok-cmt', part);
+        }
+        if (!el.childNodes.length) el.appendChild(document.createTextNode(' '));
+        pre.appendChild(el);
+        continue;
+      }
       let buf = '';
       const flush = () => { push(null, buf); buf = ''; };
       while (i < line.length) {

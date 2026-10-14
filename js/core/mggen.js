@@ -44,17 +44,34 @@
     const tr = opts.t || ((k) => k);
     const unsupported = [];
     const code = [];          // { label, op, args: [], cmt } oder { text } (Kommentarzeile)
-    let labelNo = 0;
-    const newLabel = (hint) => (hint || 'L') + (++labelNo);
     const RET = tr('mgReturnLabel');
     const END = tr('mgEndLabel');
     const HELP = { cat: 'txt_cat', num: 'txt_num', cmp: 'txt_cmp' };
     const fnLabel = new Map();
     for (const f of program.fns.filter((x) => !x.isMain)) {
       let n = labelName(f.name);
-      while ([...fnLabel.values()].includes(n) || /^(L|zu)\d+$/.test(n) || n === RET || n === END || Object.values(HELP).includes(n)) n += '_';
+      while ([...fnLabel.values()].includes(n) || /\d$/.test(n) || n === RET || n === END || Object.values(HELP).includes(n)) n += '_';
       fnLabel.set(f.name, n);
     }
+    // Sprechende Sprungmarken: wenn3/sonst3/ende3, solange4/rumpf4 … (Wörter je nach Sprache)
+    const W = tr('genArgPrompt') === 'frage'
+      ? { then: 'dann', else: 'sonst', end: 'ende', while: 'solange', body: 'rumpf', repeat: 'wdh', for: 'fuer', case: 'fall',
+        other: 'sonstfall', back: 'weiter', and: 'und', or: 'oder', yes: 'ja', no: 'nein', sign: 'vz', div: 'div', loop: 'schleife' }
+      : { then: 'then', else: 'else', end: 'end', while: 'while', body: 'body', repeat: 'repeat', for: 'for', case: 'case',
+        other: 'other', back: 'resume', and: 'and', or: 'or', yes: 'yes', no: 'no', sign: 'sign', div: 'div', loop: 'loop' };
+    let labelNo = 0;
+    const genLabels = new Set();
+    /** Gruppe von Sprungmarken mit gemeinsamer Nummer, z. B. group('then', 'else', 'end') → dann3, sonst3, ende3 */
+    const group = (...hints) => {
+      const fns = new Set(fnLabel.values());
+      let ls;
+      do { const n = ++labelNo; ls = hints.map((h) => (W[h] || h || 'L') + n); } while (ls.some((l) => fns.has(l)));
+      ls.forEach((l) => genLabels.add(l));
+      return ls;
+    };
+    const newLabel = (hint) => group(hint || 'loop')[0];
+    // Textkonstanten stehen einmal in einem Datenbereich nach den Hilfszellen (Adressen werden am Ende eingesetzt)
+    const litPool = [];
 
     // ---- Zellen
     const main = program.fns.find((f) => f.isMain);
@@ -74,10 +91,56 @@
     const usedHelp = new Set();
     const callSites = [];
 
+    // ---- Namen der Zellen für Kopf und Kommentare
+    const cellName = new Map();
+    if (textStored) cellName.set(0, tr('mgEmptyText'));
+    for (const [n, c] of mainCell) cellName.set(c, n);
+    for (const [k, c] of Object.entries(R)) cellName.set(c, k);
+    for (let i = 0; i < KCELLS; i++) cellName.set(K0 + i, 'k' + (i + 1));
+    const nm = (n) => (cellName.has(+n) ? cellName.get(+n) : +n >= TEMP0 ? 't' + (+n - TEMP0 + 1) : n);
+    const textCells = new Set([...mainCell].filter(([n]) => mainScope.get(n).type === 'string').map(([, c]) => String(c)));
+    // Hilfszellen, die gerade die Adresse einer Variablen/eines Elements enthalten: t1 → { name, text }
+    // (dann heißt @t1 im Kommentar einfach „result“ oder „werte[i]“)
+    const alias = new Map();
+    const opnd = (o) => {
+      if (typeof o !== 'string') return String(o);
+      if (o.startsWith('"')) return o;
+      if (isLit(o)) return lit(litPool[+o.slice(2)].v);
+      if (o.startsWith('#')) return o.slice(1);
+      if (o.startsWith('$@')) return tr('mgPsText') + ' ' + (alias.has(o.slice(2)) ? alias.get(o.slice(2)).name : nm(o.slice(2)));
+      if (o.startsWith('$')) return tr('mgPsText') + '(' + opnd(o.slice(1)) + ')';
+      if (o.startsWith('@')) return alias.has(o.slice(1)) ? alias.get(o.slice(1)).name : '@' + nm(o.slice(1));
+      return nm(o);
+    };
+    const isText = (x) => textCells.has(x) || (x.startsWith('@') && alias.has(x.slice(1)) && alias.get(x.slice(1)).text);
+    /** Klartext zu einem Befehl, z. B. „X1 := antwort“ */
+    function explain(op, args) {
+      const [x, y] = args;
+      const X = opnd(x), Y = opnd(y);
+      switch (op) {
+        case 'S':
+          if (x.startsWith('$')) return Y + ' → ' + X;
+          return X + ' := ' + (y === '#0' && isText(x) ? '""' : Y);
+        case 'A': return X + ' := ' + X + ' + ' + Y;
+        case 'R': return X + ' := ' + X + ' − ' + Y;
+        case 'M': return X + ' := ' + X + ' · ' + Y;
+        case 'N': return X + ' := −' + X;
+        case 'E': return X + ' = 0 → ' + y;
+        case 'I': return x.startsWith('$') ? tr('mgPsLine') + ' → ' + X : X + ' := ' + tr('mgPsNum');
+        case 'O': return x.startsWith('"') ? null : tr('mgPsOut') + ' ' + X;
+        default: return null;
+      }
+    }
+
     let pendingLabel = null;
-    function emit(op, args, cmt) {
-      code.push({ label: pendingLabel, op, args: args || [], cmt });
+    /** Befehl ausgeben; der Kommentar wird sofort gebildet (Namen gelten zu diesem Zeitpunkt). */
+    function emit(op, args, cmt, aliasFor) {
+      args = args || [];
+      code.push({ label: pendingLabel, op, args, cmt: cmt || explain(op, args) });
       pendingLabel = null;
+      // eine Hilfszelle bekommt einen neuen Wert → ihr Name gilt nicht mehr
+      if (args[0] && /^\d+$/.test(args[0]) && 'SARMNI'.includes(op)) alias.delete(args[0]);
+      if (aliasFor) alias.set(args[0], aliasFor);
     }
     function label(l) {
       if (pendingLabel) emit('G', [l]); // zwei Labels hintereinander: leerer Sprung (wird später entfernt)
@@ -107,11 +170,13 @@
     function varOperand(ctx, n) {
       if (ctx.fn.isMain) return String(mainCell.get(n) ?? 0);
       const slot = ctx.frame.slot.get(n) ?? 2;
-      const t = temp(ctx);
-      emit('S', [String(t), reg('FP')]);
-      emit('A', [String(t), '#' + slot]);
+      const t = String(temp(ctx));
       const v = ctx.scope.get(n);
-      if (v && v.kind === 'param' && v.byRef && !A.isArrayType(v.type)) emit('S', [String(t), '@' + t], tr('mgCmtAddr', n));
+      const info = { name: n, text: !!v && v.type === 'string' };
+      const byRef = v && v.kind === 'param' && v.byRef && !A.isArrayType(v.type);
+      emit('S', [t, reg('FP')]);
+      emit('A', [t, '#' + slot], tr('mgCmtAddrOf', n, ' (FP+' + slot + ')'), byRef ? null : info);
+      if (byRef) emit('S', [t, '@' + t], tr('mgCmtAddr', n), info);
       return '@' + t;
     }
 
@@ -126,6 +191,8 @@
         const o = strip(s.obj);
         const at = A.isArrayType(typeOf(ctx, o)) ? cellOf(ctx, val(ctx, o)) : textAddr(ctx, o);
         if (at === '#0') return '#0';
+        if (isLit(at)) return '#' + litLen(at);   // Länge einer Textkonstante ist bekannt
+        if (+at >= TEMP0) alias.set(at, { name: A.exprText(o) + '.length' });   // @t = Länge
         return '@' + at;   // Länge steht an der Adresse
       }
       if (typeOf(ctx, s) === 'string') return textAddr(ctx, s);
@@ -143,11 +210,12 @@
 
     /** Element a[i]: Adresse = Basis + i + 1 */
     function elemOperand(ctx, s) {
-      const t = temp(ctx);
-      emit('S', [String(t), val(ctx, s.obj)]);
+      const t = String(temp(ctx));
+      const info = { name: A.exprText(s), text: typeOf(ctx, s) === 'string' };
+      emit('S', [t, val(ctx, s.obj)]);
       const i = strip(s.index);
-      if (i.k === 'num' && Number.isInteger(i.v)) emit('A', [String(t), '#' + (i.v + 1)]);
-      else { emit('A', [String(t), val(ctx, i)]); emit('A', [String(t), '#1']); }
+      if (i.k === 'num' && Number.isInteger(i.v)) emit('A', [t, '#' + (i.v + 1)], tr('mgCmtAddrOf', info.name, ''), info);
+      else { emit('A', [t, val(ctx, i)]); emit('A', [t, '#1'], tr('mgCmtAddrOf', info.name, ''), info); }
       return '@' + t;
     }
 
@@ -168,7 +236,7 @@
       if (args[0] !== undefined) emit('S', [reg('X1'), args[0]]);
       if (args[1] !== undefined) emit('S', [reg('X2'), args[1]]);
       const id = callSites.length + 1;
-      const back = newLabel('zu');
+      const back = newLabel('back');
       callSites.push(back);
       emit('S', [reg('HR'), '#' + id]);
       emit('G', [HELP[name]]);
@@ -178,17 +246,15 @@
       return t;
     }
 
-    /** Textkonstante auf der Halde ablegen → Zelle mit der Adresse. */
+    /** Textkonstante → Konstante mit ihrer Adresse im Datenbereich (#§n, wird am Ende ersetzt). */
     function textLiteral(ctx, v) {
       if (v === '') return '#0';
-      usesHeap = true;
-      const hp = reg('HP');
-      const t = String(temp(ctx));
-      emit('S', [t, hp]);
-      emit('S', ['$@' + hp, lit(v)]);
-      emit('A', [hp, '#' + ([...v].length + 1)]);
-      return t;
+      let i = litPool.findIndex((x) => x.v === v);
+      if (i < 0) { litPool.push({ v, len: [...v].length }); i = litPool.length - 1; }
+      return '#§' + i;
     }
+    const isLit = (op) => typeof op === 'string' && op.startsWith('#§');
+    const litLen = (op) => litPool[+op.slice(2)].len;
 
     function parts(ctx, ast) {
       const s = strip(ast);
@@ -206,7 +272,7 @@
         if (p.k === 'str') x = textLiteral(ctx, p.v);
         else if (t === 'string') x = cellOf(ctx, p.k === 'id' ? varOperand(ctx, p.name) : p.k === 'idx' ? elemOperand(ctx, p) : '#0');
         else if (t === 'bool') {
-          const yes = newLabel(), no = newLabel(), end = newLabel();
+          const [yes, no, end] = group('yes', 'no', 'end');
           x = String(temp(ctx));
           condJump(ctx, p, yes, no);
           label(yes); emit('S', [x, textLiteral(ctx, 'true')]); emit('G', [end]);
@@ -228,7 +294,7 @@
           const c = cellOf(ctx, p.k === 'id' ? varOperand(ctx, p.name) : elemOperand(ctx, p));
           if (c !== '#0') emit('O', ['$@' + c]);
         } else if (t === 'bool') {
-          const yes = newLabel(), no = newLabel(), end = newLabel();
+          const [yes, no, end] = group('yes', 'no', 'end');
           condJump(ctx, p, yes, no);
           label(yes); emit('O', ['"true"']); emit('G', [end]);
           label(no); emit('O', ['"false"']);
@@ -271,7 +337,7 @@
       if (s.k === 'num') { emit('S', [T, '#' + Math.trunc(s.v)]); return t; }
       if (typeOf(ctx, s) === 'string') { unsupported.push(tr('mgNoTextNum')); emit('S', [T, '#0']); return t; }
       // Wahrheitswert → 0/1
-      const yes = newLabel(), no = newLabel();
+      const [yes, no] = group('yes', 'no');
       emit('S', [T, '#0']);
       condJump(ctx, s, yes, no);
       label(yes);
@@ -292,7 +358,7 @@
     /** Springt nach neg, wenn Zelle x < 0, sonst nach nonneg (x bleibt unverändert). */
     function signJump(ctx, x, neg, nonneg) {
       const p = String(temp(ctx)), q = String(temp(ctx));
-      const loop = newLabel();
+      const loop = newLabel('sign');
       emit('S', [p, x], tr('mgCmtSign'));
       emit('S', [q, x]);
       label(loop);
@@ -307,7 +373,7 @@
     function divmod(ctx, aCell, d, op, dst) {
       const a = String(aCell);
       const b = String(temp(ctx)), q = String(temp(ctx)), sq = String(temp(ctx)), sr = String(temp(ctx)), diff = String(temp(ctx));
-      const aPos = newLabel(), bChk = newLabel(), bPos = newLabel(), loop = newLabel(), done = newLabel(), aNeg = newLabel(), bNeg = newLabel();
+      const [aPos, bChk, bPos, loop, done, aNeg, bNeg] = group('div', 'div', 'div', 'div', 'div', 'div', 'div').map((l, i) => { const x = l + 'abcdefg'[i]; genLabels.add(x); return x; });
       emit('S', [b, d], op === '/' ? tr('mgCmtDiv') : tr('mgCmtMod'));
       usesEnd = true;
       emit('E', [b, END]);                // Division durch 0 → Programmende
@@ -341,8 +407,8 @@
     /** Bedingung als Sprünge. */
     function condJump(ctx, a, yes, no) {
       const s = strip(a);
-      if (s.k === 'bin' && s.op === '&&') { const mid = newLabel(); condJump(ctx, s.a, mid, no); label(mid); condJump(ctx, s.b, yes, no); return; }
-      if (s.k === 'bin' && s.op === '||') { const mid = newLabel(); condJump(ctx, s.a, yes, mid); label(mid); condJump(ctx, s.b, yes, no); return; }
+      if (s.k === 'bin' && s.op === '&&') { const mid = newLabel('and'); condJump(ctx, s.a, mid, no); label(mid); condJump(ctx, s.b, yes, no); return; }
+      if (s.k === 'bin' && s.op === '||') { const mid = newLabel('or'); condJump(ctx, s.a, yes, mid); label(mid); condJump(ctx, s.b, yes, no); return; }
       if (s.k === 'un' && s.op === '!') { condJump(ctx, s.a, no, yes); return; }
       if (s.k === 'bin' && ['==', '!=', '<', '<=', '>', '>='].includes(s.op)) {
         if (typeOf(ctx, s.a) === 'string' || typeOf(ctx, s.b) === 'string') { textCond(ctx, s, yes, no); return; }
@@ -369,6 +435,7 @@
         // Text als Bedingung: nicht leer
         const c = textAddr(ctx, s);
         if (c === '#0') { emit('G', [no]); return; }
+        if (isLit(c)) { emit('G', [yes]); return; }
         const n = String(temp(ctx));
         emit('S', [n, '@' + c]);
         emit('E', [n, no]);
@@ -389,6 +456,7 @@
         const other = isEmpty(s.a) ? s.b : s.a;
         const c = textAddr(ctx, other);
         if (c === '#0') { emit('G', [s.op === '==' ? yes : no]); return; }
+        if (isLit(c)) { emit('G', [s.op === '==' ? no : yes]); return; }
         const n = String(temp(ctx));
         emit('S', [n, '@' + c]);
         emit('E', [n, s.op === '==' ? yes : no]);
@@ -504,7 +572,7 @@
         }
         case 'if': {
           head(tr('mgIf', n.cond));
-          const yes = newLabel(), no = newLabel(), end = newLabel();
+          const [yes, no, end] = group('then', 'else', 'end');
           condFrom(ctx, n.cond, yes, no);
           label(yes);
           genSeq(ctx, n.then);
@@ -514,7 +582,7 @@
         }
         case 'while': {
           head(tr('mgWhile', n.cond));
-          const top = newLabel(), body = newLabel(), end = newLabel();
+          const [top, body, end] = group('while', 'body', 'end');
           label(top);
           ctx.tmp = 0;
           condFrom(ctx, n.cond, body, end);
@@ -526,7 +594,7 @@
         }
         case 'until': {
           head(tr('mgUntil', n.cond));
-          const top = newLabel(), end = newLabel();
+          const [top, end] = group('repeat', 'end');
           label(top);
           genSeq(ctx, n.body);
           ctx.tmp = 0;
@@ -536,7 +604,7 @@
         }
         case 'for': {
           head(tr('mgFor', n.counter, n.from, n.to, String(n.step || '1').trim() || '1'));
-          const top = newLabel(), body = newLabel(), end = newLabel();
+          const [top, body, end] = group('for', 'body', 'end');
           store(ctx, n.counter, tryParse(n.from));
           const stepAst = tryParse(n.step) || { k: 'num', v: 1, raw: '1' };
           const lit1 = A.literalValue(stepAst);
@@ -545,7 +613,7 @@
           ctx.tmp = 0;
           if (typeof lit1 === 'number') condJump(ctx, { k: 'bin', op: lit1 >= 0 ? '<=' : '>=', a: k, b: to }, body, end);
           else {
-            const pos = newLabel(), neg = newLabel();
+            const [pos, neg] = group('sign', 'sign').map((l, i) => { const x = l + 'pn'[i]; genLabels.add(x); return x; });
             const s = String(temp(ctx));
             emit('S', [s, val(ctx, stepAst)]);
             signJump(ctx, s, neg, pos);
@@ -569,9 +637,8 @@
           const sel = tryParse(n.expr);
           if (!sel) return;
           const isText = typeOf(ctx, sel) === 'string';
-          const end = newLabel();
-          const labels = n.cases.map(() => newLabel());
-          const other = newLabel();
+          const [end, other] = group('end', 'other');
+          const labels = n.cases.map(() => newLabel('case'));
           const sv = isText ? textAddr(ctx, sel) : cellOf(ctx, val(ctx, sel));
           n.cases.forEach((c, i) => {
             const v = tryParse(c.value) || { k: isText ? 'str' : 'num', v: isText ? '' : 0, raw: '0' };
@@ -606,12 +673,12 @@
             const v = A.isArrayType(p.type) ? val(ctx, src) : p.byRef ? addrValue(ctx, src) : p.type === 'string' ? textAddr(ctx, src) : val(ctx, src);
             const a = String(temp(ctx));
             emit('S', [a, SP]);
-            emit('A', [a, '#' + fr.slot.get(p.name)]);
-            emit('S', ['@' + a, v], p.name);
+            emit('A', [a, '#' + fr.slot.get(p.name)], tr('mgCmtParam', p.name), { name: callee.name + '.' + p.name, text: p.type === 'string' });
+            emit('S', ['@' + a, v]);
           });
           ctx.tmp = 0;
           const id = callSites.length + 1;
-          const back = newLabel('zu');
+          const back = newLabel('back');
           callSites.push(back);
           const a = String(temp(ctx));
           emit('S', ['@' + SP, '#' + id], tr('mgCmtRetId'));
@@ -732,12 +799,12 @@
       note('; ' + tr('mgFrame', [...fr.slot].map(([n, k]) => 'FP+' + k + ' ' + n).join(', ')));
       label(fnLabel.get(fn.name));
       // Variablen im Rahmen auf 0 setzen (der Stapel wird wiederverwendet)
-      for (const [n, k] of fr.slot) {
+      if ([...fr.slot.keys()].some((n) => (fr.scope.get(n) || {}).kind !== 'param')) note('; ' + tr('mgZeroVars'));
+      for (const [n] of fr.slot) {
         const v = fr.scope.get(n);
         if (v && v.kind === 'param') continue;
         ctx.tmp = 0;
-        const t = String(temp(ctx));
-        emit('S', [t, reg('FP')]); emit('A', [t, '#' + k]); emit('S', ['@' + t, '#0']);
+        emit('S', [varOperand(ctx, n), '#0']);
       }
       if (fn.returnType !== 'void') { ctx.tmp = 0; store(ctx, 'result', tryParse(fn.resultInit)); }
       genSeq(ctx, fn.body);
@@ -766,12 +833,24 @@
     }
     if (usesEnd) { label(END); emit('T'); }
 
-    // Startwerte für Stapel und Halde vor das Hauptprogramm
-    const heapBase = Math.ceil((TEMP0 + maxTemp + 1) / 100) * 100;
+    // Speicherplan: … Zwischenzellen | Textkonstanten (ab volle Zehn) | Halde (ab volle Hundert)
+    const litBase = Math.ceil((TEMP0 + maxTemp + 1) / 10) * 10;
+    let a = litBase;
+    for (const l of litPool) { l.addr = a; a += l.len + 1; }
+    const heapBase = Math.ceil((a + 1) / 100) * 100;
+    // Startwerte für Stapel und Halde sowie die Textkonstanten vor das Hauptprogramm
     const init = [];
     if (usesStack) init.push({ op: 'S', args: [String(R.SP), '#' + STACK], cmt: tr('mgCmtStack') });
     if (usesHeap || usedHelp.size) { usedReg.add('HP'); init.push({ op: 'S', args: [String(R.HP), '#' + heapBase], cmt: tr('mgCmtHeap') }); }
+    if (litPool.length) {
+      init.push({ text: '; ' + tr('mgLitHead') });
+      for (const l of litPool) init.push({ op: 'S', args: ['$' + l.addr, lit(l.v)] });
+    }
     code.splice(initAt, 0, ...init);
+    if (init.length) code.splice(initAt + init.length, 0, { text: '; ' + tr('mgMainHead') });
+
+    // Adressen der Textkonstanten einsetzen
+    for (const c of code) if (c.args) c.args = c.args.map((o) => (isLit(o) ? '#' + litPool[+o.slice(2)].addr : o));
 
     // Sprünge zum direkt folgenden Label entfernen
     for (let i = 0; i < code.length - 1; i++) {
@@ -788,25 +867,32 @@
       if (c.op === 'G') target.add(c.args[0]);
       if (c.op === 'E') target.add(c.args[1]);
     }
-    for (const c of code) if (c.label && /^(L|zu)\d+$/.test(c.label) && !target.has(c.label)) c.label = null;
+    for (const c of code) if (c.label && genLabels.has(c.label) && !target.has(c.label)) c.label = null;
 
     // Ausgabe
     const out = ['; ' + tr('mgHeader1'), '; ' + tr('mgHeader2'), ';'];
-    const cells = [...mainCell].map(([n, c]) => c + ' = ' + n);
-    if (textStored) cells.unshift('0 = ' + tr('mgEmptyText'));
-    if (cells.length) out.push('; ' + tr('mgCells') + ' ' + cells.join(', '));
-    const regs = Object.entries(R).filter(([k]) => usedReg.has(k)).map(([k, c]) => c + ' = ' + k);
-    const span = (a, b) => (a === b ? String(a) : a + '…' + b);
-    if (maxK) regs.push(span(K0, K0 + maxK - 1) + ' = ' + tr('mgHelpCells'));
-    if (maxTemp) regs.push(span(TEMP0, TEMP0 + maxTemp - 1) + ' = ' + tr('mgTemps'));
+    // Speicherplan im Kopf: eine Zeile je Bereich
+    const span = (p, q) => (p === q ? String(p) : p + '…' + q);
+    const plan = [];
+    const cells = [...mainCell].map(([n, c]) => c + ' ' + n);
+    if (textStored) cells.unshift('0 ' + tr('mgEmptyText'));
+    if (cells.length) plan.push(tr('mgCells') + ' ' + cells.join(', '));
+    const regDoc = { SP: tr('mgRegSP'), FP: tr('mgRegFP'), HP: tr('mgRegHP'), RV: tr('mgRegRV'), RID: tr('mgRegRID'), HR: tr('mgRegHR'), X1: tr('mgRegX'), X2: tr('mgRegX') };
+    for (const [k, c] of Object.entries(R)) if (usedReg.has(k)) plan.push(c + ' ' + k + ' – ' + regDoc[k]);
+    if (maxK) plan.push(span(K0, K0 + maxK - 1) + ' k1… – ' + tr('mgHelpCells'));
+    if (maxTemp) plan.push(span(TEMP0, TEMP0 + maxTemp - 1) + ' t1… – ' + tr('mgTemps'));
+    if (litPool.length) plan.push(span(litBase, a - 1) + ' – ' + tr('mgLitHead'));
+    if (usesHeap || usedHelp.size) plan.push(heapBase + '… – ' + tr('mgCmtHeap'));
+    if (usesStack) plan.push(STACK + '… – ' + tr('mgCmtStack'));
+    if (plan.length) { out.push('; ' + tr('mgPlan')); for (const p of plan) out.push(';   ' + p); }
     const uniq = [...new Set(unsupported)];
     if (uniq.length) out.push(';', '; ⚠ ' + uniq.join(' '));
     out.push('');
     for (const c of code) {
       if (c.text !== undefined) { out.push(c.text); continue; }
-      const lab = c.label ? (c.label + ': ').padEnd(10) : ' '.repeat(10);
+      const lab = c.label ? (c.label + ': ').padEnd(12) : ' '.repeat(12);
       const ins = (c.op + '  ' + c.args.join(' ')).trimEnd();
-      out.push((lab + (c.cmt ? ins.padEnd(18) + '; ' + c.cmt : ins)).trimEnd());
+      out.push((lab + (c.cmt ? ins.padEnd(20) + '; ' + c.cmt : ins)).trimEnd());
     }
     const text = out.join('\n') + '\n';
     return opts.report ? { code: text, unsupported: uniq } : text;
@@ -889,6 +975,12 @@
     };
     const jump = (l, ins) => { if (!labels.has(l)) throw err(ins, 'Label ' + l + ' fehlt'); return labels.get(l); };
     const out = (s) => { if (io.output) io.output(s); };
+    // Eingabe: io.input() liefert eine Zeile, oder io.stdin enthält die ganze Eingabe als Text
+    if (!io.input && io.stdin != null) {
+      const lines = String(io.stdin).split('\n');
+      if (lines.length && lines[lines.length - 1] === '') lines.pop();
+      io = Object.assign({}, io, { input: () => (lines.length ? lines.shift() : null) });
+    }
     let pc = 0, steps = 0;
     const max = io.maxSteps || 50000000;
     try {

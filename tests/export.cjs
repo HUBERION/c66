@@ -109,9 +109,6 @@ for (const c of cases) {
     catch (e) { c.results.push(L.tag.toUpperCase() + '-ERROR Generator: ' + e.message); }
     fs.writeFileSync(path.join(dirs[L.id], c.name + '.in'), c.stdin);
   }
-  if (BBE.mggen) {
-    c.mg = BBE.mggen.generate(program, { t: BBE.i18n.t, report: true });
-  }
 }
 
 const compare = (c, label, stdout) => {
@@ -248,18 +245,33 @@ if (tools.asm) {
   }
 }
 
-// ------------------------------------------------------------------ MARTIN GOES (eigener Interpreter in mggen.js)
-tools.mg = BBE.mggen && (!process.env.BBE_ONLY || process.env.BBE_ONLY.split(',').includes('mg'));
-if (tools.mg) {
+// ------------------------------------------------------------------ Sprachen mit eigenem Interpreter in JS
+// Jedes Modul BBE.<gen> hat generate(program, { t, report: true }) → { code, unsupported: [] }
+// und run(code, { stdin, output(text), maxSteps }) → { steps, error }.  stdin = komplette Eingabe als Text.
+const INTERP_LANGS = [
+  { id: 'mg', tag: 'mg', gen: 'mggen' },
+  { id: 'ws', tag: 'ws', gen: 'wsgen' },
+  { id: 'bf', tag: 'bf', gen: 'bfgen' }
+];
+for (const L of INTERP_LANGS) {
+  tools[L.id] = !!BBE[L.gen] && (!process.env.BBE_ONLY || process.env.BBE_ONLY.split(',').includes(L.id));
+  if (!tools[L.id]) continue;
+  const dir = path.join(work, L.tag);
+  fs.mkdirSync(dir, { recursive: true });
   for (const c of cases) {
-    if (c.mg.unsupported.length) { c.results.push('mg – (' + c.mg.unsupported.join(' ') + ')'); continue; }
-    const queue = c.inputs.slice();
+    BBE.i18n.lang = c.lang;
+    let g;
+    try { g = BBE[L.gen].generate(BBE.model.programFromBB(JSON.parse(JSON.stringify(c.bb))), { t: BBE.i18n.t, report: true }); }
+    catch (e) { c.results.push(L.tag.toUpperCase() + '-ERROR Generator: ' + e.message); continue; }
+    fs.writeFileSync(path.join(dir, c.name + '.' + L.tag), g.code);
+    if (g.unsupported && g.unsupported.length) { c.results.push(L.tag + ' – (' + [...new Set(g.unsupported)].join(' ') + ')'); continue; }
     let stdout = '';
-    const r = BBE.mggen.run(c.mg.code, { input: () => (queue.length ? queue.shift() : null), output: (s) => { stdout += s; } });
-    if (r.error) c.results.push('MG-ERROR ' + r.error);
-    else compare(c, 'mg', stdout);
+    const r = BBE[L.gen].run(g.code, { stdin: c.stdin, output: (s) => { stdout += s; } });
+    if (r.error) c.results.push(L.tag.toUpperCase() + '-ERROR ' + r.error);
+    else compare(c, L.tag, stdout);
   }
 }
+
 
 // ------------------------------------------------------------------ Ergebnis
 let fail = 0;

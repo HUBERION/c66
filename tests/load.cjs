@@ -4,7 +4,7 @@ const path = require('path');
 const vm = require('vm');
 
 const root = path.join(__dirname, '..', 'js', 'core');
-for (const f of ['i18n.js', 'expr.js', 'model.js', 'analyze.js', 'interp.js', 'cgen.js', 'pygen.js', 'javagen.js', 'csgen.js', 'cppgen.js', 'jsgen.js', 'fortgen.js', 'cobolgen.js', 'bashgen.js', 'cshgen.js', 'luagen.js', 'rustgen.js', 'basicgen.js', 'asmgen.js', 'rpggen.js', 'mggen.js', 'examples.js', 'pyimport.js']) {
+for (const f of ['i18n.js', 'expr.js', 'model.js', 'analyze.js', 'interp.js', 'cgen.js', 'pygen.js', 'javagen.js', 'csgen.js', 'cppgen.js', 'jsgen.js', 'fortgen.js', 'cobolgen.js', 'bashgen.js', 'cshgen.js', 'luagen.js', 'rustgen.js', 'basicgen.js', 'asmgen.js', 'rpggen.js', 'mggen.js', 'wsgen.js', 'bfgen.js', 'examples.js', 'pyimport.js']) {
   const file = path.join(root, f);
   if (!fs.existsSync(file)) continue;
   vm.runInThisContext(fs.readFileSync(file, 'utf8'), { filename: file });
