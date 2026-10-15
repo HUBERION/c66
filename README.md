@@ -118,6 +118,11 @@ COBOL, BASIC, RPG IV, MARTIN GOES, Whitespace und Brainfuck (Auswahlliste im Rei
   Der erzeugte Code hat einen Speicherplan im Kopf, Klartext-Kommentare je Zeile (`; t1 := t1 · n`) und Sprungmarken
   nach Blöcken (`dann3`, `solange5`). Ein Interpreter steckt in `js/core/mggen.js` (`BBE.mggen.run`).
 
+**Original-Editor 2.2 eingebaut** (Ordner [`v2/`](v2/README.md), GPL-3.0, unverändert von c65.at)
+- *Exportieren → Bild in alter Optik*: je Unterprogramm ein PNG genau im Aussehen von Version 2.2 (für bestehende Arbeitsblätter)
+- *Exportieren → Im alten Editor öffnen*: das aktuelle Programm im Original-Editor in einem neuen Tab
+- Übergabe über `v2/pages/bbe3-bruecke.html` (Programm im `#`-Teil der Adresse); die Einzeldatei nutzt dafür c66.xeox.at
+
 **Python → Blockbild**
 - *Öffnen* nimmt auch `.py`-Dateien: Zuweisungen, `input`/`print`, f-Strings, `if/elif/else`, `while`,
   `while True … break` (→ WIEDERHOLE … BIS), `for … in range`, `for x in liste`, `match/case`, `def`/`return`,
@@ -179,7 +184,8 @@ eingesetzt: [eggers97/block-diagram-editor](https://github.com/eggers97/block-di
 Idee, Bedienkonzept und das `.bb`-Dateiformat stammen von ihnen – vielen Dank für diese Grundlage!
 
 Die Idee, den Editor als **Version 3.0** neu zu bauen, stammt von **Martin Huber** – danke dafür!
-Version 3 ist eine Neuentwicklung; aus dem alten Projekt wurde kein Code übernommen.
+Version 3 ist eine Neuentwicklung; ihr Code übernimmt nichts aus dem alten Projekt. Der Original-Editor 2.2 liegt
+unverändert (GPL-3.0) im Ordner [`v2/`](v2/README.md) – für Bilder und Ansicht in der gewohnten Optik.
 Im Editor stehen die Credits unter *Einstellungen* und am Ende der *Hilfe*.
 
 Für die Weiterentwicklung (auch mit KI-Assistenten) siehe [CLAUDE.md](CLAUDE.md).

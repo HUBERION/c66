@@ -82,6 +82,7 @@ tools/serve.cjs     lokaler Server:  node tools/serve.cjs  → http://localhost:
 tools/build.mjs     baut dist/blockbild-editor.html (eine Datei, alles inline)
 tests/              Node-Tests ohne Abhängigkeiten (siehe unten)
 dist/               gebaute Einzeldatei (wird mit eingecheckt); artifact.html ist ignoriert
+v2/                 Original-Editor 2.2 (GPL-3.0, unverändert von c65.at, mit jQuery) + eigene Brücke pages/bbe3-bruecke.html
 ```
 
 Alle Module hängen an `window.BBE` (bzw. `globalThis.BBE` in Node). Reihenfolge in `index.html` und
@@ -224,6 +225,18 @@ Deployment: `git push` auf `main` – GitHub Pages liefert `index.html` aus dem 
 `dist/blockbild-editor.html` ist die Einzeldatei zum Hochladen auf andere Server oder zum Offline-Weitergeben.
 
 Commit-Stil bisher: deutsche Betreffzeile, kurze Aufzählung im Text.
+
+### Original-Editor 2.2 (v2/)
+
+`v2/` ist der **unveränderte** alte Editor (Stand c65.at, nicht GitHub – leicht anders: jQuery UI 1.11.4, addon.js mit
+Dunkelmodus). Er ist von Regel 1 (keine Abhängigkeiten) ausgenommen; **Originaldateien nicht ändern**, sonst stimmt die Optik
+nicht mehr. Eigener Code nur in `v2/pages/bbe3-bruecke.html`: liest `#mode=open|png&lang=de-DE|en-GB&name=…&bb=<Base64url>`,
+legt das Programm in localStorage `autoSavedDiagram` (und `configurations.currentLanguage`), lädt Blocks-Editor.html im iframe und
+klickt „Letztes Diagramm wiederherstellen“ + „Trotzdem wiederherstellen“. Für `png`: je Reiter „Fertig“-Knopf (ui-icon-locked),
+Panel klonen, berechnete Stile + Input-Werte übernehmen, Hintergrundbilder (jQuery-UI-Icons) als Daten-URL einbetten,
+SVG-foreignObject → Canvas (1:1) → `postMessage({type: 'bbe-v2-png', files})`. In app.js: `oldEditorUrl()`, `exportOldPng()`,
+`openOldEditor()` – lokal/c66.xeox.at relativ, sonst (Einzeldatei) https://c66.xeox.at/v2/. Der alte Editor überschreibt dabei
+sein eigenes `autoSavedDiagram` (bewusst so entschieden). Bekannt: im deutschen Modus zeigt 2.2 „resultat“ statt „result“ (Fehler des Originals).
 
 ## Stolpersteine, die wir schon gefunden haben
 

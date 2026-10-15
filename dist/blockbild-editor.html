@@ -1034,7 +1034,7 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
   </style>
 </head>
 <body>
-  <!-- Blockbild-Editor 3.0 · gebaut 2026-10-14 · eine Datei, keine externen Abhängigkeiten -->
+  <!-- Blockbild-Editor 3.0 · gebaut 2026-10-15 · eine Datei, keine externen Abhängigkeiten -->
   <div id="app" class="app">
     <noscript>Der Blockbild-Editor benötigt JavaScript.</noscript>
   </div>
@@ -1087,7 +1087,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     'tb.step': 'Schritt', 'tb.stop': 'Stopp', 'tb.speed': 'Tempo', 'tb.settings': 'Einstellungen', 'tb.help': 'Hilfe',
     'tb.theme': 'Hell/Dunkel', 'tb.fileName': 'Dateiname', 'tb.more': 'Mehr',
     'tb.delay': 'Verzögerung pro Schritt in Millisekunden (0 = sofort)', 'speed.slow': 'langsam', 'speed.fast': 'schnell', 'speed.max': 'sofort',
-    'exp.c': 'C-Code herunterladen (.c)', 'exp.png': 'Diagramm als Bild (.png)', 'exp.bb': 'Blockbild speichern (.bb)',
+    'exp.c': 'C-Code herunterladen (.c)', 'exp.png': 'Diagramm als Bild (.png)', 'exp.oldPng': 'Bild in alter Optik (Version 2.2, .png)', 'exp.oldOpen': 'Im alten Editor (Version 2.2) öffnen',
+    'toast.oldPngWait': 'Alter Editor zeichnet die Bilder …', 'toast.oldPngDone': '{0} Bild(er) in alter Optik gespeichert', 'toast.oldPngFail': 'Der alte Editor war nicht erreichbar (Internetverbindung?).', 'toast.oldBlocked': 'Neuer Tab wurde blockiert – bitte Pop-ups erlauben.', 'exp.bb': 'Blockbild speichern (.bb)',
     'exp.copyBB': 'Blockbild als Text kopieren', 'exp.recoverOld': 'Diagramm der alten Version wiederherstellen',
 
     // Tabs und Funktionen
@@ -1441,7 +1442,8 @@ dialog.dlg.out::backdrop { animation: fade-out .14s ease-in forwards; }
     'tb.step': 'Step', 'tb.stop': 'Stop', 'tb.speed': 'Speed', 'tb.settings': 'Settings', 'tb.help': 'Help',
     'tb.theme': 'Light/Dark', 'tb.fileName': 'File name', 'tb.more': 'More',
     'tb.delay': 'Delay per step in milliseconds (0 = instant)', 'speed.slow': 'slow', 'speed.fast': 'fast', 'speed.max': 'instant',
-    'exp.c': 'Download C code (.c)', 'exp.png': 'Diagram as image (.png)', 'exp.bb': 'Save diagram (.bb)',
+    'exp.c': 'Download C code (.c)', 'exp.png': 'Diagram as image (.png)', 'exp.oldPng': 'Image in the old look (version 2.2, .png)', 'exp.oldOpen': 'Open in the old editor (version 2.2)',
+    'toast.oldPngWait': 'The old editor is drawing the images …', 'toast.oldPngDone': '{0} image(s) in the old look saved', 'toast.oldPngFail': 'The old editor could not be reached (internet connection?).', 'toast.oldBlocked': 'The new tab was blocked – please allow pop-ups.', 'exp.bb': 'Save diagram (.bb)',
     'exp.copyBB': 'Copy diagram as text', 'exp.recoverOld': 'Recover diagram from the old version',
 
     'tab.add': 'Add subprogram', 'tab.close': 'Delete subprogram', 'fn.main': 'Main program',
@@ -18441,6 +18443,9 @@ ende: O  1          ; ergebnis ausgeben
   <h3>Dateien</h3>
   <ul>
     <li><b>Speichern</b> legt eine <code>.bb</code>-Datei an. Sie ist mit dem bisherigen Blockbild-Editor (Version 2.x) kompatibel – alte Dateien lassen sich öffnen und umgekehrt.</li>
+    <li><b>Alte Optik:</b> <i>Exportieren → Bild in alter Optik</i> erzeugt je Unterprogramm ein PNG genau so, wie es der Original-Editor 2.2
+    (Stefan Egger, Michael Delfser) zeichnet – praktisch für bestehende Arbeitsblätter. <i>Im alten Editor öffnen</i> zeigt das Programm
+    im Original-Editor in einem neuen Tab. Beides braucht Internet, wenn der Editor nicht von c66.xeox.at geladen wurde.</li>
     <li>Beim Öffnen kannst du statt des ganzen Diagramms auch nur die Unterprogramme übernehmen, um sie wiederzuverwenden.</li>
     <li>Eine <code>.bb</code>-Datei kann auch einfach auf das Fenster gezogen werden.</li>
     <li>Der Browser sichert dein Diagramm automatisch und stellt es beim nächsten Öffnen wieder her.</li>
@@ -18680,6 +18685,9 @@ done: O  1          ; output result
   <h3>Files</h3>
   <ul>
     <li><b>Save</b> writes a <code>.bb</code> file compatible with the previous block diagram editor (version 2.x) – old files open here and vice versa.</li>
+    <li><b>Old look:</b> <i>Export → Image in the old look</i> creates one PNG per subprogram exactly as the original editor 2.2
+    (Stefan Egger, Michael Delfser) draws it – handy for existing worksheets. <i>Open in the old editor</i> shows the program in the
+    original editor in a new tab. Both need internet unless the editor was loaded from c66.xeox.at.</li>
     <li>When opening you can take over only the subprograms instead of the whole diagram, to reuse them.</li>
     <li>You can also drop a <code>.bb</code> file onto the window.</li>
     <li>The browser saves your diagram automatically and restores it next time.</li>
@@ -19943,7 +19951,9 @@ done: O  1          ; output result
       // die verbreiteten Sprachen direkt, die gewählte Sprache des Code-Reiters, alle anderen über den Reiter
       ...CODE_LANGS.filter((l) => l.group === 'main' || l.id === codeLang()).map((l) => ({ label: t(l.exp), icon: 'code', action: () => exportCode(l.id) })),
       { label: t('exp.more'), icon: 'code', action: () => { setSide('code'); if (el.langSeg) el.langSeg.focus(); } },
-      { label: t('exp.png'), icon: 'image', action: exportPng }
+      { label: t('exp.png'), icon: 'image', action: exportPng },
+      { label: t('exp.oldPng'), icon: 'image', action: exportOldPng },
+      { label: t('exp.oldOpen'), icon: 'history', action: openOldEditor }
     ];
     if (store.getRaw(KEY_OLD)) items.push('-', { label: t('exp.recoverOld'), icon: 'history', action: recoverOld });
     BBE.ui.menu(items, anchor);
@@ -20354,6 +20364,61 @@ done: O  1          ; output result
     // nur bestimmte Endungen sind im Viewer erlaubt
     const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob|sh|csh|lua|rs|bas|asm|rpgle|mg|ws|bf)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
+  }
+
+  // ---------------------------------------------------------------- Original-Editor 2.2 (unter v2/)
+
+  /**
+   * Adresse der Brückenseite zum alten Editor. Auf c66.xeox.at und lokal liegt v2/ neben index.html;
+   * die Einzeldatei (dist/) und andere Server nutzen die Fassung auf c66.xeox.at.
+   */
+  function oldEditorUrl(mode) {
+    const local = /^https?:$/.test(location.protocol) && /^(c66\.xeox\.at|localhost|127\.0\.0\.1)$/.test(location.hostname) &&
+      !/\/dist\//.test(location.pathname);
+    const base = local ? new URL('v2/pages/bbe3-bruecke.html', location.href).href : 'https://c66.xeox.at/v2/pages/bbe3-bruecke.html';
+    const bytes = new TextEncoder().encode(bbText());
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    const b64 = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return base + '#mode=' + mode + '&lang=' + (I18N.lang === 'en' ? 'en-GB' : 'de-DE') + '&name=' + encodeURIComponent(slug(S.fileName)) + '&bb=' + b64;
+  }
+
+  /** Programm im Original-Editor 2.2 öffnen (neuer Tab). */
+  function openOldEditor() {
+    const w = window.open(oldEditorUrl('open'), '_blank');
+    if (!w) toast(t('toast.oldBlocked'));
+  }
+
+  /** Je Unterprogramm ein PNG in der Optik des Original-Editors 2.2 (der läuft dafür unsichtbar im Hintergrund). */
+  function exportOldPng() {
+    const url = oldEditorUrl('png');
+    const frame = h('iframe', { title: 'Blockbild-Editor 2.2', 'aria-hidden': 'true', tabindex: '-1',
+      style: { position: 'fixed', left: '-5000px', top: '0', width: '1600px', height: '1200px', border: '0' } });
+    toast(t('toast.oldPngWait'));
+    let done = false;
+    const finish = (files, error) => {
+      if (done) return;
+      done = true;
+      window.removeEventListener('message', onMsg);
+      frame.remove();
+      if (error || !files || !files.length) { toast(t('toast.oldPngFail')); return; }
+      for (const f of files) {
+        const [head, data] = f.dataUrl.split(',');
+        const bin = atob(data);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        download(f.name, new Blob([bytes], { type: /image\/png/.test(head) ? 'image/png' : 'application/octet-stream' }));
+      }
+      toast(t('toast.oldPngDone', files.length));
+    };
+    const onMsg = (e) => {
+      if (e.source !== frame.contentWindow || !e.data || e.data.type !== 'bbe-v2-png') return;
+      finish(e.data.files, e.data.error);
+    };
+    window.addEventListener('message', onMsg);
+    setTimeout(() => finish(null, 'timeout'), 30000);
+    frame.src = url;
+    document.body.appendChild(frame);
   }
 
   function bbText() {

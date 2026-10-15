@@ -1,0 +1,194 @@
+<!doctype html>
+<!--
+  Brücke vom Blockbild-Editor 3 zum Original-Editor 2.2 (nicht Teil des Originals).
+
+  Aufruf:  bbe3-bruecke.html#mode=open|png&lang=de-DE|en-GB&name=dateiname&bb=<Programm als Base64url-JSON>
+  - open: zeigt den alten Editor (Blocks-Editor.html, unverändert) mit dem übergebenen Programm.
+  - png:  lädt den alten Editor unsichtbar, stellt jedes Unterprogramm „fertig“ (ohne Einfügepunkte) dar und
+          schickt je Unterprogramm ein PNG an das aufrufende Fenster (postMessage { type: 'bbe-v2-png', files })
+          bzw. lädt die Bilder herunter, wenn die Seite direkt geöffnet wurde.
+  Der alte Editor liest das Programm aus localStorage "autoSavedDiagram" (Knopf „Letztes Diagramm wiederherstellen“) –
+  diesen Knopf und die Rückfrage betätigt diese Seite selbst.
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blockbild-Editor 2.2</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #fff; }
+    iframe { border: 0; width: 100%; height: 100%; display: block; }
+    #msg { position: fixed; inset: 0; display: grid; place-items: center; font: 16px system-ui, sans-serif; color: #333; background: #fff; }
+    #msg[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <div id="msg">…</div>
+  <iframe id="old" title="Blockbild-Editor 2.2"></iframe>
+  <script>
+    (function () {
+      'use strict';
+      var msg = document.getElementById('msg');
+      var frame = document.getElementById('old');
+      var params = {};
+      location.hash.replace(/^#/, '').split('&').forEach(function (kv) {
+        var i = kv.indexOf('=');
+        if (i > 0) params[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1));
+      });
+      var mode = params.mode === 'png' ? 'png' : 'open';
+      var lang = params.lang === 'en-GB' ? 'en-GB' : 'de-DE';
+      var T = lang === 'de-DE'
+        ? { wait: 'Alter Editor wird geladen …', none: 'Kein Programm übergeben.', err: 'Fehler: ', done: 'Bilder gespeichert.' }
+        : { wait: 'Loading the old editor …', none: 'No program was passed.', err: 'Error: ', done: 'Images saved.' };
+      msg.textContent = T.wait;
+
+      function fromBase64Url(s) {
+        s = s.replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) s += '=';
+        var bin = atob(s);
+        var bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new TextDecoder().decode(bytes);
+      }
+
+      function report(data) {
+        if (window.parent !== window) window.parent.postMessage(data, '*');
+      }
+      function fail(text) {
+        msg.hidden = false;
+        msg.textContent = T.err + text;
+        report({ type: 'bbe-v2-png', error: text });
+      }
+
+      if (!params.bb) { msg.textContent = T.none; report({ type: 'bbe-v2-png', error: 'no program' }); return; }
+      var bbText;
+      try { bbText = fromBase64Url(params.bb); JSON.parse(bbText); } catch (e) { fail(String(e.message || e)); return; }
+      // Programm und Sprache dort ablegen, wo der alte Editor sie sucht
+      localStorage.setItem('autoSavedDiagram', bbText);
+      var conf = {};
+      try { conf = JSON.parse(localStorage.getItem('configurations') || '{}') || {}; } catch (e) { conf = {}; }
+      if (conf.simulationDelay === undefined) conf.simulationDelay = 1000;
+      if (conf.skipLoopChecks === undefined) conf.skipLoopChecks = false;
+      if (conf.hideAddressColumn === undefined) conf.hideAddressColumn = true;
+      conf.currentLanguage = lang;
+      localStorage.setItem('configurations', JSON.stringify(conf));
+      // Programm nicht in der Adresszeile stehen lassen
+      if (mode === 'open') history.replaceState(null, '', location.pathname);
+
+      var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+      async function waitFor(fn, ms) {
+        for (var t = 0; t < (ms || 10000); t += 50) { var v = fn(); if (v) return v; await sleep(50); }
+        throw new Error('timeout');
+      }
+
+      frame.addEventListener('load', async function () {
+        try {
+          var w = frame.contentWindow, d = w.document;
+          // „Letztes Diagramm wiederherstellen“ und „Trotzdem wiederherstellen“ betätigen
+          var recover = await waitFor(function () { var i = d.querySelector('#toolsToolbar .ui-icon-arrowrefresh-1-e'); return i && i.closest('button'); });
+          recover.click();
+          var okText = w.blockDiagramEditorGlobals.languagePack.loadAnyway;
+          var ok = await waitFor(function () {
+            return Array.prototype.find.call(d.querySelectorAll('.ui-dialog-buttonset button'), function (b) { return b.offsetParent && b.textContent.trim() === okText; });
+          });
+          ok.click();
+          await waitFor(function () { return d.querySelectorAll('#tabs > ul a').length > 1; });
+          await sleep(200);
+          msg.hidden = true;
+          if (mode === 'png') await exportAll(w, d);
+        } catch (e) {
+          fail(String(e.message || e));
+        }
+      });
+      frame.src = 'Blocks-Editor.html';
+
+      /** Jedes Unterprogramm „fertig“ darstellen und als PNG abbilden. */
+      async function exportAll(w, d) {
+        var finish = d.querySelector('#toolsToolbar .ui-icon-locked').closest('button');
+        var tabs = Array.prototype.filter.call(d.querySelectorAll('#tabs > ul a'), function (a) { return /^#/.test(a.getAttribute('href') || ''); });
+        var files = [];
+        var base = (params.name || 'blockbild').replace(/[^\w.-]+/g, '-');
+        for (var i = 0; i < tabs.length; i++) {
+          tabs[i].click();
+          await sleep(150);
+          finish.click();
+          await sleep(150);
+          var panel = d.querySelector(tabs[i].getAttribute('href'));
+          var name = base + (i === 0 ? '' : '-' + tabs[i].textContent.trim()) + '-v2.png';
+          files.push({ name: name, dataUrl: await toPng(w, panel) });
+        }
+        if (window.parent !== window) report({ type: 'bbe-v2-png', files: files });
+        else {
+          files.forEach(function (f) { var a = document.createElement('a'); a.href = f.dataUrl; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); });
+          msg.hidden = false;
+          msg.textContent = T.done;
+        }
+      }
+
+      var dataUrlCache = {};
+      /** url("…") in einem CSS-Wert durch Daten-URLs ersetzen (gleiche Domain, daher lesbar). */
+      async function inlineUrls(value) {
+        var urls = value.match(/url\("?([^")]+)"?\)/g) || [];
+        for (var i = 0; i < urls.length; i++) {
+          var u = urls[i].replace(/^url\("?|"?\)$/g, '');
+          if (/^data:/.test(u)) continue;
+          if (!dataUrlCache[u]) {
+            dataUrlCache[u] = fetch(u).then(function (r) { return r.blob(); }).then(function (b) {
+              return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.readAsDataURL(b); });
+            }).catch(function () { return ''; });
+          }
+          var data = await dataUrlCache[u];
+          value = value.split(urls[i]).join(data ? 'url("' + data + '")' : 'none');
+        }
+        return value;
+      }
+
+      /**
+       * Element des alten Editors als PNG (Bildschirmgröße): Kopie mit allen berechneten Stilen und den aktuellen
+       * Feldinhalten in ein SVG (foreignObject) legen und auf eine Leinwand zeichnen.
+       */
+      async function toPng(w, el) {
+        var rect = el.getBoundingClientRect();
+        var width = Math.ceil(rect.width), height = Math.ceil(rect.height);
+        var clone = el.cloneNode(true);
+        var src = [el].concat(Array.prototype.slice.call(el.querySelectorAll('*')));
+        var dst = [clone].concat(Array.prototype.slice.call(clone.querySelectorAll('*')));
+        for (var i = 0; i < src.length; i++) {
+          var s = src[i], c = dst[i];
+          var cs = w.getComputedStyle(s);
+          var css = '';
+          for (var k = 0; k < cs.length; k++) {
+            var prop = cs[k], val = cs.getPropertyValue(prop);
+            // Hintergrundbilder (Symbole von jQuery UI) einbetten – ein SVG-Bild lädt keine fremden Dateien nach
+            if (prop === 'background-image' && /url\(/.test(val)) val = await inlineUrls(val);
+            css += prop + ':' + val + ';';
+          }
+          c.setAttribute('style', css);
+          for (var a = c.attributes.length - 1; a >= 0; a--) if (/^on/i.test(c.attributes[a].name)) c.removeAttribute(c.attributes[a].name);
+          if (s.tagName === 'INPUT') c.setAttribute('value', s.value);
+          if (s.tagName === 'TEXTAREA') c.textContent = s.value;
+        }
+        clone.style.margin = '0';
+        var bg = w.getComputedStyle(w.document.getElementById('tabs')).backgroundColor || '#fff';
+        var xhtml = new XMLSerializer().serializeToString(clone);
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
+          '<foreignObject x="0" y="0" width="100%" height="100%">' +
+          '<div xmlns="http://www.w3.org/1999/xhtml" style="background:' + bg + '">' + xhtml + '</div>' +
+          '</foreignObject></svg>';
+        var img = new Image();
+        await new Promise(function (resolve, reject) {
+          img.onload = resolve; img.onerror = function () { reject(new Error('image')); };
+          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        });
+        var canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+        return canvas.toDataURL('image/png');
+      }
+    })();
+  </script>
+</body>
+</html>

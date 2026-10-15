@@ -207,6 +207,9 @@ ende: O  1          ; ergebnis ausgeben
   <h3>Dateien</h3>
   <ul>
     <li><b>Speichern</b> legt eine <code>.bb</code>-Datei an. Sie ist mit dem bisherigen Blockbild-Editor (Version 2.x) kompatibel – alte Dateien lassen sich öffnen und umgekehrt.</li>
+    <li><b>Alte Optik:</b> <i>Exportieren → Bild in alter Optik</i> erzeugt je Unterprogramm ein PNG genau so, wie es der Original-Editor 2.2
+    (Stefan Egger, Michael Delfser) zeichnet – praktisch für bestehende Arbeitsblätter. <i>Im alten Editor öffnen</i> zeigt das Programm
+    im Original-Editor in einem neuen Tab. Beides braucht Internet, wenn der Editor nicht von c66.xeox.at geladen wurde.</li>
     <li>Beim Öffnen kannst du statt des ganzen Diagramms auch nur die Unterprogramme übernehmen, um sie wiederzuverwenden.</li>
     <li>Eine <code>.bb</code>-Datei kann auch einfach auf das Fenster gezogen werden.</li>
     <li>Der Browser sichert dein Diagramm automatisch und stellt es beim nächsten Öffnen wieder her.</li>
@@ -446,6 +449,9 @@ done: O  1          ; output result
   <h3>Files</h3>
   <ul>
     <li><b>Save</b> writes a <code>.bb</code> file compatible with the previous block diagram editor (version 2.x) – old files open here and vice versa.</li>
+    <li><b>Old look:</b> <i>Export → Image in the old look</i> creates one PNG per subprogram exactly as the original editor 2.2
+    (Stefan Egger, Michael Delfser) draws it – handy for existing worksheets. <i>Open in the old editor</i> shows the program in the
+    original editor in a new tab. Both need internet unless the editor was loaded from c66.xeox.at.</li>
     <li>When opening you can take over only the subprograms instead of the whole diagram, to reuse them.</li>
     <li>You can also drop a <code>.bb</code> file onto the window.</li>
     <li>The browser saves your diagram automatically and restores it next time.</li>

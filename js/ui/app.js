@@ -1219,7 +1219,9 @@
       // die verbreiteten Sprachen direkt, die gewählte Sprache des Code-Reiters, alle anderen über den Reiter
       ...CODE_LANGS.filter((l) => l.group === 'main' || l.id === codeLang()).map((l) => ({ label: t(l.exp), icon: 'code', action: () => exportCode(l.id) })),
       { label: t('exp.more'), icon: 'code', action: () => { setSide('code'); if (el.langSeg) el.langSeg.focus(); } },
-      { label: t('exp.png'), icon: 'image', action: exportPng }
+      { label: t('exp.png'), icon: 'image', action: exportPng },
+      { label: t('exp.oldPng'), icon: 'image', action: exportOldPng },
+      { label: t('exp.oldOpen'), icon: 'history', action: openOldEditor }
     ];
     if (store.getRaw(KEY_OLD)) items.push('-', { label: t('exp.recoverOld'), icon: 'history', action: recoverOld });
     BBE.ui.menu(items, anchor);
@@ -1630,6 +1632,61 @@
     // nur bestimmte Endungen sind im Viewer erlaubt
     const safe = name.replace(/\.bb$/, '.bb.json').replace(/\.(c|cpp|cs|java|py|js|f90|cob|sh|csh|lua|rs|bas|asm|rpgle|mg|ws|bf)$/, '.$1.txt');
     try { await dlNs.save({ filename: safe, data }); return 'saved'; } catch (e) { return e && e.code === 'declined' ? 'declined' : 'none'; }
+  }
+
+  // ---------------------------------------------------------------- Original-Editor 2.2 (unter v2/)
+
+  /**
+   * Adresse der Brückenseite zum alten Editor. Auf c66.xeox.at und lokal liegt v2/ neben index.html;
+   * die Einzeldatei (dist/) und andere Server nutzen die Fassung auf c66.xeox.at.
+   */
+  function oldEditorUrl(mode) {
+    const local = /^https?:$/.test(location.protocol) && /^(c66\.xeox\.at|localhost|127\.0\.0\.1)$/.test(location.hostname) &&
+      !/\/dist\//.test(location.pathname);
+    const base = local ? new URL('v2/pages/bbe3-bruecke.html', location.href).href : 'https://c66.xeox.at/v2/pages/bbe3-bruecke.html';
+    const bytes = new TextEncoder().encode(bbText());
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    const b64 = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return base + '#mode=' + mode + '&lang=' + (I18N.lang === 'en' ? 'en-GB' : 'de-DE') + '&name=' + encodeURIComponent(slug(S.fileName)) + '&bb=' + b64;
+  }
+
+  /** Programm im Original-Editor 2.2 öffnen (neuer Tab). */
+  function openOldEditor() {
+    const w = window.open(oldEditorUrl('open'), '_blank');
+    if (!w) toast(t('toast.oldBlocked'));
+  }
+
+  /** Je Unterprogramm ein PNG in der Optik des Original-Editors 2.2 (der läuft dafür unsichtbar im Hintergrund). */
+  function exportOldPng() {
+    const url = oldEditorUrl('png');
+    const frame = h('iframe', { title: 'Blockbild-Editor 2.2', 'aria-hidden': 'true', tabindex: '-1',
+      style: { position: 'fixed', left: '-5000px', top: '0', width: '1600px', height: '1200px', border: '0' } });
+    toast(t('toast.oldPngWait'));
+    let done = false;
+    const finish = (files, error) => {
+      if (done) return;
+      done = true;
+      window.removeEventListener('message', onMsg);
+      frame.remove();
+      if (error || !files || !files.length) { toast(t('toast.oldPngFail')); return; }
+      for (const f of files) {
+        const [head, data] = f.dataUrl.split(',');
+        const bin = atob(data);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        download(f.name, new Blob([bytes], { type: /image\/png/.test(head) ? 'image/png' : 'application/octet-stream' }));
+      }
+      toast(t('toast.oldPngDone', files.length));
+    };
+    const onMsg = (e) => {
+      if (e.source !== frame.contentWindow || !e.data || e.data.type !== 'bbe-v2-png') return;
+      finish(e.data.files, e.data.error);
+    };
+    window.addEventListener('message', onMsg);
+    setTimeout(() => finish(null, 'timeout'), 30000);
+    frame.src = url;
+    document.body.appendChild(frame);
   }
 
   function bbText() {

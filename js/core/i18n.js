@@ -45,7 +45,8 @@
     'tb.step': 'Schritt', 'tb.stop': 'Stopp', 'tb.speed': 'Tempo', 'tb.settings': 'Einstellungen', 'tb.help': 'Hilfe',
     'tb.theme': 'Hell/Dunkel', 'tb.fileName': 'Dateiname', 'tb.more': 'Mehr',
     'tb.delay': 'Verzögerung pro Schritt in Millisekunden (0 = sofort)', 'speed.slow': 'langsam', 'speed.fast': 'schnell', 'speed.max': 'sofort',
-    'exp.c': 'C-Code herunterladen (.c)', 'exp.png': 'Diagramm als Bild (.png)', 'exp.bb': 'Blockbild speichern (.bb)',
+    'exp.c': 'C-Code herunterladen (.c)', 'exp.png': 'Diagramm als Bild (.png)', 'exp.oldPng': 'Bild in alter Optik (Version 2.2, .png)', 'exp.oldOpen': 'Im alten Editor (Version 2.2) öffnen',
+    'toast.oldPngWait': 'Alter Editor zeichnet die Bilder …', 'toast.oldPngDone': '{0} Bild(er) in alter Optik gespeichert', 'toast.oldPngFail': 'Der alte Editor war nicht erreichbar (Internetverbindung?).', 'toast.oldBlocked': 'Neuer Tab wurde blockiert – bitte Pop-ups erlauben.', 'exp.bb': 'Blockbild speichern (.bb)',
     'exp.copyBB': 'Blockbild als Text kopieren', 'exp.recoverOld': 'Diagramm der alten Version wiederherstellen',
 
     // Tabs und Funktionen
@@ -399,7 +400,8 @@
     'tb.step': 'Step', 'tb.stop': 'Stop', 'tb.speed': 'Speed', 'tb.settings': 'Settings', 'tb.help': 'Help',
     'tb.theme': 'Light/Dark', 'tb.fileName': 'File name', 'tb.more': 'More',
     'tb.delay': 'Delay per step in milliseconds (0 = instant)', 'speed.slow': 'slow', 'speed.fast': 'fast', 'speed.max': 'instant',
-    'exp.c': 'Download C code (.c)', 'exp.png': 'Diagram as image (.png)', 'exp.bb': 'Save diagram (.bb)',
+    'exp.c': 'Download C code (.c)', 'exp.png': 'Diagram as image (.png)', 'exp.oldPng': 'Image in the old look (version 2.2, .png)', 'exp.oldOpen': 'Open in the old editor (version 2.2)',
+    'toast.oldPngWait': 'The old editor is drawing the images …', 'toast.oldPngDone': '{0} image(s) in the old look saved', 'toast.oldPngFail': 'The old editor could not be reached (internet connection?).', 'toast.oldBlocked': 'The new tab was blocked – please allow pop-ups.', 'exp.bb': 'Save diagram (.bb)',
     'exp.copyBB': 'Copy diagram as text', 'exp.recoverOld': 'Recover diagram from the old version',
 
     'tab.add': 'Add subprogram', 'tab.close': 'Delete subprogram', 'fn.main': 'Main program',

@@ -1,0 +1,16 @@
+#con_output {
+    display: inline-block;
+    resize:both;
+    min-width: 300px;
+    min-height: 200px;
+    background-color: black;
+    color: yellow;
+    overflow: scroll;
+    font: Lucida Console; 
+    font-size: 200%; 
+}
+
+.dark-mode {
+    background-color: #222;
+    color: white;
+}
