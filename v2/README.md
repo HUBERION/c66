@@ -13,6 +13,6 @@ unverändert so, wie er auf https://c65.at/BE/pages/Blocks-Editor.html läuft (S
 **Nicht Teil des Originals** ist nur `pages/bbe3-bruecke.html`: Sie übergibt ein Programm aus dem Blockbild-Editor 3
 an den alten Editor (Menü *Exportieren → Im alten Editor öffnen* bzw. *Bild in alter Optik*). Sie legt das Programm in
 `localStorage` („autoSavedDiagram“) ab, betätigt „Letztes Diagramm wiederherstellen“ und erzeugt bei Bedarf je
-Unterprogramm ein PNG der „fertigen“ Ansicht. Die Originaldateien werden dabei nicht verändert.
+Unterprogramm ein PNG des Reiterbereichs (Bearbeitungsansicht, wie am Bildschirm). Die Originaldateien werden dabei nicht verändert.
 
 Vielen Dank an Stefan Egger und Michael Delfser!

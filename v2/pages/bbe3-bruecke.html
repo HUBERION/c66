@@ -4,8 +4,8 @@
 
   Aufruf:  bbe3-bruecke.html#mode=open|png&lang=de-DE|en-GB&name=dateiname&bb=<Programm als Base64url-JSON>
   - open: zeigt den alten Editor (Blocks-Editor.html, unverändert) mit dem übergebenen Programm.
-  - png:  lädt den alten Editor unsichtbar, stellt jedes Unterprogramm „fertig“ (ohne Einfügepunkte) dar und
-          schickt je Unterprogramm ein PNG an das aufrufende Fenster (postMessage { type: 'bbe-v2-png', files })
+  - png:  lädt den alten Editor unsichtbar, wählt nacheinander jeden Reiter und bildet den ganzen Reiterbereich (Bearbeitungsansicht,
+          wie am Bildschirm, mit Rand in Seitenfarbe) ab; je Unterprogramm ein PNG an das aufrufende Fenster (postMessage { type: 'bbe-v2-png', files })
           bzw. lädt die Bilder herunter, wenn die Seite direkt geöffnet wurde.
   Der alte Editor liest das Programm aus localStorage "autoSavedDiagram" (Knopf „Letztes Diagramm wiederherstellen“) –
   diesen Knopf und die Rückfrage betätigt diese Seite selbst.
@@ -102,20 +102,18 @@
       });
       frame.src = 'Blocks-Editor.html';
 
-      /** Jedes Unterprogramm „fertig“ darstellen und als PNG abbilden. */
+      /** Jedes Unterprogramm in der Bearbeitungsansicht mit Reiterleiste (wie am Bildschirm) als PNG abbilden. */
       async function exportAll(w, d) {
-        var finish = d.querySelector('#toolsToolbar .ui-icon-locked').closest('button');
         var tabs = Array.prototype.filter.call(d.querySelectorAll('#tabs > ul a'), function (a) { return /^#/.test(a.getAttribute('href') || ''); });
         var files = [];
         var base = (params.name || 'blockbild').replace(/[^\w.-]+/g, '-');
+        var area = d.getElementById('tabs');
         for (var i = 0; i < tabs.length; i++) {
           tabs[i].click();
-          await sleep(150);
-          finish.click();
-          await sleep(150);
-          var panel = d.querySelector(tabs[i].getAttribute('href'));
+          tabs[i].blur();   // kein Fokusrahmen im Bild
+          await sleep(200);
           var name = base + (i === 0 ? '' : '-' + tabs[i].textContent.trim()) + '-v2.png';
-          files.push({ name: name, dataUrl: await toPng(w, panel) });
+          files.push({ name: name, dataUrl: await toPng(w, area, 8) });
         }
         if (window.parent !== window) report({ type: 'bbe-v2-png', files: files });
         else {
@@ -147,9 +145,10 @@
        * Element des alten Editors als PNG (Bildschirmgröße): Kopie mit allen berechneten Stilen und den aktuellen
        * Feldinhalten in ein SVG (foreignObject) legen und auf eine Leinwand zeichnen.
        */
-      async function toPng(w, el) {
+      async function toPng(w, el, pad) {
+        pad = pad || 0;
         var rect = el.getBoundingClientRect();
-        var width = Math.ceil(rect.width), height = Math.ceil(rect.height);
+        var width = Math.ceil(rect.width) + 2 * pad, height = Math.ceil(rect.height) + 2 * pad;
         var clone = el.cloneNode(true);
         var src = [el].concat(Array.prototype.slice.call(el.querySelectorAll('*')));
         var dst = [clone].concat(Array.prototype.slice.call(clone.querySelectorAll('*')));
@@ -169,11 +168,14 @@
           if (s.tagName === 'TEXTAREA') c.textContent = s.value;
         }
         clone.style.margin = '0';
-        var bg = w.getComputedStyle(w.document.getElementById('tabs')).backgroundColor || '#fff';
+        clone.style.position = 'static';
+        // Rand in der Farbe der Seite (auf c65.at dunkel), wie am Bildschirm
+        var bg = w.getComputedStyle(w.document.body).backgroundColor;
+        if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') bg = '#fff';
         var xhtml = new XMLSerializer().serializeToString(clone);
         var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
           '<foreignObject x="0" y="0" width="100%" height="100%">' +
-          '<div xmlns="http://www.w3.org/1999/xhtml" style="background:' + bg + '">' + xhtml + '</div>' +
+          '<div xmlns="http://www.w3.org/1999/xhtml" style="background:' + bg + ';padding:' + pad + 'px">' + xhtml + '</div>' +
           '</foreignObject></svg>';
         var img = new Image();
         await new Promise(function (resolve, reject) {
