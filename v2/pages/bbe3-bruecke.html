@@ -156,8 +156,23 @@
           var s = src[i], c = dst[i];
           var cs = w.getComputedStyle(s);
           var css = '';
+          // Absolut gesetzte Teile ohne eigene Lage (z. B. „WH“ bei WIEDERHOLE) stehen dort, wo sie im Fluss wären.
+          // getComputedStyle liefert dafür Pixelwerte – die würden im Bild leicht verrutschen, also wieder „auto“.
+          var autoSides = {};
+          if (cs.position === 'absolute' || cs.position === 'fixed') {
+            ['top', 'left', 'right', 'bottom'].forEach(function (side) {
+              var before = s.getBoundingClientRect(), old = s.style[side];
+              s.style[side] = 'auto';
+              var after = s.getBoundingClientRect();
+              if (Math.abs(before.top - after.top) < 0.5 && Math.abs(before.left - after.left) < 0.5) autoSides[side] = true;
+              s.style[side] = old;
+            });
+          }
           for (var k = 0; k < cs.length; k++) {
             var prop = cs[k], val = cs.getPropertyValue(prop);
+            // inset-block-start & Co. doppeln top/left/… mit Pixelwerten und würden „auto“ im Bild überstimmen
+            if (/^inset/.test(prop)) continue;
+            if (autoSides[prop]) val = 'auto';
             // Hintergrundbilder (Symbole von jQuery UI) einbetten – ein SVG-Bild lädt keine fremden Dateien nach
             if (prop === 'background-image' && /url\(/.test(val)) val = await inlineUrls(val);
             css += prop + ':' + val + ';';
@@ -167,8 +182,11 @@
           if (s.tagName === 'INPUT') c.setAttribute('value', s.value);
           if (s.tagName === 'TEXTAREA') c.textContent = s.value;
         }
+        // Position der Wurzel behalten (relative): absolut gesetzte Teile wie „WH“ beziehen sich darauf
         clone.style.margin = '0';
-        clone.style.position = 'static';
+        clone.style.top = '0';
+        clone.style.left = '0';
+        clone.style.float = 'none';
         // Rand in der Farbe der Seite (auf c65.at dunkel), wie am Bildschirm
         var bg = w.getComputedStyle(w.document.body).backgroundColor;
         if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') bg = '#fff';
